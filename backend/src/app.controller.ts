@@ -4,9 +4,9 @@ import { SupabaseAuthGuard } from './auth.guard';
 @Controller()
 export class AppController {
   
-  @Get('profile')
+  @Get('users')
   @UseGuards(SupabaseAuthGuard)
-  getProfile(@Request() req) {
+  getUsers(@Request() req) {
     // จะเข้าถึงได้ก็ต่อเมื่อมี Token ส่งมา และจะได้เห็น role ด้วย
     return {
       message: 'Hello, ' + req.user.email,
