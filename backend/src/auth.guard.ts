@@ -21,11 +21,11 @@ export class SupabaseAuthGuard implements CanActivate {
 
     if (error || !user) throw new UnauthorizedException('Invalid token');
 
-    // ดึง Role จากตาราง profiles
+    // ดึง Role จากตาราง users
     const { data: profile } = await this.supabase
-      .from('profiles')
+      .from('users')
       .select('role')
-      .eq('id', user.id)
+      .eq('auth_id', user.id)
       .single();
 
     // แนบ user และ role ไปกับ request
