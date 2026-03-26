@@ -1,0 +1,59 @@
+.app-item-card {
+  background: white;
+  border-radius: 20px;
+  padding: 30px 20px 20px 20px; /* เพิ่ม Padding ด้านบนเล็กน้อยเพื่อไม่ให้เนื้อหาเบียดกับปุ่ม */
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #f1f5f9;
+  position: relative; /* 💡 สำคัญมาก: เพื่อให้ปุ่มถังขยะอ้างอิงตำแหน่งกับ Card นี้ */
+  transition: all 0.2s ease;
+}
+
+.app-item-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+}
+
+.status-tag {
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* --- ส่วนที่แก้ไข: ปุ่มถังขยะมุมขวาบน --- */
+.btn-delete {
+  background: #f8fafc; /* พื้นหลังสีเทาอ่อนมาก */
+  border: 1px solid #e2e8f0;
+  color: #94a3b8;
+  cursor: pointer;
+  
+  /* จัดตำแหน่งไปมุมขวาบน */
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-delete:hover {
+  background: #fee2e2; /* พื้นแดงอ่อนเมื่อชี้ */
+  color: #ef4444;    /* ไอคอนแดง */
+  border-color: #fecaca;
+  transform: scale(1.1);
+}
+
+/* สีสถานะคงเดิม */
+.status-tag.pending { background: #fef9c3; color: #a16207; }
+.status-tag.approved { background: #dcfce7; color: #15803d; }
+.status-tag.rejected { background: #fee2e2; color: #b91c1c; }
