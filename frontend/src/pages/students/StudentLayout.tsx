@@ -1,19 +1,16 @@
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'; // 1. เพิ่ม useNavigate
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Briefcase, FileText, User, LogOut } from 'lucide-react';
 import './StudentLayout.css';
 
 export default function StudentLayout() {
   const location = useLocation();
-  const navigate = useNavigate(); // 2. ประกาศตัวแปรสำหรับนำทาง
+  const navigate = useNavigate();
 
-  // ฟังก์ชันเช็คว่าเมนูไหนกำลัง Active อยู่ เพื่อเปลี่ยนสี
   const isActive = (path: string) => location.pathname.includes(path) ? 'active' : '';
 
-  // 3. สร้างฟังก์ชัน Logout
   const handleLogout = () => {
     if (window.confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
-      // ถ้ามี Token ใน LocalStorage ให้ลบตรงนี้ (เช่น localStorage.removeItem('token'))
-      navigate('/login'); // ดีดไปหน้า Login
+      navigate('/login');
     }
   };
 
@@ -22,7 +19,7 @@ export default function StudentLayout() {
       <nav className="student-nav">
         <div className="nav-container">
           <Link to="/student/projects" className="nav-logo">
-            CO-OP <span>STUDENT</span>
+            CO-OP <span>EDUCATION</span>
           </Link>
 
           <div className="nav-menu">

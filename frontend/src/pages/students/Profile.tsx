@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, GraduationCap, Phone, Mail, Save } from 'lucide-react';
+import { User, Phone, Save } from 'lucide-react';
 import './Profile.css';
 
 export default function StudentProfile() {
@@ -9,8 +9,6 @@ export default function StudentProfile() {
     lastName: 'สายโค้ด',
     email: '66050xxx@kmitl.ac.th',
     phone: '081-234-5678',
-    major: 'Computer Engineering',
-    gpax: '3.50',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -26,7 +24,7 @@ export default function StudentProfile() {
             {profile.firstName[0]}{profile.lastName[0]}
           </div>
           <h2>โปรไฟล์ของฉัน</h2>
-          <p>จัดการข้อมูลส่วนตัวและข้อมูลการเรียนของคุณ</p>
+          <p>จัดการข้อมูลส่วนตัวของคุณ</p>
         </div>
 
         <form onSubmit={handleSubmit} className="profile-form">
@@ -52,25 +50,6 @@ export default function StudentProfile() {
               <div className="input-group">
                 <label><Phone size={14} /> เบอร์โทรศัพท์</label>
                 <input type="text" value={profile.phone} onChange={(e) => setProfile({...profile, phone: e.target.value})} />
-              </div>
-            </div>
-          </div>
-
-          <div className="form-section">
-            <h3><GraduationCap size={18} /> ข้อมูลการศึกษา</h3>
-            <div className="form-grid">
-              <div className="input-group">
-                <label>สาขาวิชา</label>
-                <select value={profile.major} onChange={(e) => setProfile({...profile, major: e.target.value})}>
-                    <option value="Computer Science">Computer Science</option>
-                  <option value="Computer Engineering">Computer Engineering</option>
-                  <option value="Information Technology">Information Technology</option>
-                  <option value="Data Science">Data Science</option>
-                </select>
-              </div>
-              <div className="input-group">
-                <label>เกรดเฉลี่ยสะสม (GPAX)</label>
-                <input type="number" step="0.01" value={profile.gpax} onChange={(e) => setProfile({...profile, gpax: e.target.value})} />
               </div>
             </div>
           </div>

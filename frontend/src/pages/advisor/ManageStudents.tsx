@@ -1,43 +1,132 @@
+import { useState } from 'react';
+import { 
+  Users, 
+  CheckCircle2, 
+  XCircle, 
+  Search, 
+  ArrowLeft,
+  Mail,
+  GraduationCap
+} from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
 import './Advisor.css';
 
 export default function ManageStudents() {
+  const { projectId } = useParams(); 
+
+  const [students] = useState([
+    { 
+      id: 1, 
+      name: 'นายสมชาย วิทยา', 
+      studentId: '66050001', 
+      email: '66050001@kmitl.ac.th',
+      status: 'PENDING_CONFIRM', 
+      hiredStatus: 'WAITING' 
+    },
+    { 
+      id: 2, 
+      name: 'นางสาววิภาดา เรียนดี', 
+      studentId: '66050015', 
+      email: '66050015@kmitl.ac.th',
+      status: 'CONFIRMED', 
+      hiredStatus: 'WAITING' 
+    },
+    { 
+      id: 3, 
+      name: 'นายมานะ อดทน', 
+      studentId: '66050099', 
+      email: '66050099@kmitl.ac.th',
+      status: 'CONFIRMED', 
+      hiredStatus: 'HIRED'
+    },
+  ]);
+
   return (
-    <div className="advisor-layout">
-      <main className="advisor-main" style={{marginLeft: 0, padding: '40px 10%'}}>
-        <button onClick={() => window.history.back()} style={{marginBottom: '20px', cursor: 'pointer'}}>← กลับ</button>
-        <h1>จัดการนักศึกษาในโครงการ</h1>
-        <div className="card">
-          <table>
-            <thead>
-              <tr>
-                <th>ชื่อ-นามสกุล</th>
-                <th>การยืนยันสิทธิ์</th>
-                <th>ผลการจ้างงาน (ตอนจบ)</th>
-                <th>รายงาน</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>นายสมชาย เรียนดี</td>
+    <div className="advisor-page">
+      <div className="page-header-flex">
+        <div className="header-left">
+          <Link to="/advisor/projects/mine" className="btn-back-link">
+            <ArrowLeft size={18} /> กลับไปหน้าโครงการ
+          </Link>
+          <h2 className="title-with-icon">
+            <Users size={28} /> จัดการรายชื่อนักศึกษา
+          </h2>
+          <p className="subtitle">โครงการ: Web Application for Inventory Management (ID: {projectId})</p>
+        </div>
+        <div className="header-right">
+          <div className="project-cap-badge">
+             <GraduationCap size={18} /> นักศึกษาที่สมัคร: {students.length} คน
+          </div>
+        </div>
+      </div>
+
+      <div className="advisor-card">
+        <div className="table-filter-bar" style={{ marginBottom: '20px' }}>
+          <div className="search-wrapper">
+            <Search size={18} />
+            <input type="text" placeholder="ค้นหารหัสนักศึกษา หรือ ชื่อ..." />
+          </div>
+        </div>
+
+        <table className="advisor-table">
+          <thead>
+            <tr>
+              <th>ข้อมูลนักศึกษา</th>
+              <th>สถานะสิทธิ</th>
+              <th>ผลการจ้างงาน (Final)</th>
+              <th style={{ textAlign: 'center' }}>การดำเนินการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {students.map((std) => (
+              <tr key={std.id}>
                 <td>
-                  <button className="btn-orange" style={{padding: '8px 15px', fontSize: '0.8rem'}}>ยืนยัน</button>
-                  <button style={{marginLeft: '5px', padding: '8px 15px', background: '#fee2e2', color: '#b91c1c', border: 'none', borderRadius: '8px', cursor: 'pointer'}}>ปฏิเสธ</button>
+                  <div className="student-info-cell">
+                    <div className="std-avatar">{std.name[0]}</div>
+                    <div className="std-details">
+                      <span className="std-name">{std.name}</span>
+                      <span className="std-id">ID: {std.studentId}</span>
+                      <span className="std-contact"><Mail size={12}/> {std.email}</span>
+                    </div>
+                  </div>
                 </td>
                 <td>
-                  <select style={{padding: '8px', borderRadius: '8px', border: '1px solid #ddd'}}>
-                    <option value="">-- เลือกสถานะ --</option>
-                    <option value="HIRED">HIRED (รับเข้าทำงาน)</option>
-                    <option value="NOT_HIRED">NOT HIRED</option>
+                  <span className={`status-pill ${std.status.toLowerCase()}`}>
+                    {std.status === 'CONFIRMED' ? '🟢 ยืนยันสิทธิแล้ว' : '🟡 รอการยืนยัน'}
+                  </span>
+                </td>
+                <td>
+                  <select 
+                    className={`hired-select ${std.hiredStatus.toLowerCase()}`}
+                    defaultValue={std.hiredStatus}
+                    disabled={std.status !== 'CONFIRMED'}
+                  >
+                    <option value="WAITING">⌛ รอสรุปผล</option>
+                    <option value="HIRED">✅ HIRED (ได้งาน)</option>
+                    <option value="NOT_HIRED">❌ NOT HIRED</option>
                   </select>
                 </td>
-                <td>
-                  <button onClick={() => window.location.href='/advisor/projects/1/reports'} style={{background: 'none', border: '1px solid var(--orange-kmitl)', color: 'var(--orange-kmitl)', padding: '5px 10px', borderRadius: '8px', cursor: 'pointer'}}>ดู Report</button>
+                <td style={{ textAlign: 'center' }}>
+                  <div className="action-group">
+                    {std.status === 'PENDING_CONFIRM' ? (
+                      <>
+                        <button className="btn-action-confirm" title="ยืนยันสิทธิ">
+                          <CheckCircle2 size={20} />
+                        </button>
+                        <button className="btn-action-reject" title="ปฏิเสธสิทธิ">
+                          <XCircle size={20} />
+                        </button>
+                      </>
+                    ) : (
+                      <span style={{ color: '#cbd5e1', fontWeight: 'bold' }}>-</span>
+                    )}
+                  </div>
                 </td>
               </tr>
-            </tbody>
-          </table>
-        </div>
-      </main>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

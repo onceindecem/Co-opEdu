@@ -14,6 +14,9 @@
   font-family: 'Inter', sans-serif;
 }
 
+/* ------------------------------ */
+/* 🏢 Company Navbar Style       */
+/* ------------------------------ */
 .company-navbar {
   background: var(--white);
   padding: 0 10%;
@@ -21,44 +24,75 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   position: sticky;
   top: 0;
-  z-index: 100;
-  border-bottom: 2px solid var(--company-orange-light);
+  z-index: 1000;
+  border-bottom: 1px solid var(--border);
 }
 
 .nav-brand { 
-  font-size: 1.25rem; 
+  font-size: 22px; 
   font-weight: 800; 
-  color: var(--company-orange); 
+  color: var(--text-dark); 
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
 }
 
-.nav-menu { display: flex; gap: 30px; align-items: center; }
+.nav-menu { 
+  display: flex; 
+  gap: 10px; 
+  align-items: center; 
+}
 
 .nav-item { 
   text-decoration: none; 
   color: var(--text-muted); 
-  font-weight: 600; 
-  font-size: 0.95rem; 
-  transition: 0.3s; 
+  padding: 10px 16px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500; 
+  transition: all 0.2s ease; 
 }
 
 .nav-item:hover, .nav-item.active { 
+  background: var(--company-orange-light);
   color: var(--company-orange); 
 }
 
 .btn-logout { 
-  background: #fee2e2; 
-  color: #991b1b; 
-  border: none; 
-  padding: 8px 16px; 
-  border-radius: 8px; 
+  background: none; 
+  border: none;
+  color: var(--text-muted); 
+  padding: 10px 16px; 
+  border-radius: 12px; 
+  display: flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer; 
-  font-weight: 600; 
-  transition: 0.2s;
+  font-weight: 500; 
+  transition: all 0.2s ease;
 }
-.btn-logout:hover { background: #fecaca; }
+
+.btn-logout:hover { 
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+/* Mobile Responsive สำหรับ Navbar */
+@media (max-width: 768px) {
+  .company-navbar { padding: 0 5%; }
+  .nav-item span { display: none; }
+  .nav-menu { gap: 5px; }
+}
+
+/* ------------------------------ */
+/* Main Content & Components      */
+/* ------------------------------ */
 
 .company-main { padding: 40px 10%; }
 
@@ -135,6 +169,7 @@
   background: var(--company-orange-hover); 
   transform: translateY(-1px);
 }
+
 .btn-edit-outline {
   background: transparent;
   color: var(--company-orange);

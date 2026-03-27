@@ -24,10 +24,9 @@ export default function LoginPage() {
         
         <form onSubmit={handleCustomLogin}>
           <div className="input-field">
-            <label>อีเมลนักศึกษา / บุคลากร</label>
+            <label>อีเมล</label>
             <input 
               type="email" 
-              placeholder="name@kmitl.ac.th" 
               onChange={(e) => setEmail(e.target.value)} 
               required 
             />
@@ -36,7 +35,6 @@ export default function LoginPage() {
             <label>รหัสผ่าน</label>
             <input 
               type="password" 
-              placeholder="••••••••" 
               onChange={(e) => setPassword(e.target.value)} 
               required 
             />

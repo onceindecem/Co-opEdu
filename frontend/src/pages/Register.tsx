@@ -18,26 +18,26 @@ export default function RegisterPage() {
                     <div className="input-row">
                         <div className="input-group">
                             <label>ชื่อ (First Name)</label>
-                            <input type="text" placeholder="สมชาย" required />
+                            <input type="text" placeholder="กรุณากรอกชื่อ" required />
                         </div>
                         <div className="input-group">
                             <label>นามสกุล (Last Name)</label>
-                            <input type="text" placeholder="สายชล" required />
+                            <input type="text" placeholder="กรุณากรอกนามสกุล" required />
                         </div>
                     </div>
 
                     <div className="input-row">
                         <div className="input-group">
                             <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <Phone size={14} /> เบอร์โทรศัพท์ส่วนตัว
+                                <Phone size={14} /> เบอร์โทรศัพท์ส่วนตัว (Tel.)
                             </label>
-                            <input type="tel" placeholder="081-234-5678" required />
+                            <input type="tel" placeholder="กรุณากรอกเบอร์โทรติดต่อ" required />
                         </div>
                         <div className="input-group">
                             <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                 <Briefcase size={14} /> ตำแหน่ง (Position)
                             </label>
-                            <input type="text" placeholder="HR Manager" required />
+                            <input type="text" placeholder="กรุณากรอกตำแหน่งของคุณ" required />
                         </div>
                     </div>
 
@@ -46,18 +46,18 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="input-group span-full">
-                        <label>อีเมล (ใช้สำหรับ Login)</label>
-                        <input type="email" placeholder="hr@company.com" required />
+                        <label>อีเมล (Email)</label>
+                        <input type="email"  required />
                     </div>
 
                     <div className="input-row">
                         <div className="input-group">
-                            <label>รหัสผ่าน</label>
-                            <input type="password" placeholder="••••••••" required />
+                            <label>รหัสผ่าน (Password)</label>
+                            <input type="password"  required />
                         </div>
                         <div className="input-group">
-                            <label>ยืนยันรหัสผ่าน</label>
-                            <input type="password" placeholder="••••••••" required />
+                            <label>ยืนยันรหัสผ่าน (Confirm Password)</label>
+                            <input type="password"  required />
                         </div>
                     </div>
 
@@ -87,13 +87,13 @@ export default function RegisterPage() {
                     <div className="input-row">
                         <div className="input-group">
                             <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <Mail size={16} /> อีเมลบริษัท (กลาง)
+                                <Mail size={16} /> อีเมลบริษัท (Email company)
                             </label>
                             <input type="email" placeholder="contact@company.com" required />
                         </div>
                         <div className="input-group">
                             <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <Phone size={16} /> เบอร์โทรบริษัท
+                                <Phone size={16} /> เบอร์โทรบริษัท (Tel. Company)
                             </label>
                             <input type="tel" placeholder="02-123-4567" required />
                         </div>

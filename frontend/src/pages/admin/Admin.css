@@ -1,0 +1,183 @@
+.admin-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f8fafc; /* พื้นหลังสีเทาอ่อนแบบ Advisor */
+  font-family: 'Inter', sans-serif;
+}
+
+/* Sidebar Styling (ถอดแบบมาจาก Advisor) */
+.admin-sidebar {
+  width: 280px; /* ขยายกว้างขึ้นเป็น 280px */
+  background: #0f172a;
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  z-index: 1000;
+}
+
+.admin-logo {
+  padding: 30px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid #1e293b;
+}
+
+.admin-logo-icon {
+  background: #f97316; /* กล่องโลโก้สีส้ม */
+  color: white;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 1.2rem;
+}
+
+.admin-logo-text .brand { font-weight: 800; font-size: 1.1rem; display: block; }
+.admin-logo-text .role { font-size: 0.75rem; color: #94a3b8; font-weight: 600; }
+
+.admin-nav {
+  flex: 1;
+  padding: 20px 12px;
+}
+
+/* เมนูไอเทม */
+.admin-container .admin-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  color: #94a3b8;
+  text-decoration: none;
+  border-radius: 12px; /* มุมโค้ง 12px */
+  margin-bottom: 8px;
+  font-weight: 600;
+  transition: 0.2s;
+  background: transparent;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+}
+
+.admin-container .admin-nav-item:hover {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+/* สี Active เป็นสีส้ม */
+.admin-container .admin-nav-item.active {
+  background: #f97316;
+  color: white;
+}
+
+.admin-footer {
+  padding: 20px;
+  border-top: 1px solid #1e293b;
+}
+
+.admin-container .btn-logout-sidebar {
+  width: 100%;
+  padding: 10px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.admin-container .btn-logout-sidebar:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* Main Content Area */
+.admin-main {
+  flex: 1;
+  margin-left: 280px; /* ขยับตาม Sidebar */
+  padding: 40px;
+}
+
+.admin-header-flex {
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.admin-header-flex h2 {
+  font-size: 1.5rem;
+  color: #0f172a;
+  margin: 0;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Card สไตล์ Advisor */
+.admin-card {
+  background: white;
+  padding: 24px;
+  border-radius: 16px; /* โค้ง 16px */
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+/* Table สไตล์ Advisor */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: 15px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.admin-table td {
+  padding: 20px 15px; /* ช่องไฟกว้างขึ้น */
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+/* Badges */
+.admin-container .badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.admin-container .badge.active { background: #dcfce7; color: #166534; }
+.admin-container .badge.pending { background: #fef3c7; color: #92400e; }
+.admin-container .badge.banned { background: #fee2e2; color: #991b1b; }
+
+/* Action Buttons */
+.admin-container .action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+.admin-container .action-btn.approve { color: #10b981; }
+.admin-container .action-btn.approve:hover { transform: scale(1.15); }
+.admin-container .action-btn.ban { color: #ef4444; }
+.admin-container .action-btn.ban:hover { transform: scale(1.15); }
