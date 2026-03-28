@@ -1,3 +1,4 @@
+import { useState } from 'react'; 
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Briefcase, FileText, User, LogOut } from 'lucide-react';
 import './StudentLayout.css';
@@ -5,17 +6,47 @@ import './StudentLayout.css';
 export default function StudentLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const isActive = (path: string) => location.pathname.includes(path) ? 'active' : '';
 
-  const handleLogout = () => {
-    if (window.confirm("คุณต้องการออกจากระบบใช่หรือไม่?")) {
-      navigate('/login');
-    }
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutModal(false);
+    navigate('/login');
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutModal(false);
   };
 
   return (
     <div className="student-app">
+      
+      {showLogoutModal && (
+        <div className="logout-modal-overlay">
+          <div className="logout-modal-content">
+            <div className="logout-modal-icon">
+              <LogOut size={40} color="#ef4444" />
+            </div>
+            <h2>ออกจากระบบ</h2>
+            <p>คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบบัญชีของคุณ?</p>
+            <div className="logout-modal-actions">
+              <button onClick={cancelLogout} className="btn-cancel-logout">
+                ยกเลิก
+              </button>
+              <button onClick={confirmLogout} className="btn-confirm-logout">
+                ยืนยันการออก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <nav className="student-nav">
         <div className="nav-container">
           <Link to="/student/projects" className="nav-logo">
@@ -40,11 +71,10 @@ export default function StudentLayout() {
               <span className="user-name">John Doe</span>
             </Link>
             
-            {/* 4. ใส่ onClick ให้กับปุ่ม LogOut */}
             <button 
               className="btn-logout" 
               title="ออกจากระบบ" 
-              onClick={handleLogout}
+              onClick={handleLogoutClick}
             >
               <LogOut size={18} />
             </button>

@@ -18,11 +18,11 @@ export default function RegisterPage() {
                     <div className="input-row">
                         <div className="input-group">
                             <label>ชื่อ (First Name)</label>
-                            <input type="text" placeholder="กรุณากรอกชื่อ" required />
+                            <input type="text" required />
                         </div>
                         <div className="input-group">
                             <label>นามสกุล (Last Name)</label>
-                            <input type="text" placeholder="กรุณากรอกนามสกุล" required />
+                            <input type="text"  required />
                         </div>
                     </div>
 
@@ -31,13 +31,13 @@ export default function RegisterPage() {
                             <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                 <Phone size={14} /> เบอร์โทรศัพท์ส่วนตัว (Tel.)
                             </label>
-                            <input type="tel" placeholder="กรุณากรอกเบอร์โทรติดต่อ" required />
+                            <input type="tel" required />
                         </div>
                         <div className="input-group">
                             <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                 <Briefcase size={14} /> ตำแหน่ง (Position)
                             </label>
-                            <input type="text" placeholder="กรุณากรอกตำแหน่งของคุณ" required />
+                            <input type="text"  required />
                         </div>
                     </div>
 
@@ -67,7 +67,8 @@ export default function RegisterPage() {
 
                     <div className="input-group span-full">
                         <label>ชื่อบริษัท (ภาษาไทย)</label>
-                        <input type="text" placeholder="บริษัท เอบีซี จำกัด" required />
+                        <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '0.75rem' }}>(Company Name in Thai)</span>
+                        <input type="text"  required />
                     </div>
 
                     <div className="input-group span-full">
@@ -75,27 +76,28 @@ export default function RegisterPage() {
                             ชื่อบริษัท (ภาษาอังกฤษ)
                             <span className="optional-text"> (ถ้ามี)</span>
                         </label>
-                        <input type="text" maxLength={100} placeholder="ABC Co., Ltd." />
+                         <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '0.75rem' }}>(Company Name in English)</span>
+                        <input type="text" maxLength={100} />
                     </div>
 
                     <div className="input-group span-full">
                         <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <MapPin size={16} /> ที่อยู่บริษัท
+                            <MapPin size={16} /> ที่อยู่บริษัท (Company address)
                         </label>
-                        <textarea rows={3} placeholder="เลขที่, ถนน, แขวง/ตำบล, เขต/อำเภอ..." required></textarea>
+                        <textarea rows={3}  required></textarea>
                     </div>
                     <div className="input-row">
                         <div className="input-group">
                             <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <Mail size={16} /> อีเมลบริษัท (Email company)
+                                <Mail size={16} /> อีเมลบริษัท (Company Email)
                             </label>
-                            <input type="email" placeholder="contact@company.com" required />
+                            <input type="email" required />
                         </div>
                         <div className="input-group">
                             <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                <Phone size={16} /> เบอร์โทรบริษัท (Tel. Company)
+                                <Phone size={16} /> เบอร์โทรบริษัท (Company Tel.)
                             </label>
-                            <input type="tel" placeholder="02-123-4567" required />
+                            <input type="tel"  required />
                         </div>
                     </div>
 

@@ -16,14 +16,14 @@ export default function MyProjects() {
       title: 'Web Application for Inventory Management', 
       company: 'ABC Tech Solutions', 
       appliedCount: 3, 
-      status: 'OPEN' // เปิดรับสมัคร
+      status: 'OPEN' 
     },
     { 
       id: 102, 
       title: 'Data Analysis Dashboard', 
       company: 'Global Data Co.', 
       appliedCount: 5, 
-      status: 'CLOSED' // ปิดรับสมัคร (เปลี่ยนจาก FILLED)
+      status: 'CLOSED'
     }
   ]);
 
@@ -38,7 +38,6 @@ export default function MyProjects() {
         {myProjects.map((proj) => (
           <div key={proj.id} className="advisor-card project-item-card">
             <div className="card-top">
-              {/* ปรับแก้ข้อความ Status ให้สอดคล้องกับการไม่จำกัดจำนวนคน */}
               <span className={`status-tag ${proj.status.toLowerCase()}`}>
                 {proj.status === 'OPEN' ? '🟢 เปิดรับสมัคร' : '🔴 ปิดรับสมัคร'}
               </span>
@@ -53,7 +52,6 @@ export default function MyProjects() {
               <div className="stat-box">
                 <span className="stat-label">นักศึกษาที่สมัคร</span>
                 <span className="stat-value">
-                  {/* เปลี่ยนให้แสดงแค่จำนวนคนสมัคร และเติมคำว่า "คน" */}
                   <Users size={18} /> {proj.appliedCount} คน
                 </span>
               </div>
@@ -66,7 +64,6 @@ export default function MyProjects() {
             </div>
 
             <div className="card-actions">
-              {/* ส่งไปหน้าจัดการนักศึกษา โดยส่ง ID โครงการไปด้วย */}
               <Link to={`/advisor/projects/${proj.id}/students`} className="btn-manage-students">
                 จัดการรายชื่อนักศึกษา <ArrowRight size={16} />
               </Link>

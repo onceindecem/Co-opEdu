@@ -7,12 +7,10 @@ export default function AdminLayout() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // ใส่ Logic การเคลียร์ Token ตรงนี้ถ้ามี
     navigate('/login');
   };
 
   return (
-    // ใส่ครอบชั้นนอกสุดด้วย <div className="admin-container"> แบบนี้ครับ
 <div className="admin-container">
   
   <aside className="admin-sidebar">
@@ -42,7 +40,6 @@ export default function AdminLayout() {
     </div>
   </aside>
 
-      {/* Main Content */}
       <main className="admin-main">
         <header className="admin-topbar">
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -52,7 +49,6 @@ export default function AdminLayout() {
             </div>
         </header>
 
-        {/* จุดที่ React Router จะดึง Component ลูกๆ (UserManagement หรือ AuditLogs) มาแสดง */}
         <div className="admin-content">
           <Outlet /> 
         </div>

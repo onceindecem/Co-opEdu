@@ -12,7 +12,6 @@ import './Advisor.css';
 export default function AdvisorLayout() {
   const location = useLocation();
 
-  // เมนูตามโครงสร้างที่คุณวางไว้
   const menuItems = [
     { 
       path: '/advisor/projects/available', 
@@ -33,13 +32,12 @@ export default function AdvisorLayout() {
 
   return (
     <div className="advisor-layout">
-      {/* --- SIDEBAR NAVBAR --- */}
       <aside className="advisor-sidebar">
         <div className="sidebar-header">
-          <div className="logo-box">SC</div>
+          <div className="logo-box">CS</div>
           <div className="logo-text">
             <span className="brand">CO-OP</span>
-            <span className="role">EDUCATION</span>
+            <span className="role"> EDUCATION</span>
           </div>
         </div>
 
@@ -70,10 +68,9 @@ export default function AdvisorLayout() {
         </div>
       </aside>
 
-      {/* --- MAIN CONTENT AREA --- */}
       <main className="advisor-main-content">
         <div className="content-container">
-          <Outlet /> {/* หน้าลูกอื่นๆ จะมาแสดงตรงนี้ */}
+          <Outlet />
         </div>
       </main>
     </div>

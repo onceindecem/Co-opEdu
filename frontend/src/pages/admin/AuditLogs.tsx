@@ -2,7 +2,6 @@ import { Activity, Search, ShieldCheck, Clock } from 'lucide-react';
 import './Admin.css';
 
 export default function AuditLogs() {
-  // ข้อมูล Log ที่ตอบโจทย์ Security Measures (Mapping กับ OWASP)
   const logs = [
     {
       id: 1,
@@ -38,7 +37,6 @@ export default function AuditLogs() {
     }
   ];
 
-  // ฟังก์ชันช่วยกำหนดสีของ Badge Action
   const getActionColor = (type: string) => {
     switch(type) {
       case 'success': return { bg: '#dcfce7', color: '#166534' };
@@ -51,7 +49,6 @@ export default function AuditLogs() {
   return (
     <div className="admin-card">
       
-      {/* Header */}
       <div className="admin-header-flex" style={{ marginBottom: '20px', alignItems: 'center' }}>
         <div>
           <h2 style={{ margin: 0, color: '#0f172a', fontSize: '1.5rem', fontWeight: 800 }}>
@@ -63,7 +60,6 @@ export default function AuditLogs() {
         </div>
       </div>
 
-      {/* Search */}
       <div style={{ marginBottom: '20px' }}>
         <div style={{ position: 'relative', width: '350px' }}>
           <Search size={18} style={{ position: 'absolute', left: '12px', top: '10px', color: '#94a3b8' }} />
@@ -75,7 +71,6 @@ export default function AuditLogs() {
         </div>
       </div>
 
-      {/* Table (Read-only) */}
       <table className="admin-table">
         <thead>
           <tr>

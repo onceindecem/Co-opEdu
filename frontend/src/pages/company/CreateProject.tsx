@@ -8,7 +8,6 @@ export default function CreateProject() {
 
   return (
     <div className="company-page-container">
-      {/* Header ของหน้า Create Project */}
       <div className="page-header" style={{ maxWidth: '900px', margin: '0 auto 30px' }}>
         <button 
           onClick={() => navigate(-1)} 

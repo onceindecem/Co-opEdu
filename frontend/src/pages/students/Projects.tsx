@@ -1,7 +1,9 @@
 import './Projects.css';
 import { Search, MapPin, Briefcase } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function StudentProjects() {
+  const navigate = useNavigate();
   return (
     <div className="projects-container">
       <div className="search-section">
@@ -14,7 +16,6 @@ export default function StudentProjects() {
 
       <div className="project-grid">
         <div className="project-card">
-          <div className="status-badge">Approved</div>
           <h3>TTB tech & data Internship 2026</h3>
           <p className='position'>UX/UI</p>
           <p className="company">บริษัท เอบีซี จำกัด</p>
@@ -24,7 +25,7 @@ export default function StudentProjects() {
           <div className="info-row">
             <Briefcase size={16} /> <span>2 คน</span>
           </div>
-          <button className="btn-view" onClick={() => window.location.href='/student/projects/1'}>
+          <button className="btn-view" onClick={() => navigate('/student/projects/1')}>
             ดูรายละเอียดและสมัคร
           </button>
         </div>

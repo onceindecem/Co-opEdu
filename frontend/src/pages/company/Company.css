@@ -14,9 +14,6 @@
   font-family: 'Inter', sans-serif;
 }
 
-/* ------------------------------ */
-/* 🏢 Company Navbar Style       */
-/* ------------------------------ */
 .company-navbar {
   background: var(--white);
   padding: 0 10%;
@@ -83,16 +80,12 @@
   background: #fef2f2;
 }
 
-/* Mobile Responsive สำหรับ Navbar */
 @media (max-width: 768px) {
   .company-navbar { padding: 0 5%; }
   .nav-item span { display: none; }
   .nav-menu { gap: 5px; }
 }
 
-/* ------------------------------ */
-/* Main Content & Components      */
-/* ------------------------------ */
 
 .company-main { padding: 40px 10%; }
 

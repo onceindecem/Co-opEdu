@@ -6,7 +6,6 @@ export default function UserManagement() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // --- States สำหรับ Modal ต่างๆ ---
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; userId: number | null; userName: string }>({
     isOpen: false, userId: null, userName: ''
   });
@@ -19,7 +18,7 @@ export default function UserManagement() {
     isOpen: false, userId: null, userName: ''
   });
 
-  const [newPassword, setNewPassword] = useState(''); // เก็บค่ารหัสผ่านใหม่ใน Modal Reset
+  const [newPassword, setNewPassword] = useState(''); 
 
   const [userList, setUserList] = useState([
     { id: 1, name: 'สมชาย ใจดี', email: 'somchai@student.ac.th', role: 'STUDENT', provider: 'Local', date: '2026-03-25' },
@@ -27,7 +26,6 @@ export default function UserManagement() {
     { id: 3, name: 'สมหญิง รักเรียน', email: 'advisor.a@university.ac.th', role: 'ADVISOR', provider: 'Local', date: '2026-03-15' },
   ]);
 
-  // --- Logic Functions ---
   const confirmDelete = () => {
     if (deleteConfirm.userId) {
       setUserList(userList.filter(user => user.id !== deleteConfirm.userId));
@@ -59,7 +57,6 @@ export default function UserManagement() {
 
   return (
     <div className="admin-card" style={{ position: 'relative' }}>
-      {/* Header */}
       <div className="admin-header-flex" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ margin: 0, fontWeight: 800 }}><Users size={24} style={{ marginRight: '8px' }} /> User Management</h2>
@@ -70,7 +67,6 @@ export default function UserManagement() {
         </button>
       </div>
 
-      {/* Search */}
       <div style={{ marginBottom: '20px' }}>
         <input 
           type="text" 
@@ -81,7 +77,6 @@ export default function UserManagement() {
         />
       </div>
 
-      {/* Table */}
       <table className="admin-table">
         <thead>
           <tr>
@@ -132,7 +127,6 @@ export default function UserManagement() {
         </tbody>
       </table>
 
-      {/* --- 1. Modal ยืนยันการลบ --- */}
       {deleteConfirm.isOpen && (
         <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'white', padding: '32px', borderRadius: '20px', width: '400px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
@@ -151,7 +145,6 @@ export default function UserManagement() {
         </div>
       )}
 
-      {/* --- 2. Modal ยืนยันเปลี่ยน Role --- */}
       {roleConfirm.isOpen && (
         <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'white', padding: '32px', borderRadius: '20px', width: '420px', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
@@ -171,7 +164,6 @@ export default function UserManagement() {
         </div>
       )}
 
-      {/* --- 3. Modal Reset Password (ใหม่!) --- */}
       {resetPwdConfirm.isOpen && (
         <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'white', padding: '32px', borderRadius: '20px', width: '400px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
@@ -218,7 +210,6 @@ export default function UserManagement() {
         </div>
       )}
 
-      {/* --- 4. Modal เพิ่ม User ใหม่ --- */}
       {showAddModal && (
         <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
           <div style={{ background: 'white', padding: '30px', borderRadius: '20px', width: '420px', position: 'relative', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>

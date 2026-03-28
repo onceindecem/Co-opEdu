@@ -33,9 +33,8 @@ export default function CompanyLayout() {
         </div>
       </nav>
 
-      {/* Main Content Area */}
       <main className="company-main">
-        <Outlet /> {/* เนื้อหาของ CreateProject, CompanyProjects จะมาโผล่ตรงนี้ */}
+        <Outlet /> 
       </main>
     </div>
   );

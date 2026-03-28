@@ -1,59 +1,249 @@
+.apps-container {
+  padding: 24px;
+  max-width: 850px;
+  margin: 0 auto;
+}
+
+.apps-header {
+  margin-bottom: 30px;
+}
+
+.apps-header h1 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #431407;
+  margin: 0 0 8px 0;
+}
+
+.apps-header p {
+  color: #475569;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.apps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
 .app-item-card {
   background: white;
-  border-radius: 20px;
-  padding: 30px 20px 20px 20px; /* เพิ่ม Padding ด้านบนเล็กน้อยเพื่อไม่ให้เนื้อหาเบียดกับปุ่ม */
-  margin-bottom: 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  padding: 20px 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
   border: 1px solid #f1f5f9;
-  position: relative; /* 💡 สำคัญมาก: เพื่อให้ปุ่มถังขยะอ้างอิงตำแหน่งกับ Card นี้ */
   transition: all 0.2s ease;
 }
 
 .app-item-card:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
 
-.status-tag {
-  padding: 6px 14px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
+.card-top-row {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 6px;
+  margin-bottom: 8px;
 }
 
-/* --- ส่วนที่แก้ไข: ปุ่มถังขยะมุมขวาบน --- */
-.btn-delete {
-  background: #f8fafc; /* พื้นหลังสีเทาอ่อนมาก */
-  border: 1px solid #e2e8f0;
-  color: #94a3b8;
+.card-top-row h3 {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #431407;
+  margin: 0;
+}
+
+.btn-icon-delete {
+  background: none;
+  border: none;
+  color: #ef4444;
   cursor: pointer;
-  
-  /* จัดตำแหน่งไปมุมขวาบน */
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  
-  padding: 6px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 4px;
   transition: all 0.2s ease;
 }
 
-.btn-delete:hover {
-  background: #fee2e2; /* พื้นแดงอ่อนเมื่อชี้ */
-  color: #ef4444;    /* ไอคอนแดง */
-  border-color: #fecaca;
+.btn-icon-delete:hover {
+  color: #dc2626;
   transform: scale(1.1);
 }
 
-/* สีสถานะคงเดิม */
-.status-tag.pending { background: #fef9c3; color: #a16207; }
-.status-tag.approved { background: #dcfce7; color: #15803d; }
-.status-tag.rejected { background: #fee2e2; color: #b91c1c; }
+.company-text {
+  color: #f97316;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+}
+
+.card-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.app-date {
+  color: #1e293b;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* --- ป้ายสถานะ --- */
+.app-status-zone {
+  display: flex;
+  align-items: center;
+}
+
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.status-tag.pending {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.status-tag.approved {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.status-tag.rejected {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+/* --- สถานะเมื่อยังไม่มีข้อมูล --- */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 16px;
+  border: 2px dashed #cbd5e1;
+  margin-top: 20px;
+}
+
+.btn-go-find {
+  background: #f97316;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 10px;
+}
+
+.btn-go-find:hover {
+  background: #ea580c;
+  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+  transform: translateY(-2px);
+}
+
+/* --- Modal Overlay --- */
+.delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+
+.delete-modal-content {
+  background: white;
+  width: 90%;
+  max-width: 400px;
+  padding: 32px 24px;
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  animation: slideUp 0.3s ease;
+}
+
+.delete-modal-icon {
+  background: #fef2f2;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px auto;
+}
+
+.delete-modal-content h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 10px 0;
+}
+
+.delete-modal-content p {
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0 0 24px 0;
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-cancel-modal,
+.btn-confirm-modal {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-cancel-modal {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.btn-cancel-modal:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn-confirm-modal {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
+}
+
+.btn-confirm-modal:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(239, 68, 68, 0.3);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

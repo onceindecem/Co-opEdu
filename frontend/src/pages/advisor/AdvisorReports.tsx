@@ -2,10 +2,8 @@ import React, { useState } from 'react';
 import { Building2, Activity, Clock, Eye, X, FileText } from 'lucide-react';
 
 export default function AdvisorReports() {
-  // เพิ่ม State สำหรับจัดการ Modal เปิด/ปิด และเก็บข้อมูลที่ถูกเลือก
   const [selectedReport, setSelectedReport] = useState<any>(null);
 
-  // อัปเดต Mock Data ให้มีฟิลด์ title และ detail เพื่อจำลองข้อมูลที่เด็กส่งมา
   const reportData = [
     {
       id: 1,
@@ -125,7 +123,6 @@ export default function AdvisorReports() {
                     </span>
                   </td>
 
-                  {/* คอลัมน์ปุ่มดูรายละเอียด */}
                   <td style={{ textAlign: 'center' }}>
                     <button 
                       onClick={() => handleOpenModal(item)}
@@ -157,7 +154,6 @@ export default function AdvisorReports() {
         </div>
       </div>
 
-      {/* Modal สำหรับแสดงรายละเอียด */}
       {selectedReport && (
         <div className="modal-overlay" style={{ 
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
