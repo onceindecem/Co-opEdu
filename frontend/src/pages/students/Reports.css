@@ -1,0 +1,353 @@
+/* Container & Header */
+.reports-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.reports-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.reports-header h1 {
+  font-size: 1.5rem;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* Timeline Core */
+.timeline {
+  margin-top: 30px;
+  border-left: 2px solid #fed7aa;
+  padding-left: 20px;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -27px;
+  top: 5px;
+  width: 12px;
+  height: 12px;
+  background: #f97316;
+  border-radius: 50%;
+  border: 3px solid white;
+}
+
+/* Timeline Content & Texts */
+.timeline-content {
+  background: white;
+  padding: 15px 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+.timeline-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.timeline-date {
+  font-size: 12px;
+  color: #f97316;
+  font-weight: 700;
+}
+
+.timeline-project {
+  color: #f97316;
+  font-weight: bold;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeline-title {
+  color: #431407;
+  margin-bottom: 8px;
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeline-detail {
+  color: #475569;
+  line-height: 1.5;
+  margin: 10px 0 16px 0;
+}
+
+/* Action Buttons (Edit/Delete in Timeline) */
+.timeline-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-icon-edit {
+  background: none;
+  border: none;
+  color: #f59e0b;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.btn-icon-delete {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 4px;
+}
+
+/* Main Buttons */
+.btn-add-report {
+  background: #f97316;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.btn-submit-report {
+  width: 100%;
+  padding: 12px;
+  background: #f97316;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-top: 10px;
+}
+
+.btn-submit-report:hover { 
+  background: #ea580c; 
+}
+
+/* Modal Overlay & Content */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 { 
+  font-size: 1.25rem; 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  color: #1e293b; 
+}
+
+.btn-close { 
+  background: none; 
+  border: none; 
+  cursor: pointer; 
+  color: #64748b; 
+}
+
+/* Form Styles */
+.form-group { 
+  margin-bottom: 15px; 
+}
+
+.form-group label { 
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem; 
+  font-weight: 700; 
+  color: #475569; 
+  margin-bottom: 6px; 
+}
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.label-highlight {
+  color: #f97316 !important;
+}
+
+/* Status Pills (แทนการใช้ JS Style Object) */
+.status-pill {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.status-pass {
+  border: 1px solid #22c55e;
+  background-color: #f0fdf4;
+  color: #15803d;
+}
+
+.status-fail {
+  border: 1px solid #ef4444;
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+.status-pending {
+  border: 1px solid #f97316;
+  background-color: #fff7ed;
+  color: #ea580c;
+}
+
+/* Grid Layout for Future Expansion */
+.status-grid-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  background: #f8fafc;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+/* --- Delete Confirmation Modal --- */
+.delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease;
+}
+
+.delete-modal-content {
+  background: white;
+  width: 90%;
+  max-width: 400px;
+  padding: 32px 24px;
+  border-radius: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  animation: slideUp 0.3s ease;
+}
+
+.delete-modal-icon {
+  background: #fef2f2;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px auto;
+}
+
+.delete-modal-content h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 10px 0;
+}
+
+.delete-modal-content p {
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0 0 24px 0;
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-cancel-modal,
+.btn-confirm-modal {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-cancel-modal {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.btn-cancel-modal:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn-confirm-modal {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
+}
+
+.btn-confirm-modal:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(239, 68, 68, 0.3);
+}
+
+/* Animations (เผื่อไฟล์เก่ายังไม่มี) */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
