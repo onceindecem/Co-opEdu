@@ -1,158 +1,100 @@
-import  { useState } from 'react';
-import { Building2, Activity, Clock, Eye, X, FileText } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Search,
+  CheckCircle,
+  Info,
+  Building2,
+  Calendar,
+  ChevronRight
+} from 'lucide-react';
 import './Advisor.css';
 
-export default function AdvisorReports() {
-  const [selectedReport, setSelectedReport] = useState<any>(null);
-
-  const reportData = [
+export default function AvailableProjects() {
+  const navigate = useNavigate();
+  const [pendingProjects] = useState([
     {
       id: 1,
-      project: "AI Chatbot for Customer Service",
-      company: "TechNova Co.",
-      position: "Frontend Developer",
-      student: "นายสมชาย ใจดี",
-      studentId: "66050001",
-      currentStatus: "นัดวันสัมภาษณ์แล้ว", 
-      interviewDate: "25/04/2026",
-      lastUpdate: "24/03/2026",
-      reportTitle: "ส่ง Portfolio และได้รับการติดต่อกลับ",
-      reportDetail: "ทาง HR ของ TechNova ติดต่อมาเพื่อนัดวันสัมภาษณ์ทางออนไลน์ผ่าน Google Meet ครับ ผมได้เตรียมตัวและส่งเอกสารเพิ่มเติมไปให้แล้ว",
+      title: 'AI Chatbot for Customer Service',
+      company: 'Tech Innovate Co., Ltd.',
+      date: '25 มี.ค. 2569',
+      studentsNeeded: 2
     },
     {
       id: 2,
-      project: "Inventory Management System",
-      company: "Global Logistics",
-      position: "Backend Developer",
-      student: "นางสาววิภาดา เรียนดี",
-      studentId: "66050015",
-      currentStatus: "ส่งอีเมลแล้วรอการตอบกลับ", 
-      interviewDate: "",
-      lastUpdate: "20/03/2026",
-      reportTitle: "ส่ง Resume ไปยังอีเมลบริษัท",
-      reportDetail: "หนูได้ทำการแนบ Resume และ Transcript ส่งไปยังอีเมล hr@globallogistics.com เรียบร้อยแล้วค่ะ ตอนนี้กำลังรอการตอบกลับเพื่อทำแบบทดสอบ",
+      title: 'Mobile Banking App Redesign',
+      company: 'Finance Plus',
+      date: '24 มี.ค. 2569',
+      studentsNeeded: 1
     },
-    {
-      id: 3,
-      project: "Data Analytics Dashboard",
-      company: "DataCorp",
-      position: "Data Analyst",
-      student: "นายมานะ อดทน",
-      studentId: "66050099",
-      currentStatus: "ผ่านการสัมภาษณ์", 
-      interviewDate: "",
-      lastUpdate: "22/03/2026",
-      reportTitle: "ผลการสัมภาษณ์รอบสุดท้าย",
-      reportDetail: "พี่ๆ ในทีม Data แจ้งว่าผ่านการสัมภาษณ์แล้วครับ จะเริ่มงานในวันที่ 1 พฤษภาคมนี้ โดยจะมีการปฐมนิเทศก่อนเริ่มงาน 1 วันครับ",
-    }
-  ];
-
-  const getStatusClass = (status: string) => {
-    if (status === 'ผ่านการสัมภาษณ์') return 'status-pass';
-    if (status === 'ไม่ผ่านการสัมภาษณ์') return 'status-fail';
-    return 'status-process';
-  };
-
-  const handleCloseModal = () => {
-    setSelectedReport(null);
-  };
+  ]);
 
   return (
-    <div className="advisor-page text-left">
+    <div className="advisor-page">
       <div className="page-header-section">
-        <h2 className="page-title">ติดตามสถานะการสมัครงาน</h2>
-        <p className="page-subtitle">ตรวจสอบความคืบหน้าล่าสุดและรายละเอียดบันทึกของนักศึกษา</p>
+        <h2 className="page-title">โครงการที่รอการอนุมัติ</h2>
+        <p className="page-subtitle">ตรวจสอบรายละเอียดโครงการและเลือกรับเป็นอาจารย์ที่ปรึกษา</p>
       </div>
 
       <div className="advisor-card">
-        <div className="table-responsive">
-          <table className="advisor-table report-table">
-            <thead>
-              <tr>
-                <th>โครงการ / บริษัท</th>
-                <th>ชื่อนักศึกษา</th>
-                <th className="min-w-220"><Activity size={16} className="icon-inline" /> สถานะปัจจุบัน</th>
-                <th><Clock size={16} className="icon-inline" /> อัปเดตล่าสุด</th>
-                <th>รายละเอียด</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportData.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    <div className="project-info-mini">
-                      <div className="title-text-small">{item.project}</div>
-                      <div className="company-pos-text">
-                        <Building2 size={12} /> {item.company} • {item.position}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="std-info-small">
-                      <div className="std-name-text">{item.student}</div>
-                      <div className="std-id-text">ID: {item.studentId}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`status-badge-custom ${getStatusClass(item.currentStatus)}`}>
-                      {item.currentStatus === 'นัดวันสัมภาษณ์แล้ว' && item.interviewDate
-                        ? `${item.currentStatus} (${item.interviewDate})`
-                        : item.currentStatus}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="last-update-text">{item.lastUpdate}</span>
-                  </td>
-                  <td>
-                    <button className="btn-view-report" onClick={() => setSelectedReport(item)}>
-                      <Eye size={18} /> ดูบันทึก
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {selectedReport && (
-        <div className="modal-overlay">
-          <div className="modal-content-report">
-            <div className="modal-header-report">
-              <div>
-                <h2 className="modal-title-report">
-                  <FileText size={20} color="#3b82f6" /> รายละเอียดบันทึก
-                </h2>
-                <p className="modal-subtitle-report">
-                  อัปเดตเมื่อ: {selectedReport.lastUpdate}
-                </p>
-              </div>
-              <button className="btn-close-modal" onClick={handleCloseModal}>
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="modal-body-section">
-              <h4>หัวข้อบันทึก</h4>
-              <div className="report-box-title">{selectedReport.reportTitle}</div>
-            </div>
-
-            <div className="modal-body-section">
-              <h4>รายละเอียด</h4>
-              <div className="report-box-detail">{selectedReport.reportDetail}</div>
-            </div>
-
-            <div className="modal-body-section">
-              <h4>สถานะในขณะนั้น</h4>
-              <span className={`status-badge-custom ${getStatusClass(selectedReport.currentStatus)}`}>
-                {selectedReport.currentStatus === 'นัดวันสัมภาษณ์แล้ว' && selectedReport.interviewDate
-                  ? `${selectedReport.currentStatus} (${selectedReport.interviewDate})`
-                  : selectedReport.currentStatus}
-              </span>
-            </div>
+        <div className="table-actions">
+          <div className="search-wrapper">
+            <Search size={18} />
+            <input type="text" placeholder="ค้นหาชื่อโครงการ หรือ บริษัท..." />
           </div>
         </div>
-      )}
+
+        <table className="advisor-table">
+          <thead>
+            <tr>
+              <th>ชื่อโครงการ / ตำแหน่งงาน</th>
+              <th>บริษัท</th>
+              <th>วันที่ส่ง</th>
+              <th>จำนวนที่รับ</th>
+              <th style={{ textAlign: 'center' }}>การดำเนินการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pendingProjects.map((proj) => (
+              <tr key={proj.id}>
+                <td className="proj-title-cell">
+                  <div className="title-text">{proj.title}</div>
+                  {/* แก้ไขตรงนี้: รวมปุ่มให้เหลืออันเดียว และใส่ onClick พร้อมข้อความ */}
+                  <button
+                    className="btn-view-detail"
+                    onClick={() => navigate(`/advisor/projects/${proj.id}`)}
+                  >
+                    ดูรายละเอียด <ChevronRight size={14} />
+                  </button>
+                </td>
+                <td>
+                  <div className="company-info-cell">
+                    <Building2 size={16} /> {proj.company}
+                  </div>
+                </td>
+                <td>
+                  <div className="date-cell">
+                    <Calendar size={16} /> {proj.date}
+                  </div>
+                </td>
+                <td style={{ fontWeight: 700, color: 'var(--company-orange)' }}>
+                  {proj.studentsNeeded} คน
+                </td>
+                <td style={{ textAlign: 'center' }}>
+                  <button className="btn-approve-claim">
+                    <CheckCircle size={18} /> อนุมัติและรับดูแล
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="helper-note">
+        <Info size={16} />
+        <span>เมื่อกด <strong>"อนุมัติและรับดูแล"</strong> โครงการจะถูกเปลี่ยนสถานะเป็น APPROVED และคุณจะกลายเป็นอาจารย์ที่ปรึกษาทันที</span>
+      </div>
     </div>
   );
 }

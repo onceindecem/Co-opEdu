@@ -3,7 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Building2, MapPin, Users, Wrench, 
   UserCheck, Phone, Mail, FileText, CheckCircle, 
-  Briefcase, GraduationCap, Paperclip
+  Briefcase, GraduationCap, Paperclip, UserCircle, 
+  Contact 
 } from 'lucide-react';
 import './students/Projects.css';
 
@@ -20,6 +21,7 @@ export default function ProjectDetail() {
     currentRole = 'ADVISOR';
   }
 
+  // อัปเดต Mock Data ให้ตรงกับฟอร์ม CreateProject ใหม่
   const [project] = useState({
     id: 1,
     title: 'AI Chatbot for Customer Service',
@@ -30,11 +32,32 @@ export default function ProjectDetail() {
     jobDescription: '1. ออกแบบและพัฒนา Chatbot Flow\n2. เทรนโมเดล AI ด้วยข้อมูลของบริษัท\n3. เชื่อมต่อ API กับระบบฐานข้อมูลลูกค้า',
     skills: 'Python, TensorFlow, React, Node.js, Dialogflow',
     workLocation: '123 อาคารซอฟต์แวร์ ชั้น 5 เขตปทุมวัน กรุงเทพมหานคร 10330',
-    mentorName: 'คุณสมศักดิ์ นำพา',
-    mentorPosition: 'Senior AI Engineer',
-    mentorDepartment: 'Research and Development (R&D)',
-    mentorPhone: '0819997999',
-    mentorEmail: 'somsak@techinnovate.com',
+    
+    // 1. ข้อมูลพี่เลี้ยง (รองรับหลายคน)
+    mentors: [
+      { id: 1, name: 'คุณสมศักดิ์ นำพา', position: 'Senior AI Engineer', phone: '0819997999', email: 'somsak@techinnovate.com' },
+      { id: 2, name: 'คุณวิภาดา เรียนดี', position: 'Data Scientist', phone: '0821112222', email: 'wipada@techinnovate.com' }
+    ],
+
+    // 2. ข้อมูลผู้จัดการโครงการ
+    manager: {
+      name: 'คุณประเสริฐ ยอดเยี่ยม',
+      position: 'CTO',
+      department: 'IT & Engineering',
+      phone: '0834445555',
+      email: 'prasert@techinnovate.com'
+    },
+
+    // 3. ข้อมูลผู้ประสานงาน (ถ้ามี)
+    contactMethod: 'coordinator', // 'manager' | 'coordinator'
+    coordinator: {
+      name: 'คุณสมใจ บริการ',
+      position: 'HR Manager',
+      department: 'Human Resources',
+      phone: '0898887777',
+      email: 'hr@techinnovate.com'
+    },
+
     advisorName: 'รศ.ดร. ใจดี รักเรียน',
     advisorEmail: 'jaidee.ru@kmitl.ac.th',
     attachments: 'company_profile_2026.pdf'
@@ -77,9 +100,9 @@ export default function ProjectDetail() {
   };
 
   return (
-    <div className="project-detail-container">
+    <div className="project-detail-container text-left">
       
-      {/* 🟠 Popup ยืนยันการสมัครโครงการ */}
+      {/* Modal ยืนยันการสมัคร */}
       {isConfirmOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -106,14 +129,13 @@ export default function ProjectDetail() {
         </div>
       )}
 
-      {/* ปุ่มย้อนกลับ */}
       <button className="btn-back" onClick={() => navigate(-1)}>
         <ArrowLeft size={18} /> กลับ
       </button>
 
       <div className="detail-card">
         
-        {/* หัวข้อโครงการและบริษัท */}
+        {/* ส่วนหัวโครงการ */}
         <div className="detail-header-section">
           <h1>{project.title}</h1>
           <div className="company-badge">
@@ -122,7 +144,7 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        {/* ข้อมูลทั่วไปของโครงการ */}
+        {/* 1. รายละเอียดโครงการ */}
         <div className="detail-section">
           <h3><FileText size={20} color="#3b82f6" /> รายละเอียดโครงการ</h3>
           <div className="info-box">
@@ -160,32 +182,87 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        {/* ข้อมูลผู้จัดการโครงการ / พี่เลี้ยง */}
+        {/* 2. ข้อมูลพี่เลี้ยง (Mentors) */}
         <div className="detail-section">
-          <h3><UserCheck size={20} color="#f59e0b" /> ข้อมูลผู้จัดการโครงการ</h3>
-          <div className="mentor-grid">
+          <h3><UserCheck size={20} color="#f59e0b" /> ข้อมูลพนักงานที่ปรึกษา (พี่เลี้ยง)</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {project.mentors.map((mentor, index) => (
+              <div key={mentor.id} className="mentor-grid info-box">
+                <div style={{ gridColumn: '1 / -1', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px', marginBottom: '8px' }}>
+                  <strong style={{ color: '#475569' }}>พี่เลี้ยงคนที่ {index + 1}</strong>
+                </div>
+                <div>
+                  <strong className="info-label">ชื่อ-นามสกุล:</strong>
+                  <div className="info-value" style={{ fontWeight: 500 }}>{mentor.name}</div>
+                </div>
+                <div>
+                  <strong className="info-label">ตำแหน่ง:</strong>
+                  <div className="info-value">{mentor.position}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Phone size={16} color="#64748b"/> <span>{mentor.phone}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Mail size={16} color="#64748b"/> <span>{mentor.email}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 3. ข้อมูลผู้จัดการโครงการ */}
+        <div className="detail-section">
+          <h3><UserCircle size={20} color="#8b5cf6" /> ข้อมูลผู้จัดการโครงการ/หัวหน้าหน่วยงาน</h3>
+          <div className="mentor-grid info-box">
             <div>
               <strong className="info-label">ชื่อ-นามสกุล:</strong>
-              <div className="info-value" style={{ fontWeight: 500 }}>{project.mentorName}</div>
+              <div className="info-value" style={{ fontWeight: 500 }}>{project.manager.name}</div>
             </div>
             <div>
               <strong className="info-label">ตำแหน่ง:</strong>
-              <div className="info-value">{project.mentorPosition}</div>
+              <div className="info-value">{project.manager.position}</div>
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
-              <strong className="info-label">แผนก:</strong>
-              <div className="info-value">{project.mentorDepartment}</div>
+              <strong className="info-label">แผนก/ฝ่าย:</strong>
+              <div className="info-value">{project.manager.department}</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Phone size={16} color="#64748b"/> <span>{project.mentorPhone}</span>
+              <Phone size={16} color="#64748b"/> <span>{project.manager.phone}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Mail size={16} color="#64748b"/> <span>{project.mentorEmail}</span>
+              <Mail size={16} color="#64748b"/> <span>{project.manager.email}</span>
             </div>
           </div>
         </div>
 
-        {/* ข้อมูลอาจารย์ที่ปรึกษา */}
+        {/* 4. ข้อมูลผู้ประสานงาน (ถ้ามี) */}
+        {project.contactMethod === 'coordinator' && project.coordinator && (
+          <div className="detail-section">
+            <h3><Contact size={20} color="#10b981" /> ข้อมูลผู้ติดต่อประสานงาน (HR/Coordinator)</h3>
+            <div className="mentor-grid info-box" style={{ borderLeft: '4px solid #10b981' }}>
+              <div>
+                <strong className="info-label">ชื่อ-นามสกุล:</strong>
+                <div className="info-value" style={{ fontWeight: 500 }}>{project.coordinator.name}</div>
+              </div>
+              <div>
+                <strong className="info-label">ตำแหน่ง:</strong>
+                <div className="info-value">{project.coordinator.position}</div>
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <strong className="info-label">แผนก/ฝ่าย:</strong>
+                <div className="info-value">{project.coordinator.department}</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Phone size={16} color="#64748b"/> <span>{project.coordinator.phone}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Mail size={16} color="#64748b"/> <span>{project.coordinator.email}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 5. อาจารย์ผู้ดูแลโครงการ */}
         <div className="detail-section">
           <h3><GraduationCap size={20} color="#8b5cf6" /> อาจารย์ผู้ดูแลโครงการ</h3>
           <div className="info-box-purple">
@@ -200,7 +277,7 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        {/* 🔒 แสดงเอกสารแนบ เฉพาะฝั่ง ADVISOR เท่านั้น */}
+        {/* 6. เอกสารแนบ (เฉพาะที่ปรึกษา) */}
         {currentRole === 'ADVISOR' && (
           <div className="detail-section">
             <h3><Paperclip size={20} color="#64748b" /> เอกสารแนบ</h3>
@@ -214,7 +291,7 @@ export default function ProjectDetail() {
           </div>
         )}
 
-        {/* ปุ่ม Action (เปลี่ยนตาม Role) */}
+        {/* ปุ่มดำเนินการ */}
         <div className="action-buttons">
           <button className="btn-close" onClick={() => navigate(-1)}>ปิด</button>
           
