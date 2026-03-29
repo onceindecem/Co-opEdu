@@ -679,3 +679,307 @@
   line-height: 1.4;
   margin-top: 4px;
 }
+
+.empty-icon {
+    color: #cbd5e1;
+}
+
+.btn-confirm-success {
+    background: #f97316;
+    width: 100%;
+    box-shadow: 0 4px 10px rgba(249, 115, 22, 0.2);
+}
+
+.modal-icon-warning {
+    background: #fff7ed;
+}
+
+.modal-icon-success {
+    background: #f0fdf4;
+}
+
+.btn-manage-students {
+    border-color: #f97316; 
+    color: #f97316;
+}
+
+.btn-manage-students:hover {
+    background: #f97316;
+    color: white;
+}
+/* --- Report Page & Alignment --- */
+.text-left { text-align: left; }
+.min-w-220 { min-width: 220px; }
+
+.icon-inline {
+    position: relative;
+    top: 2px;
+    margin-right: 4px;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.title-text-small {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.95rem;
+    text-align: left;
+}
+
+.company-pos-text {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #64748b;
+    font-size: 0.85rem;
+    margin-top: 4px;
+}
+
+.std-name-text {
+    font-weight: 500;
+    color: #1e293b;
+}
+
+.std-id-text {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.last-update-text {
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+/* --- Status Badges --- */
+.status-badge-custom {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.status-pass { border: 1px solid #22c55e; background-color: #f0fdf4; color: #15803d; }
+.status-fail { border: 1px solid #ef4444; background-color: #fef2f2; color: #b91c1c; }
+.status-process { border: 1px solid #f97316; background-color: #fff7ed; color: #ea580c; }
+
+/* --- Action Button --- */
+.btn-view-report {
+    background: none;
+    border: none;
+    color: #3b82f6;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.btn-view-report:hover {
+    background-color: #eff6ff;
+}
+
+/* --- Modal Report Styles --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content-report {
+    background-color: white;
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    text-align: left;
+}
+
+.modal-header-report {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+}
+
+.modal-title-report {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.modal-subtitle-report {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.btn-close-modal {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #94a3b8;
+}
+
+.modal-body-section {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.modal-body-section h4 {
+    margin: 0 0 8px 0;
+    color: #334155;
+    font-size: 0.95rem;
+}
+
+.report-box-title {
+    padding: 12px;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    color: #1e293b;
+}
+
+.report-box-detail {
+    padding: 12px;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    min-height: 80px;
+    line-height: 1.6;
+}
+/* --- Summary Section --- */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.summary-card {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.summary-icon-box {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.summary-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.summary-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+/* Color Variants สำหรับ Card */
+.summary-card.info .summary-icon-box { background: #eff6ff; color: #3b82f6; }
+.summary-card.success .summary-icon-box { background: #f0fdf4; color: #22c55e; }
+.summary-card.warning .summary-icon-box { background: #fff7ed; color: #f97316; }
+.summary-card.secondary .summary-icon-box { background: #faf5ff; color: #a855f7; }
+.summary-card.danger .summary-icon-box { background: #fef2f2; color: #ef4444; }
+/* --- New Status Badge Styles (เพิ่มสถานะใหม่) --- */
+/* สีเทาสำหรับยังไม่ส่ง */
+.status-not-sent { 
+    border: 1px solid #cbd5e1; 
+    background-color: #f1f5f9; 
+    color: #64748b; 
+}
+
+/* สีส้มอ่อน/เหลืองสำหรับรอผลสัมภาษณ์ */
+.status-waiting-result { 
+    border: 1px solid #fdba74; 
+    background-color: #fff7ed; 
+    color: #c2410c; 
+}
+
+/* --- New Summary Card Variants (เพิ่มสไตล์การ์ดสรุปด้านบน) --- */
+
+/* การ์ดสีเทา (ยังไม่ส่งอีเมล) */
+.summary-card.muted {
+    border-left: 4px solid #94a3b8;
+}
+.summary-card.muted .summary-icon-box { 
+    background: #f1f5f9; 
+    color: #64748b; 
+}
+
+/* การ์ดสีส้มสว่าง (รอผลสัมภาษณ์) */
+.summary-card.warning-light {
+    border-left: 4px solid #f97316;
+}
+.summary-card.warning-light .summary-icon-box { 
+    background: #fff7ed; 
+    color: #f97316; 
+}
+
+/* ตกแต่งเพิ่ม: ให้ Summary Card เดิมดูมีมิติเหมือนของใหม่ */
+.summary-card.info { border-left: 4px solid #3b82f6; }
+.summary-card.success { border-left: 4px solid #22c55e; }
+.summary-card.warning { border-left: 4px solid #f97316; }
+.summary-card.secondary { border-left: 4px solid #a855f7; }
+.summary-card.danger { border-left: 4px solid #ef4444; }
+
+/* ปรับแต่ง Table Cell เล็กน้อยเพื่อให้ข้อมูลอ่านง่ายขึ้น */
+.min-w-220 {
+    min-width: 220px;
+}
+
+.status-badge-custom {
+    white-space: nowrap; /* ป้องกันสถานะตัดบรรทัด */
+    text-align: center;
+    min-width: 120px;
+}
+/* สีสำหรับ Badge ในตาราง */
+.status-submitted-test { 
+    border: 1px solid #6366f1; 
+    background-color: #eef2ff; 
+    color: #4338ca; 
+}
+
+/* สีสำหรับการ์ดสรุป (Indigo) */
+.summary-card.indigo {
+    border-left: 4px solid #6366f1;
+}
+.summary-card.indigo .summary-icon-box { 
+    background: #eef2ff; 
+    color: #6366f1; 
+}

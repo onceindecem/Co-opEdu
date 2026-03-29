@@ -8,11 +8,10 @@ import {
   Mail,
   GraduationCap
 } from 'lucide-react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import './Advisor.css';
 
 export default function ManageStudents() {
-  const { projectId } = useParams(); 
 
   const [students] = useState([
     { 
@@ -51,7 +50,7 @@ export default function ManageStudents() {
           <h2 className="title-with-icon">
             <Users size={28} /> จัดการรายชื่อนักศึกษา
           </h2>
-          <p className="subtitle">โครงการ: Web Application for Inventory Management (ID: {projectId})</p>
+          <p className="subtitle">โครงการ: Web Application for Inventory Management</p>
         </div>
         <div className="header-right">
           <div className="project-cap-badge">
@@ -72,7 +71,7 @@ export default function ManageStudents() {
           <thead>
             <tr>
               <th>ข้อมูลนักศึกษา</th>
-              <th>สถานะสิทธิ</th>
+              <th>สถานะ</th>
               <th>ผลการจ้างงาน (Final)</th>
               <th style={{ textAlign: 'center' }}>การดำเนินการ</th>
             </tr>
