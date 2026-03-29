@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'; // 👈 เอา BrowserRouter ที่ซ้ำซ้อนออก
 import LoginPage from './pages/Login';
 import RegisterPage from './pages/Register';
-import Profile from './pages/Profile'; 
+import Profile from './pages/Profile';
 import ProjectDetail from './pages/ProjectDetail';
 import './App.css';
 
@@ -27,6 +27,7 @@ import AdvisorReports from './pages/advisor/AdvisorReports';
 import AdminLayout from './pages/admin/AdminLayout';
 import UserManagement from './pages/admin/UserManagement';
 import AuditLogs from './pages/admin/AuditLogs';
+import ApproveDeleteRequests from './pages/admin/ApproveDeleteRequests';
 
 function App() {
   return (
@@ -41,13 +42,13 @@ function App() {
         <Route path="/student" element={<StudentLayout />}>
           <Route index element={<Navigate to="/student/projects" replace />} />
           <Route path="projects" element={<StudentProjects />} />
-          
+
           {/* 👈 เพิ่ม ProjectDetail ไว้ในกลุ่มนักศึกษา (path จะกลายเป็น /student/projects/:id อัตโนมัติ) */}
           <Route path="projects/:id" element={<ProjectDetail />} />
-          
+
           <Route path="applications" element={<StudentApplications />} />
           <Route path="reports" element={<StudentReports />} />
-          <Route path="profile" element={<Profile />} /> 
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* 2. Company Journey */}
@@ -55,7 +56,7 @@ function App() {
           <Route index element={<Navigate to="/company/projects" replace />} />
           <Route path="projects" element={<CompanyProjects />} />
           <Route path="projects/create" element={<CreateProject />} />
-          <Route path="profile" element={<Profile />} /> 
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* 3. Advisor Journey */}
@@ -63,13 +64,10 @@ function App() {
           <Route index element={<Navigate to="projects/available" replace />} />
           <Route path="projects/available" element={<AvailableProjects />} />
           <Route path="projects/mine" element={<MyProjects />} />
-          
-          {/* 👈 เพิ่ม ProjectDetail ไว้ในกลุ่มอาจารย์ (path จะกลายเป็น /advisor/projects/:id อัตโนมัติ) */}
           <Route path="projects/:id" element={<ProjectDetail />} />
-          
           <Route path="projects/:projectId/students" element={<ManageStudents />} />
           <Route path="reports" element={<AdvisorReports />} />
-          <Route path="profile" element={<Profile />} /> 
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* 4. Admin Journey */}
@@ -77,7 +75,9 @@ function App() {
           <Route index element={<Navigate to="users" replace />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="logs" element={<AuditLogs />} />
-          <Route path="profile" element={<Profile />} /> 
+          {/* แก้จาก approve เป็น approve-delete ให้ตรงกับ Sidebar */}
+          <Route path="approve-delete" element={<ApproveDeleteRequests />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* 404 Page */}

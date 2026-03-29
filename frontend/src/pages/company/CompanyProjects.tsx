@@ -1,74 +1,130 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Clock, CheckCircle2, AlertCircle } from 'lucide-react'; 
 import './Company.css';
 
 export default function CompanyProjects() {
     const navigate = useNavigate();
     
-    const data = [
-        { id: 1, name: "TTB tech & data Internship 2026", role: "UX/UI", slots: 2, status: "APPROVED" },
-        { id: 2, name: "TTB tech & data Internship 2026", role: "Software Engineering", slots: 1, status: "PENDING" }
-    ];
+    // State สำหรับจัดการ Modal
+    const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+    const [showSuccess, setShowSuccess] = useState(false);
+
+    const [projects, setProjects] = useState([
+        { id: 1, name: "TTB tech & data Internship 2026", role: "UX/UI", slots: 2, status: "APPROVED", deleteRequested: false },
+        { id: 2, name: "TTB tech & data Internship 2026", role: "Software Engineering", slots: 1, status: "PENDING", deleteRequested: false }
+    ]);
+
+    // ฟังก์ชันเมื่อกดยืนยันใน Popup
+    const confirmDeleteRequest = () => {
+        if (deleteTarget !== null) {
+            setProjects(prevProjects => 
+                prevProjects.map(project => 
+                    project.id === deleteTarget 
+                        ? { ...project, deleteRequested: true } 
+                        : project
+                )
+            );
+            setDeleteTarget(null); // ปิดหน้าต่างยืนยัน
+            setShowSuccess(true);   // เปิดหน้าต่างสำเร็จ
+        }
+    };
 
     return (
         <div className="company-page-container">
-            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                <h1 style={{ fontSize: '1.8rem', color: '#0f172a' }}>จัดการโครงการ</h1>
+            <div className="page-header">
+                <h1>จัดการโครงการ</h1>
                 <button 
                     className="btn-primary" 
                     onClick={() => navigate('/company/projects/create')}
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f97316', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 600, cursor: 'pointer' }}
                 >
                     <Plus size={18} /> สร้างโครงการใหม่
                 </button>
             </div>
 
-            <div className="card form-card" style={{ background: 'white', borderRadius: '15px', padding: '20px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
-                <table className="project-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div className="card form-card">
+                <table className="project-table">
                     <thead>
-                        <tr style={{ background: '#f8fafc', color: '#64748b', textAlign: 'left' }}>
-                            <th style={{ padding: '15px', borderBottom: '1px solid #e2e8f0' }}>ชื่อโครงการ</th>
-                            <th style={{ padding: '15px', borderBottom: '1px solid #e2e8f0' }}>ตำแหน่ง</th>
-                            <th style={{ padding: '15px', borderBottom: '1px solid #e2e8f0' }}>จำนวนรับ</th>
-                            <th style={{ padding: '15px', borderBottom: '1px solid #e2e8f0' }}>สถานะ</th>
-                            <th style={{ padding: '15px', borderBottom: '1px solid #e2e8f0', textAlign: 'center' }}>จัดการ</th>
+                        <tr>
+                            <th>ชื่อโครงการ</th>
+                            <th>ตำแหน่ง</th>
+                            <th>จำนวนรับ</th>
+                            <th>สถานะ</th>
+                            <th className="text-center">จัดการ</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {data.map(item => (
-                            <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                <td style={{ padding: '15px', textAlign: 'left' }}>
-                                    <strong style={{ color: '#334155' }}>{item.name}</strong>
-                                </td>
-
-                                <td style={{ padding: '15px', color: '#f97316', fontWeight: 600 }}>
-                                    {item.role}
-                                </td>
-
-                                <td style={{ padding: '15px', fontWeight: 600, color: '#475569' }}>
-                                    {item.slots}
-                                </td>
-
-                                <td style={{ padding: '15px' }}>
+                        {projects.map(item => (
+                            <tr key={item.id}>
+                                <td><strong className="project-name">{item.name}</strong></td>
+                                <td className="project-role-text">{item.role}</td>
+                                <td className="project-slots-text">{item.slots}</td>
+                                <td>
                                     <span className={`status-badge ${item.status.toLowerCase()}`}>
                                         {item.status}
                                     </span>
                                 </td>
-
-                                <td style={{ padding: '15px', textAlign: 'center' }}>
-                                    <button 
-                                        className="btn-edit-outline"
-                                        onClick={() => navigate(`/company/projects/create`)}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '5px', margin: '0 auto', background: 'transparent', border: '1px solid #cbd5e1', padding: '6px 12px', borderRadius: '8px', color: '#64748b', cursor: 'pointer' }}
-                                    >
-                                        <Edit2 size={16} /> แก้ไขข้อมูล
-                                    </button>
+                                <td className="text-center">
+                                    <div className="action-group">
+                                        <button className="btn-edit-outline" onClick={() => navigate(`/company/projects/create`)}>
+                                            <Edit2 size={16} /> แก้ไข
+                                        </button>
+                                        
+                                        {item.deleteRequested ? (
+                                            <button className="btn-pending-delete" disabled>
+                                                <Clock size={16} /> รออนุมัติลบ
+                                            </button>
+                                        ) : (
+                                            <button className="btn-delete-outline" onClick={() => setDeleteTarget(item.id)}>
+                                                <Trash2 size={16} /> ลบ
+                                            </button>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+
+            {/* --- Popup 1: ยืนยันการส่งคำขอ (แทน Alert/Confirm) --- */}
+            {deleteTarget && (
+                <div className="logout-modal-overlay">
+                    <div className="logout-modal-content">
+                        <div className="logout-modal-icon" style={{ background: '#fff7ed' }}>
+                            <AlertCircle size={40} color="#f97316" />
+                        </div>
+                        <h2>ยืนยันการลบโครงการ</h2>
+                        <p>ระบบจะส่งคำขอลบโครงการนี้ไปยังผู้ดูแลระบบ <br/> คุณต้องการดำเนินการต่อหรือไม่?</p>
+                        <div className="logout-modal-actions">
+                            <button className="btn-cancel-logout" onClick={() => setDeleteTarget(null)}>ยกเลิก</button>
+                            <button className="btn-confirm-logout" onClick={confirmDeleteRequest}>ยืนยันการลบ</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* --- Popup 2: แสดงสถานะส่งสำเร็จ --- */}
+            {showSuccess && (
+                <div className="logout-modal-overlay">
+                    <div className="logout-modal-content">
+                        <div className="logout-modal-icon" style={{ background: '#f0fdf4' }}>
+                            <CheckCircle2 size={40} color="#22c55e" />
+                        </div>
+                        <h2>ส่งคำขอสำเร็จ</h2>
+                        <p>ส่งคำขอลบโครงการไปยังผู้ดูแลระบบแล้ว <br/> กรุณารอการตรวจสอบ</p>
+                        <div className="logout-modal-actions">
+                            <button 
+                                className="btn-confirm-logout" 
+                                style={{ background: '#f97316', width: '100%' }} 
+                                onClick={() => setShowSuccess(false)}
+                            >
+                                ตกลง
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -1,11 +1,18 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // สมมติว่าใช้สำหรับ navigate
 import { 
-  FolderCheck, 
-  Users, 
-  ArrowRight, 
-  Building2, 
-  ClipboardCheck
-} from 'lucide-react';
+  Plus, 
+  Edit2, 
+  Trash2, 
+  Clock, 
+  CheckCircle2, 
+  AlertCircle,
+  Users,
+  ClipboardCheck,
+  Building2,
+  ArrowRight,
+  FolderCheck
+} from 'lucide-react'; 
 import { Link } from 'react-router-dom';
 import './Advisor.css';
 
@@ -16,14 +23,14 @@ export default function MyProjects() {
       title: 'Web Application for Inventory Management', 
       company: 'ABC Tech Solutions', 
       appliedCount: 3, 
-      status: 'OPEN' 
+      status: 'OPEN' // แทนรอบที่ 1
     },
     { 
       id: 102, 
       title: 'Data Analysis Dashboard', 
       company: 'Global Data Co.', 
       appliedCount: 5, 
-      status: 'CLOSED'
+      status: 'CLOSED' // แทนรอบที่ 2
     }
   ]);
 
@@ -38,8 +45,9 @@ export default function MyProjects() {
         {myProjects.map((proj) => (
           <div key={proj.id} className="advisor-card project-item-card">
             <div className="card-top">
+              {/* เปลี่ยนข้อความเป็น รอบที่ 1 และ 2 */}
               <span className={`status-tag ${proj.status.toLowerCase()}`}>
-                {proj.status === 'OPEN' ? '🟢 เปิดรับสมัคร' : '🔴 ปิดรับสมัคร'}
+                {proj.status === 'OPEN' ? '🟢 รอบที่ 1' : '🔴 รอบที่ 2'}
               </span>
               <div className="company-tag">
                 <Building2 size={14} /> {proj.company}
@@ -74,7 +82,7 @@ export default function MyProjects() {
 
       {myProjects.length === 0 && (
         <div className="empty-state">
-          <FolderCheck size={48} color="#cbd5e1" />
+          <FolderCheck size={48} className="empty-icon" />
           <p>คุณยังไม่มีโครงการในความดูแล เริ่มต้นโดยการอนุมัติโครงการใหม่</p>
           <Link to="/advisor/projects/available" className="btn-primary">ไปหน้าอนุมัติโครงการ</Link>
         </div>
