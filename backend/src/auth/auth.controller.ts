@@ -39,13 +39,4 @@ export class AuthController {
     // send the user information received from Google to AuthService to handle login or registration logic
     return this.authService.googleLogin(req.user);
   }
-
-  @UseGuards(JwtAuthGuard) // require a valid JWT token to access this route
-  @Get('profile')
-  getProfile(@Req() req) {
-    return {
-      message: 'ยินดีต้อนรับสู่พื้นที่หวงห้าม! 🎉',
-      user_info: req.user, 
-    };
-  }
 }

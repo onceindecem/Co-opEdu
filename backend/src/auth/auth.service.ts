@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/sequelize';
 import { UsersService } from '../users/users.service';
 import { RegisterHRDto } from './dto/register-hr.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
-import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { Sequelize } from 'sequelize-typescript';

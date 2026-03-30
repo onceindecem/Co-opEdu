@@ -6,6 +6,7 @@ import {
   PrimaryKey,
   HasMany,
 } from 'sequelize-typescript';
+import { HR } from 'src/hr/entities/hr.entity';
 
 // TODO: รอปลดคอมเมนต์เมื่อนำไปเชื่อมกับตาราง Project
 // import { Project } from './project.model'; 
@@ -42,4 +43,6 @@ export class Company extends Model {
   // บริษัท 1 แห่ง สามารถมีได้หลายโปรเจกต์ (1-to-Many)
   // @HasMany(() => Project)
   // projects: Project[];
+  @HasMany(() => HR)
+  hrs: HR[];
 }
