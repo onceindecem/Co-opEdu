@@ -9,6 +9,7 @@ export const projectService = {
 
   // สำหรับหน้า CreateProject ของบริษัท
   create: (data: any) => api.post('/projects', data),
+  createPM: (data: any) => api.post('/project-manager', data),
 
   // สำหรับการ PATCH ข้อมูล (เช่น Advisor เลือกรับโปรเจกต์)
   update: (id: string, data: any) => api.patch(`/projects/${id}`, data),

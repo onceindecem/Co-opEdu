@@ -5,6 +5,7 @@ import {
   IsInt,
   IsEnum,
   Min,
+  IsUUID,
 } from 'class-validator';
 
 // กำหนด Enum ให้ตรงกับใน Database (ป้องกันคนพิมพ์ผิด)
@@ -19,7 +20,8 @@ enum RoundType {
 }
 
 export class CreateProjectDto {
-  @IsString()
+
+  @IsUUID('all', { message: 'projID ต้องเป็น UUID' })
   @IsNotEmpty()
   projID: string;
 

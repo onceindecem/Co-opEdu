@@ -2,16 +2,38 @@ import { useState } from 'react';
 import './Company.css'; 
 import { ClipboardList, Users, Wrench, MapPin, Upload, Save, ArrowLeft, Mail, Phone, Info, Building2, UserCircle, UserCheck, Plus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { projectService } from '../../api/projectService'; // 👈 นำเข้า Service (เช็ค Path ให้ตรงกับโปรเจกต์คุณด้วยนะครับ)
 
 export default function CreateProject() {
   const isEdit = false;
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  // --- State สำหรับข้อมูลที่ต้องส่งไป Backend ---
+  const [formData, setFormData] = useState({
+    projNameTH: '',
+    projDetail: '',
+    projAmount: 1,
+    jobDescription: '',
+    skills: '',
+    workLocation: '',
+  });
 
   const [contactMethod, setContactMethod] = useState<'manager' | 'coordinator'>('manager');
 
   const [mentors, setMentors] = useState([
     { id: Date.now(), name: '', position: '', phone: '', email: '' }
   ]);
+
+  // 🌟 [เพิ่มใหม่] State สำหรับเก็บข้อมูล PM
+  const [pmData, setPmData] = useState({
+    name: '', position: '', department: '', phone: '', email: ''
+  });
+
+  // 🌟 [เพิ่มใหม่] State สำหรับเก็บข้อมูลผู้ประสานงาน
+  const [coordData, setCoordData] = useState({
+    name: '', position: '', department: '', phone: '', email: ''
+  });
 
   const companyData = {
     nameTh: "บริษัท เทคโนโลยีและนวัตกรรม จำกัด",
@@ -37,10 +59,84 @@ export default function CreateProject() {
     ));
   };
 
+  // ฟังก์ชันจัดการ Input ของ Project
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // 🌟 [เพิ่มใหม่] ฟังก์ชันจัดการ Input ของ PM
+  const handlePmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPmData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // 🌟 [เพิ่มใหม่] ฟังก์ชันจัดการ Input ของ Coordinator
+  const handleCoordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCoordData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // 🌟 [แก้ไข] ฟังก์ชัน Submit ส่งข้อมูลไป Backend 2 ขั้นตอน (PM -> Project)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const currentCoID = '214e1528-7f61-4d33-a0c8-8a8dd92bd3c3';  // จำลอง UUID ของ Company
+      const currentUserID = 'ff887e9e-9e30-4a37-aaeb-cc423b810c92'; // จำลอง UUID ของ HR
+      
+      // --- STEP 1: สร้างตัวตน PM ---
+      // (ใช้ window.crypto เพื่อป้องกัน TypeScript error)
+      const generatedPmID = window.crypto.randomUUID(); 
+      
+      await projectService.createPM({
+        pmID: generatedPmID,
+        coID: currentCoID,
+        pmName: pmData.name,
+        pmPos: pmData.position,
+        pmDept: pmData.department,
+        pmTel: pmData.phone,
+        pmEmail: pmData.email
+      });
+
+      // --- STEP 2: สร้างโปรเจกต์ ---
+      const payload = {
+        projID: window.crypto.randomUUID(), 
+        coID: currentCoID,
+        userID: currentUserID,
+        pmID: generatedPmID, // นำ ID จาก Step 1 มาเชื่อม
+        
+        projName: formData.projNameTH,
+        obj: formData.projDetail,
+        quota: Number(formData.projAmount),
+        jd: formData.jobDescription,
+        skills: formData.skills,
+        workAddr: formData.workLocation || companyData.address,
+        
+        contact: contactMethod === 'manager' ? 'PM' : 'COORD',
+        
+        // ผูก State จริงของผู้ประสานงาน
+        contDetail: contactMethod === 'coordinator' ? JSON.stringify(coordData) : null,
+        mentor: JSON.stringify(mentors), 
+        round: '1', 
+      };
+
+      await projectService.create(payload);
+      alert("บันทึกข้อมูลและส่งโครงการเรียบร้อย!");
+      navigate('/company/projects');
+    } catch (error: any) {
+      console.error("Submit Error:", error);
+      alert('เกิดข้อผิดพลาดในการบันทึก: ' + (error.response?.data?.message || 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="company-page-container">
       <div className="page-header">
-        <button onClick={() => navigate(-1)} className="btn-back">
+        <button type="button" onClick={() => navigate(-1)} className="btn-back">
           <ArrowLeft size={18} /> กลับ
         </button>
         <h1 className="page-title">
@@ -55,7 +151,7 @@ export default function CreateProject() {
           </div>
         )}
 
-        <form onSubmit={(e) => { e.preventDefault(); console.log({ mentors }); alert("บันทึกข้อมูลเรียบร้อย!"); navigate('/company/projects'); }}>
+        <form onSubmit={handleSubmit}>
           
           {/* =========================================
               1. ข้อมูลสถานประกอบการ/หน่วยงาน
@@ -103,31 +199,68 @@ export default function CreateProject() {
 
           <div className="form-group span-full">
             <label>ชื่อโครงการ*</label>
-            <input type="text" placeholder="เช่น Web Application for Inventory Management" required />
+            <input 
+              type="text" 
+              name="projNameTH" 
+              value={formData.projNameTH} 
+              onChange={handleChange} 
+              placeholder="เช่น Web Application for Inventory Management" 
+              required 
+            />
           </div>
 
           <div className="form-group span-full">
             <label>วัตถุประสงค์ของโครงการ *</label>
-            <textarea rows={3} placeholder="ระบุสิ่งที่บริษัทต้องการได้รับจากโครงการนี้..." required />
+            <textarea 
+              rows={3} 
+              name="projDetail" 
+              value={formData.projDetail} 
+              onChange={handleChange} 
+              placeholder="ระบุสิ่งที่บริษัทต้องการได้รับจากโครงการนี้..." 
+              required 
+            />
           </div>
 
           <div className="form-group span-full">
             <label className="label-with-icon">
               <Users size={16} /> จำนวนนักศึกษาที่รับ (คน) *
             </label>
-            <input type="number" min="1" placeholder="1" required className="input-half" />
+            <input 
+              type="number" 
+              name="projAmount" 
+              min="1" 
+              value={formData.projAmount} 
+              onChange={handleChange} 
+              placeholder="1" 
+              required 
+              className="input-half" 
+            />
           </div>
 
           <div className="form-group span-full">
             <label>ลักษณะงานที่ต้องปฏิบัติ (Job Description) *</label>
-            <textarea rows={5} placeholder="ระบุรายละเอียดหน้าที่ความรับผิดชอบของนักศึกษา..." required />
+            <textarea 
+              rows={5} 
+              name="jobDescription" 
+              value={formData.jobDescription} 
+              onChange={handleChange} 
+              placeholder="ระบุรายละเอียดหน้าที่ความรับผิดชอบของนักศึกษา..." 
+              required 
+            />
           </div>
 
           <div className="form-group span-full">
             <label className="label-with-icon">
               <Wrench size={16} /> เครื่องมือและทักษะที่ต้องใช้ (Skills) *
             </label>
-            <input type="text" placeholder="เช่น React, Node.js, SQL, Docker" required />
+            <input 
+              type="text" 
+              name="skills" 
+              value={formData.skills} 
+              onChange={handleChange} 
+              placeholder="เช่น React, Node.js, SQL, Docker" 
+              required 
+            />
           </div>
 
           {/* =========================================
@@ -189,28 +322,29 @@ export default function CreateProject() {
 
           <div className="form-group span-full">
             <label>ชื่อ-นามสกุล *</label>
-            <input type="text" placeholder="ระบุชื่อ-นามสกุล ผู้จัดการโครงการ" required />
+            {/* 🌟 ผูก State ของ PM */}
+            <input type="text" name="name" value={pmData.name} onChange={handlePmChange} placeholder="ระบุชื่อ-นามสกุล ผู้จัดการโครงการ" required />
           </div>
 
           <div className="input-row">
             <div className="form-group">
               <label>ตำแหน่ง *</label>
-              <input type="text" placeholder="เช่น Project Manager, CTO" required />
+              <input type="text" name="position" value={pmData.position} onChange={handlePmChange} placeholder="เช่น Project Manager, CTO" required />
             </div>
             <div className="form-group">
               <label>แผนก/ฝ่าย *</label>
-              <input type="text" placeholder="เช่น Software Development" required />
+              <input type="text" name="department" value={pmData.department} onChange={handlePmChange} placeholder="เช่น Software Development" required />
             </div>
           </div>
 
           <div className="input-row">
             <div className="form-group">
               <label>เบอร์โทรศัพท์ติดต่อ *</label>
-              <input type="tel" placeholder="08xxxxxxxx" maxLength={10} pattern="[0-9]*" required />
+              <input type="tel" name="phone" value={pmData.phone} onChange={handlePmChange} placeholder="08xxxxxxxx" maxLength={10} pattern="[0-9]*" required />
             </div>
             <div className="form-group">
               <label>อีเมลติดต่อ *</label>
-              <input type="email" placeholder="manager@company.com" required />
+              <input type="email" name="email" value={pmData.email} onChange={handlePmChange} placeholder="manager@company.com" required />
             </div>
           </div>
 
@@ -240,26 +374,27 @@ export default function CreateProject() {
               <h4 className="coordinator-title">รายละเอียดผู้ประสานงานของสถานประกอบการ/หน่วยงาน</h4>
               <div className="form-group span-full">
                 <label>ชื่อ-นามสกุล ผู้ประสานงาน *</label>
-                <input type="text" placeholder="ระบุชื่อ-นามสกุล ผู้ประสานงาน (เช่น HR)" required />
+                {/* 🌟 ผูก State ของ Coordinator */}
+                <input type="text" name="name" value={coordData.name} onChange={handleCoordChange} placeholder="ระบุชื่อ-นามสกุล ผู้ประสานงาน (เช่น HR)" required />
               </div>
               <div className="input-row">
                 <div className="form-group">
                   <label>ตำแหน่ง *</label>
-                  <input type="text" placeholder="เช่น HR Manager, Recruiter" required />
+                  <input type="text" name="position" value={coordData.position} onChange={handleCoordChange} placeholder="เช่น HR Manager, Recruiter" required />
                 </div>
                 <div className="form-group">
                   <label>แผนก/ฝ่าย *</label>
-                  <input type="text" placeholder="เช่น Human Resources" required />
+                  <input type="text" name="department" value={coordData.department} onChange={handleCoordChange} placeholder="เช่น Human Resources" required />
                 </div>
               </div>
               <div className="input-row">
                 <div className="form-group">
                   <label>เบอร์โทรศัพท์ติดต่อ *</label>
-                  <input type="tel" placeholder="08xxxxxxxx" maxLength={10} pattern="[0-9]*" required />
+                  <input type="tel" name="phone" value={coordData.phone} onChange={handleCoordChange} placeholder="08xxxxxxxx" maxLength={10} pattern="[0-9]*" required />
                 </div>
                 <div className="form-group">
                   <label>อีเมลติดต่อ *</label>
-                  <input type="email" placeholder="hr@company.com" required />
+                  <input type="email" name="email" value={coordData.email} onChange={handleCoordChange} placeholder="hr@company.com" required />
                 </div>
               </div>
             </div>
@@ -273,7 +408,13 @@ export default function CreateProject() {
           </div>
           <div className="form-group span-full">
             <label>ระบุสถานที่ปฏิบัติงาน (หากต่างจากที่อยู่บริษัทที่ลงทะเบียนไว้)</label>
-            <textarea rows={2} placeholder="เลขที่, ถนน, แขวง/ตำบล, เขต/อำเภอ..." />
+            <textarea 
+              rows={2} 
+              name="workLocation" 
+              value={formData.workLocation} 
+              onChange={handleChange} 
+              placeholder="เลขที่, ถนน, แขวง/ตำบล, เขต/อำเภอ..." 
+            />
           </div>
 
           <div className="note-info-box">
@@ -290,11 +431,11 @@ export default function CreateProject() {
           </div>
 
           <div className="form-actions">
-            <button type="button" onClick={() => navigate(-1)} className="btn-cancel">
+            <button type="button" onClick={() => navigate(-1)} className="btn-cancel" disabled={loading}>
               ยกเลิก
             </button>
-            <button type="submit" className="btn-primary">
-              <Save size={18} /> {isEdit ? 'บันทึกการแก้ไข' : 'ส่งโครงการให้คณะพิจารณา'}
+            <button type="submit" className="btn-primary" disabled={loading}>
+              <Save size={18} /> {loading ? 'กำลังบันทึก...' : (isEdit ? 'บันทึกการแก้ไข' : 'ส่งโครงการให้คณะพิจารณา')}
             </button>
           </div>
         </form>
