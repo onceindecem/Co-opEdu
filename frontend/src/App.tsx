@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'; // 👈 เอา BrowserRouter ที่ซ้ำซ้อนออก
+import { Routes, Route, Navigate } from 'react-router-dom'; // 👈 เอา BrowserRouter ที่ซ้ำซ้อนออก
 import LoginPage from './pages/Login';
 import RegisterPage from './pages/Register';
 import Profile from './pages/Profile';
@@ -31,7 +31,6 @@ import ApproveDeleteRequests from './pages/admin/ApproveDeleteRequests';
 
 function App() {
   return (
-    <Router>
       <Routes>
         {/* Public Access */}
         <Route path="/login" element={<LoginPage />} />
@@ -97,7 +96,6 @@ function App() {
           </div>
         } />
       </Routes>
-    </Router>
   );
 }
 

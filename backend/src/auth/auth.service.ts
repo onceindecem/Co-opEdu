@@ -34,7 +34,7 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new HttpException('อีเมลนี้ถูกใช้งานแล้ว', HttpStatus.BAD_REQUEST);
+      throw new HttpException('Email already exists', HttpStatus.BAD_REQUEST);
     }
 
     // hash the password before saving to database
@@ -127,25 +127,30 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
 
     if (!user) {
-      throw new HttpException('อีเมล หรือ รหัสผ่านไม่ถูกต้อง (หาอีเมลไม่เจอ)', HttpStatus.UNAUTHORIZED);
+      throw new HttpException('email or password is incorrect', HttpStatus.UNAUTHORIZED);
     }
 
     if (!user.passwordHash || !password) {
-      throw new HttpException('อีเมล หรือ รหัสผ่านไม่ถูกต้อง (ไม่มีรหัสให้เทียบ)', HttpStatus.UNAUTHORIZED);
+      throw new HttpException('email or password is incorrect', HttpStatus.UNAUTHORIZED);
     }
 
     const isPasswordMatching = await bcrypt.compare(password, user.passwordHash);
 
     if (!isPasswordMatching) {
-      throw new HttpException('อีเมล หรือ รหัสผ่านไม่ถูกต้อง (รหัสไม่ตรง)', HttpStatus.UNAUTHORIZED);
+      throw new HttpException('email or password is incorrect', HttpStatus.UNAUTHORIZED);
     }
 
-    const payload = { userID: user.userID, role: user.role };
+    const payload = { 
+      sub: user.userID,  
+      email: user.email, 
+      role: user.role 
+    };
     const token = await this.jwtService.signAsync(payload);
 
     return {
       message: 'Login successful',
       access_token: token,
+      role: user.role,
       user: {
         email: user.email,
         role: user.role,

@@ -41,7 +41,7 @@ export class UsersService {
     }
 
     return {
-      message: 'ดึงข้อมูล Profile สำเร็จ',
+      message: 'profile retrieved successfully',
       accountInfo: userBase,
       profile: profileData,
     };

@@ -11,8 +11,8 @@ export class UsersController {
   @UseGuards(JwtAuthGuard) 
   @Get('profile')
   async getProfile(@Req() req) {
-    console.log('🕵️‍♂️ ข้อมูลจาก Token คือ:', req.user);
-    const userID = req.user.userID || req.user.sub;
+    console.log('data from token:', req.user);
+    const userID = req.user.sub;
     const role = req.user.role;
     return this.usersService.getProfile(userID, role);
   }

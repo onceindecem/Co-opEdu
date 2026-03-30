@@ -7,7 +7,7 @@ import {
   Contact, Loader2 
 } from 'lucide-react';
 import './students/Projects.css';
-import { projectService } from '../api/projectService'; // 👈 นำเข้า Service
+import { projectService } from '../api/services/projectService'; // 👈 นำเข้า Service
 
 export default function ProjectDetail() {
   const { id } = useParams(); // 👈 ดึง ID จาก URL
