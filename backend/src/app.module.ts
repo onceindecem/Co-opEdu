@@ -5,6 +5,10 @@ import { AppService } from './app.service';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { CompanyModule } from './company/company.module';
+import { HrModule } from './hr/hr.module';
+import { StudentModule } from './student/student.module';
+import { AdvisorModule } from './advisor/advisor.module';
 
 @Module({
   imports: [
@@ -25,6 +29,10 @@ import { AuthModule } from './auth/auth.module';
     }),
     UsersModule,
     AuthModule,
+    CompanyModule,
+    HrModule,
+    StudentModule,
+    AdvisorModule,
   ],
 
   controllers: [AppController],
