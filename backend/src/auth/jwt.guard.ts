@@ -1,3 +1,4 @@
+// src/auth/jwt.guard.ts
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
@@ -8,27 +9,36 @@ export class JwtAuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    // retrieve the token from the Authorization header
     const token = this.extractTokenFromHeader(request);
     
+    // 🔍 วางกับดักที่ 1: ดูว่ารับ Token มาจาก Thunder Client ได้ไหม?
+    console.log('--- 👮‍♂️ คุณลุง รปภ. กำลังตรวจบัตร ---');
+    console.log('1. Token ที่รับมาคือ:', token ? 'ได้รับ Token แล้ว!' : 'ไม่มี Token ส่งมา!');
+
     if (!token) {
-      throw new UnauthorizedException('no token provided');
+      throw new UnauthorizedException('หยุดนะ! คุณไม่มีบัตรผ่านประตู (Token)');
     }
     
     try {
-      // check if the token is valid and not expired
+      // ⚠️ ตรง secret นี้ พิมพ์ให้ตรงกับในไฟล์ auth.module.ts เป๊ะๆ เลยนะครับ (เช่น 'my-secret-key')
+      const secretKey = process.env.JWT_SECRET;
+      console.log('2. กุญแจที่ใช้ถอดรหัสคือ:', secretKey);
+
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: process.env.JWT_SECRET || 'secretpaepeemdefaultkey',
+        secret: secretKey, 
       });
-      // if valid, attach the payload (user info) to the request object for use in controllers
+      
+      console.log('3. ถอดรหัสสำเร็จ! ข้อมูลข้างในคือ:', payload);
       request['user'] = payload;
-    } catch {
-      throw new UnauthorizedException('token is invalid or expired');
+      
+    } catch (error) {
+      // 🔍 วางกับดักที่ 2: ถ้าพัง มันพังเพราะอะไร?
+      console.log('❌ ถอดรหัสพัง! สาเหตุจากระบบคือ:', error.message);
+      throw new UnauthorizedException('บัตรผ่านประตูปลอม หรือ หมดอายุแล้ว!');
     }
-    return true; // allow the request to proceed if the token is valid
+    return true; 
   }
 
-  // function to extract the token from the Authorization header
   private extractTokenFromHeader(request: Request): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;

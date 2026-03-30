@@ -1,8 +1,10 @@
 // src/auth/auth.controller.ts
-import { Controller, Post, Body, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/create-auth.dto';
+import { RegisterHRDto } from './dto/register-hr.dto';
 import { JwtAuthGuard } from './jwt.guard';
+import { AuthGuard } from '@nestjs/passport';
+import { RegisterUserDto } from './dto/register-user.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -10,9 +12,14 @@ export class AuthController {
 
   // receive POST Request at URL: /auth/register
   @Post('register')
-  register(@Body() registerDto: RegisterDto) {
+  register(@Body() registerDto: RegisterUserDto) {
     // call the register method in AuthService to handle the registration logic
-    return this.authService.register(registerDto);
+    return this.authService.registerUser(registerDto);
+  }
+
+  @Post('register-hr')
+  registerHR(@Body() dto: RegisterHRDto) {
+    return this.authService.registerHR(dto);
   }
 
   @Post('login')
@@ -20,9 +27,22 @@ export class AuthController {
     return this.authService.login(loginData);
   }
 
+  // login with Google
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth(@Req() req) {}
+
+  // google auth callback URL after user successfully logs in with Google
+  @Get('google/callback')
+  @UseGuards(AuthGuard('google'))
+  async googleAuthRedirect(@Req() req) {
+    // send the user information received from Google to AuthService to handle login or registration logic
+    return this.authService.googleLogin(req.user);
+  }
+
   @UseGuards(JwtAuthGuard) // require a valid JWT token to access this route
   @Get('profile')
-  getProfile(@Request() req) {
+  getProfile(@Req() req) {
     return {
       message: 'ยินดีต้อนรับสู่พื้นที่หวงห้าม! 🎉',
       user_info: req.user, 

@@ -17,22 +17,22 @@ import {
 export class Company extends Model {
   @PrimaryKey
   @Column({ type: DataType.UUID })
-  coID: string;
+  declare coID: string;
 
   @Column({ type: DataType.STRING(255), allowNull: false })
-  coNameTH: string;
+  declare coNameTH: string;
 
   @Column({ type: DataType.STRING(255), allowNull: true })
-  coNameEN: string;
+  declare coNameEN: string;
 
   @Column({ type: DataType.STRING(255), allowNull: false })
-  coEmail: string;
+  declare coEmail: string;
 
   @Column({ type: DataType.STRING(50), allowNull: false })
-  coTel: string;
+  declare coTel: string;
 
   @Column({ type: DataType.TEXT, allowNull: false })
-  coAddr: string;
+  declare coAddr: string;
 
   /* ==============================================
      ส่วนของการทำ Associations (ความสัมพันธ์ตาราง)
