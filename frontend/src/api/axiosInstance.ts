@@ -2,17 +2,16 @@ import axios from 'axios';
 
 const api = axios.create({
   baseURL: 'http://localhost:3000', // URL ของ NestJS
-  timeout: 5000, // ถ้า Backend ไม่ตอบใน 5 วิ ให้ตัดการเชื่อมต่อ
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// (Option) ใส่ Interceptor ไว้ดัก Error กลาง
+// ดักจับ Error เผื่อ Server พัง
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error('API Error:', error.response?.data?.message || 'Something went wrong');
+    console.error('API Error:', error.response?.data?.message || 'Server Error');
     return Promise.reject(error);
   }
 );
