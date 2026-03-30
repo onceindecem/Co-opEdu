@@ -1,26 +1,47 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/sequelize';
 import { CreateHrDto } from './dto/create-hr.dto';
 import { UpdateHrDto } from './dto/update-hr.dto';
+import { HR } from './entities/hr.entity';
 
 @Injectable()
 export class HrService {
-  create(createHrDto: CreateHrDto) {
-    return 'This action adds a new hr';
+  constructor(
+    @InjectModel(HR)
+    private hrModel: typeof HR,
+  ) {}
+
+  async create(createHrDto: CreateHrDto) {
+    return await this.hrModel.create({ ...createHrDto } as any);
   }
 
-  findAll() {
-    return `This action returns all hr`;
+  async findAll() {
+    return await this.hrModel.findAll();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} hr`;
+  async findOne(id: string) {
+    const hr = await this.hrModel.findByPk(id);
+    if (!hr) {
+      throw new NotFoundException(`ไม่พบ HR รหัส ${id}`);
+    }
+    return hr;
   }
 
-  update(id: number, updateHrDto: UpdateHrDto) {
-    return `This action updates a #${id} hr`;
+  async update(id: string, updateHrDto: UpdateHrDto) {
+    // ⚠️ เปลี่ยน userID ให้ตรงกับชื่อ Primary Key ในตาราง HR ของคุณ
+    const [numberOfAffectedRows] = await this.hrModel.update(
+      { ...updateHrDto },
+      { where: { userID: id } } 
+    );
+    if (numberOfAffectedRows === 0) {
+      throw new NotFoundException(`ไม่สามารถอัปเดตได้: ไม่พบ HR รหัส ${id}`);
+    }
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} hr`;
+  async remove(id: string) {
+    const hr = await this.findOne(id);
+    await hr.destroy();
+    return { message: `ลบ HR รหัส ${id} เรียบร้อยแล้ว` };
   }
 }

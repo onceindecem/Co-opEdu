@@ -19,16 +19,16 @@ export class CompanyController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.companyService.findOne(+id);
+    return this.companyService.findOne(id); // เอา + ออกแล้ว
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCompanyDto: UpdateCompanyDto) {
-    return this.companyService.update(+id, updateCompanyDto);
+    return this.companyService.update(id, updateCompanyDto); // เอา + ออกแล้ว
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.companyService.remove(+id);
+    return this.companyService.remove(id); // เอา + ออกแล้ว
   }
 }

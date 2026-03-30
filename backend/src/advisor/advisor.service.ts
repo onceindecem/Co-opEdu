@@ -1,26 +1,46 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/sequelize';
 import { CreateAdvisorDto } from './dto/create-advisor.dto';
 import { UpdateAdvisorDto } from './dto/update-advisor.dto';
+import { Advisor } from './entities/advisor.entity';
 
 @Injectable()
 export class AdvisorService {
-  create(createAdvisorDto: CreateAdvisorDto) {
-    return 'This action adds a new advisor';
+  constructor(
+    @InjectModel(Advisor)
+    private advisorModel: typeof Advisor,
+  ) {}
+
+  async create(createAdvisorDto: CreateAdvisorDto) {
+    return await this.advisorModel.create({ ...createAdvisorDto } as any);
   }
 
-  findAll() {
-    return `This action returns all advisor`;
+  async findAll() {
+    return await this.advisorModel.findAll();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} advisor`;
+  async findOne(id: string) {
+    const advisor = await this.advisorModel.findByPk(id);
+    if (!advisor) {
+      throw new NotFoundException(`ไม่พบ Advisor รหัส ${id}`);
+    }
+    return advisor;
   }
 
-  update(id: number, updateAdvisorDto: UpdateAdvisorDto) {
-    return `This action updates a #${id} advisor`;
+ async update(id: string, updateAdvisorDto: UpdateAdvisorDto) {
+    const [numberOfAffectedRows] = await this.advisorModel.update(
+      { ...updateAdvisorDto },
+      { where: { userID: id } } 
+    );
+    if (numberOfAffectedRows === 0) {
+      throw new NotFoundException(`ไม่สามารถอัปเดตได้: ไม่พบ Advisor รหัส ${id}`);
+    }
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} advisor`;
+  async remove(id: string) {
+    const advisor = await this.findOne(id);
+    await advisor.destroy();
+    return { message: `ลบ Advisor รหัส ${id} เรียบร้อยแล้ว` };
   }
 }

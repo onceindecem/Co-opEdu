@@ -19,16 +19,16 @@ export class HrController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.hrService.findOne(+id);
+    return this.hrService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateHrDto: UpdateHrDto) {
-    return this.hrService.update(+id, updateHrDto);
+    return this.hrService.update(id, updateHrDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.hrService.remove(+id);
+    return this.hrService.remove(id);
   }
 }

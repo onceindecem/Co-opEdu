@@ -1,26 +1,46 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/sequelize';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
+import { Company } from './entities/company.entity';
 
 @Injectable()
 export class CompanyService {
-  create(createCompanyDto: CreateCompanyDto) {
-    return 'This action adds a new company';
+  constructor(
+    @InjectModel(Company)
+    private companyModel: typeof Company,
+  ) {}
+
+  async create(createCompanyDto: CreateCompanyDto) {
+    return await this.companyModel.create({ ...createCompanyDto } as any);
   }
 
-  findAll() {
-    return `This action returns all company`;
+  async findAll() {
+    return await this.companyModel.findAll();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} company`;
+  async findOne(id: string) {
+    const company = await this.companyModel.findByPk(id);
+    if (!company) {
+      throw new NotFoundException(`ไม่พบบริษัทรหัส ${id}`);
+    }
+    return company;
   }
 
-  update(id: number, updateCompanyDto: UpdateCompanyDto) {
-    return `This action updates a #${id} company`;
+  async update(id: string, updateCompanyDto: UpdateCompanyDto) {
+    const [numberOfAffectedRows] = await this.companyModel.update(
+      { ...updateCompanyDto },
+      { where: { coID: id } }
+    );
+    if (numberOfAffectedRows === 0) {
+      throw new NotFoundException(`ไม่สามารถอัปเดตได้: ไม่พบบริษัทรหัส ${id}`);
+    }
+    return this.findOne(id);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} company`;
+  async remove(id: string) {
+    const company = await this.findOne(id);
+    await company.destroy();
+    return { message: `ลบบริษัทรหัส ${id} เรียบร้อยแล้ว` };
   }
 }

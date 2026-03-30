@@ -19,16 +19,16 @@ export class AdvisorController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.advisorService.findOne(+id);
+    return this.advisorService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAdvisorDto: UpdateAdvisorDto) {
-    return this.advisorService.update(+id, updateAdvisorDto);
+    return this.advisorService.update(id, updateAdvisorDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.advisorService.remove(+id);
+    return this.advisorService.remove(id);
   }
 }

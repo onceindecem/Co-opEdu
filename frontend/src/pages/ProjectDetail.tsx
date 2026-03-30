@@ -1,18 +1,40 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react'; // 👈 เพิ่ม useEffect
+import { useLocation, useNavigate, useParams } from 'react-router-dom'; // 👈 เพิ่ม useParams
 import { 
   ArrowLeft, Building2, MapPin, Users, Wrench, 
   UserCheck, Phone, Mail, FileText, CheckCircle, 
   Briefcase, GraduationCap, Paperclip, UserCircle, 
-  Contact 
+  Contact, Loader2 
 } from 'lucide-react';
 import './students/Projects.css';
+import { projectService } from '../api/projectService'; // 👈 นำเข้า Service
 
 export default function ProjectDetail() {
+  const { id } = useParams(); // 👈 ดึง ID จาก URL
   const location = useLocation();
   const navigate = useNavigate();
 
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [project, setProject] = useState<any>(null); // 👈 เปลี่ยนจาก Mock เป็น State ว่าง
+  const [loading, setLoading] = useState(true);
+
+  // --- 1. โหลดข้อมูลจาก Backend เมื่อเข้าหน้าจอ ---
+  useEffect(() => {
+    const fetchDetail = async () => {
+      try {
+        setLoading(true);
+        if (id) {
+          const res = await projectService.getOne(id);
+          setProject(res.data);
+        }
+      } catch (err) {
+        console.error("Error fetching project detail:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDetail();
+  }, [id]);
 
   let currentRole = '';
   if (location.pathname.includes('/student')) {
@@ -21,66 +43,18 @@ export default function ProjectDetail() {
     currentRole = 'ADVISOR';
   }
 
-  // อัปเดต Mock Data ให้ตรงกับฟอร์ม CreateProject ใหม่
-  const [project] = useState({
-    id: 1,
-    title: 'AI Chatbot for Customer Service',
-    company: 'Tech Innovate Co., Ltd.',
-    objective: 'พัฒนาระบบ AI Chatbot เพื่อช่วยตอบคำถามลูกค้าอัตโนมัติตลอด 24 ชั่วโมง ลดภาระของพนักงานและเพิ่มความรวดเร็วในการให้บริการ',
-    studentsNeeded: 2,
-    allowance: '500 บาท/วัน',
-    jobDescription: '1. ออกแบบและพัฒนา Chatbot Flow\n2. เทรนโมเดล AI ด้วยข้อมูลของบริษัท\n3. เชื่อมต่อ API กับระบบฐานข้อมูลลูกค้า',
-    skills: 'Python, TensorFlow, React, Node.js, Dialogflow',
-    workLocation: '123 อาคารซอฟต์แวร์ ชั้น 5 เขตปทุมวัน กรุงเทพมหานคร 10330',
-    
-    // 1. ข้อมูลพี่เลี้ยง (รองรับหลายคน)
-    mentors: [
-      { id: 1, name: 'คุณสมศักดิ์ นำพา', position: 'Senior AI Engineer', phone: '0819997999', email: 'somsak@techinnovate.com' },
-      { id: 2, name: 'คุณวิภาดา เรียนดี', position: 'Data Scientist', phone: '0821112222', email: 'wipada@techinnovate.com' }
-    ],
-
-    // 2. ข้อมูลผู้จัดการโครงการ
-    manager: {
-      name: 'คุณประเสริฐ ยอดเยี่ยม',
-      position: 'CTO',
-      department: 'IT & Engineering',
-      phone: '0834445555',
-      email: 'prasert@techinnovate.com'
-    },
-
-    // 3. ข้อมูลผู้ประสานงาน (ถ้ามี)
-    contactMethod: 'coordinator', // 'manager' | 'coordinator'
-    coordinator: {
-      name: 'คุณสมใจ บริการ',
-      position: 'HR Manager',
-      department: 'Human Resources',
-      phone: '0898887777',
-      email: 'hr@techinnovate.com'
-    },
-
-    advisorName: 'รศ.ดร. ใจดี รักเรียน',
-    advisorEmail: 'jaidee.ru@kmitl.ac.th',
-    attachments: 'company_profile_2026.pdf'
-  });
-
-  const handleApprove = () => {
-    navigate('/advisor/projects');
-  };
-
+  // --- Logic การสมัคร (เหมือนเดิม แต่ใช้ชื่อ Field จาก DB) ---
   const handleApplyClick = () => {
     const savedApps = JSON.parse(localStorage.getItem('myApplications') || '[]');
-    
     if (savedApps.length >= 2) {
       alert('คุณสามารถสมัครโครงการได้สูงสุด 2 รายการเท่านั้น');
       return;
     }
-
-    const isAlreadyApplied = savedApps.some((app: any) => app.title === project.title);
+    const isAlreadyApplied = savedApps.some((app: any) => app.title === project.projNameTH);
     if (isAlreadyApplied) {
       alert('คุณได้ทำการสมัครโครงการนี้ไปแล้ว!');
       return;
     }
-
     setIsConfirmOpen(true);
   };
 
@@ -88,42 +62,39 @@ export default function ProjectDetail() {
     const savedApps = JSON.parse(localStorage.getItem('myApplications') || '[]');
     const newApplication = {
       id: Date.now(), 
-      title: project.title,
-      company: project.company,
+      title: project.projNameTH,
+      company: project.company?.coNameTH,
       status: "PENDING",
       date: new Date().toLocaleDateString('th-TH')
     };
-
     localStorage.setItem('myApplications', JSON.stringify([...savedApps, newApplication]));
     setIsConfirmOpen(false); 
     navigate('/student/applications'); 
   };
 
+  // --- แสดง Loading ระหว่างรอข้อมูล ---
+  if (loading) return <div className="loading-screen"><Loader2 className="animate-spin" /> กำลังโหลดรายละเอียด...</div>;
+  if (!project) return <div className="error-screen">ไม่พบข้อมูลโครงการ</div>;
+
   return (
     <div className="project-detail-container text-left">
       
-      {/* Modal ยืนยันการสมัคร */}
+      {/* Modal ยืนยันการสมัคร (เหมือนเดิม) */}
       {isConfirmOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
             <div className="modal-icon-wrapper">
               <Briefcase size={32} color="#f97316" />
             </div>
-            
             <h3>ยืนยันการสมัครโครงการ</h3>
             <p>
               ต้องการส่งใบสมัครเข้าโครงการ <br/>
-              <strong style={{ color: '#0f172a' }}>{project.title}</strong> <br/>
-              ของ <strong>{project.company}</strong> ใช่หรือไม่?
+              <strong style={{ color: '#0f172a' }}>{project.projNameTH}</strong> <br/>
+              ของ <strong>{project.company?.coNameTH}</strong> ใช่หรือไม่?
             </p>
-            
             <div className="modal-actions">
-              <button className="btn-outline-cancel" onClick={() => setIsConfirmOpen(false)}>
-                ยกเลิก
-              </button>
-              <button className="btn-confirm-apply" onClick={confirmApply}>
-                ยืนยันการสมัคร
-              </button>
+              <button className="btn-outline-cancel" onClick={() => setIsConfirmOpen(false)}>ยกเลิก</button>
+              <button className="btn-confirm-apply" onClick={confirmApply}>ยืนยันการสมัคร</button>
             </div>
           </div>
         </div>
@@ -137,166 +108,101 @@ export default function ProjectDetail() {
         
         {/* ส่วนหัวโครงการ */}
         <div className="detail-header-section">
-          <h1>{project.title}</h1>
+          <h1>{project.projNameTH}</h1>
+          <p className="text-gray-500">{project.projNameEN}</p>
           <div className="company-badge">
             <Building2 size={20} color="#f97316" />
-            <strong>{project.company}</strong>
+            <strong>{project.company?.coNameTH}</strong>
           </div>
         </div>
 
-        {/* 1. รายละเอียดโครงการ */}
+        {/* 1. รายละเอียดโครงการ (Mapping ใหม่) */}
         <div className="detail-section">
           <h3><FileText size={20} color="#3b82f6" /> รายละเอียดโครงการ</h3>
           <div className="info-box">
             <div>
-              <strong className="info-label">วัตถุประสงค์:</strong>
-              <p className="info-value">{project.objective}</p>
+              <strong className="info-label">วัตถุประสงค์ / รายละเอียด:</strong>
+              <p className="info-value">{project.projDetail || 'ไม่มีข้อมูลรายละเอียด'}</p>
             </div>
             
             <div style={{ display: 'flex', gap: '40px', flexWrap: 'wrap' }}>
               <div>
                 <strong className="info-label"><Users size={16}/> จำนวนที่รับ:</strong>
-                <p className="info-value">{project.studentsNeeded} คน</p>
+                <p className="info-value">{project.projAmount} คน</p>
               </div>
-
-              {currentRole === 'ADVISOR' && (
-                <div>
-                  <strong className="info-label"><Briefcase size={16}/> ค่าตอบแทน:</strong>
-                  <p className="info-value" style={{ color: '#16a34a', fontWeight: 'bold' }}>{project.allowance}</p>
-                </div>
-              )}
+              <div>
+                <strong className="info-label"><Briefcase size={16}/> สถานะ:</strong>
+                <p className="info-value" style={{ color: '#f97316' }}>{project.projStat}</p>
+              </div>
             </div>
 
-            <div>
-              <strong className="info-label">ลักษณะงาน (Job Description):</strong>
-              <p className="info-value" style={{ whiteSpace: 'pre-line' }}>{project.jobDescription}</p>
-            </div>
-            <div>
-              <strong className="info-label"><Wrench size={16}/> เครื่องมือและทักษะที่ต้องใช้:</strong>
-              <p className="info-value">{project.skills}</p>
-            </div>
             <div>
               <strong className="info-label"><MapPin size={16}/> สถานที่ปฏิบัติงาน:</strong>
-              <p className="info-value">{project.workLocation}</p>
+              <p className="info-value">{project.company?.coAddr}</p>
             </div>
           </div>
         </div>
 
-        {/* 2. ข้อมูลพี่เลี้ยง (Mentors) */}
+        {/* 2. ข้อมูลผู้จัดการโครงการ (Mapping จาก projectManager) */}
         <div className="detail-section">
-          <h3><UserCheck size={20} color="#f59e0b" /> ข้อมูลพนักงานที่ปรึกษา (พี่เลี้ยง)</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {project.mentors.map((mentor, index) => (
-              <div key={mentor.id} className="mentor-grid info-box">
-                <div style={{ gridColumn: '1 / -1', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px', marginBottom: '8px' }}>
-                  <strong style={{ color: '#475569' }}>พี่เลี้ยงคนที่ {index + 1}</strong>
-                </div>
-                <div>
-                  <strong className="info-label">ชื่อ-นามสกุล:</strong>
-                  <div className="info-value" style={{ fontWeight: 500 }}>{mentor.name}</div>
-                </div>
-                <div>
-                  <strong className="info-label">ตำแหน่ง:</strong>
-                  <div className="info-value">{mentor.position}</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Phone size={16} color="#64748b"/> <span>{mentor.phone}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Mail size={16} color="#64748b"/> <span>{mentor.email}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 3. ข้อมูลผู้จัดการโครงการ */}
-        <div className="detail-section">
-          <h3><UserCircle size={20} color="#8b5cf6" /> ข้อมูลผู้จัดการโครงการ/หัวหน้าหน่วยงาน</h3>
+          <h3><UserCircle size={20} color="#8b5cf6" /> ข้อมูลผู้จัดการโครงการ (PM)</h3>
           <div className="mentor-grid info-box">
             <div>
               <strong className="info-label">ชื่อ-นามสกุล:</strong>
-              <div className="info-value" style={{ fontWeight: 500 }}>{project.manager.name}</div>
+              <div className="info-value" style={{ fontWeight: 500 }}>{project.projectManager?.pmName || 'ไม่ระบุ'}</div>
             </div>
             <div>
               <strong className="info-label">ตำแหน่ง:</strong>
-              <div className="info-value">{project.manager.position}</div>
+              <div className="info-value">{project.projectManager?.pmPos || '-'}</div>
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <strong className="info-label">แผนก/ฝ่าย:</strong>
-              <div className="info-value">{project.manager.department}</div>
+              <div className="info-value">{project.projectManager?.pmDept || '-'}</div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Phone size={16} color="#64748b"/> <span>{project.manager.phone}</span>
+              <Phone size={16} color="#64748b"/> <span>{project.projectManager?.pmTel || '-'}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Mail size={16} color="#64748b"/> <span>{project.manager.email}</span>
+              <Mail size={16} color="#64748b"/> <span>{project.projectManager?.pmEmail || '-'}</span>
             </div>
           </div>
         </div>
 
-        {/* 4. ข้อมูลผู้ประสานงาน (ถ้ามี) */}
-        {project.contactMethod === 'coordinator' && project.coordinator && (
-          <div className="detail-section">
-            <h3><Contact size={20} color="#10b981" /> ข้อมูลผู้ติดต่อประสานงาน (HR/Coordinator)</h3>
-            <div className="mentor-grid info-box" style={{ borderLeft: '4px solid #10b981' }}>
-              <div>
-                <strong className="info-label">ชื่อ-นามสกุล:</strong>
-                <div className="info-value" style={{ fontWeight: 500 }}>{project.coordinator.name}</div>
-              </div>
-              <div>
-                <strong className="info-label">ตำแหน่ง:</strong>
-                <div className="info-value">{project.coordinator.position}</div>
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <strong className="info-label">แผนก/ฝ่าย:</strong>
-                <div className="info-value">{project.coordinator.department}</div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Phone size={16} color="#64748b"/> <span>{project.coordinator.phone}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Mail size={16} color="#64748b"/> <span>{project.coordinator.email}</span>
-              </div>
+        {/* 3. ข้อมูลฝ่ายบุคคล (Mapping จาก hr) */}
+        <div className="detail-section">
+          <h3><Contact size={20} color="#10b981" /> ข้อมูลผู้ติดต่อประสานงาน (HR)</h3>
+          <div className="mentor-grid info-box" style={{ borderLeft: '4px solid #10b981' }}>
+            <div>
+              <strong className="info-label">ชื่อ-นามสกุล:</strong>
+              <div className="info-value" style={{ fontWeight: 500 }}>{project.hr?.hrName || 'ไม่ระบุ'}</div>
+            </div>
+            <div>
+              <strong className="info-label">ตำแหน่ง:</strong>
+              <div className="info-value">{project.hr?.hrPosition || '-'}</div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Phone size={16} color="#64748b"/> <span>{project.hr?.hrTel || '-'}</span>
             </div>
           </div>
-        )}
+        </div>
 
-        {/* 5. อาจารย์ผู้ดูแลโครงการ */}
+        {/* 4. อาจารย์ผู้ดูแลโครงการ (Mapping จาก advisor) */}
         <div className="detail-section">
-          <h3><GraduationCap size={20} color="#8b5cf6" /> อาจารย์ผู้ดูแลโครงการ</h3>
+          <h3><GraduationCap size={20} color="#8b5cf6" /> อาจารย์ที่ปรึกษาโครงการ</h3>
           <div className="info-box-purple">
             <div>
               <strong className="info-label">ชื่ออาจารย์:</strong>
-              <div className="info-value" style={{ fontWeight: 500 }}>{project.advisorName || 'ยังไม่มีอาจารย์ที่ปรึกษา'}</div>
-            </div>
-            <div>
-              <strong className="info-label">อีเมล:</strong>
-              <div className="info-value">{project.advisorEmail || '-'}</div>
+              <div className="info-value" style={{ fontWeight: 500 }}>{project.advisor?.advName || 'ยังไม่มีอาจารย์ที่ปรึกษา'}</div>
             </div>
           </div>
         </div>
 
-        {/* 6. เอกสารแนบ (เฉพาะที่ปรึกษา) */}
-        {currentRole === 'ADVISOR' && (
-          <div className="detail-section">
-            <h3><Paperclip size={20} color="#64748b" /> เอกสารแนบ</h3>
-            <div className="attachment-box">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#334155' }}>
-                <FileText size={20} color="#ef4444"/>
-                <span>{project.attachments}</span>
-              </div>
-              <button className="btn-download">ดาวน์โหลด</button>
-            </div>
-          </div>
-        )}
-
-        {/* ปุ่มดำเนินการ */}
+        {/* ปุ่มดำเนินการ (เหมือนเดิม) */}
         <div className="action-buttons">
           <button className="btn-close" onClick={() => navigate(-1)}>ปิด</button>
           
           {currentRole === 'ADVISOR' && (
-            <button className="btn-approve" onClick={handleApprove}>
+            <button className="btn-approve" onClick={() => alert('อนุมัติสำเร็จ (กำลังพัฒนาเชื่อม API)')}>
               <CheckCircle size={18} /> อนุมัติโครงการและรับดูแล
             </button>
           )}
