@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import './Company.css'; 
 import { ClipboardList, Users, Wrench, MapPin, Upload, Save, ArrowLeft, Mail, Phone, Info, Building2, UserCircle, UserCheck, Plus, Trash2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { projectService } from '../../api/projectService';
+import { projectService } from '../../api/services/projectService';
 
 export default function EditProject() {
   const navigate = useNavigate();

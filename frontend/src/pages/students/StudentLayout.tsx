@@ -1,7 +1,9 @@
-import { useState } from 'react'; 
+import { useEffect, useState } from 'react'; 
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Search, Briefcase, FileText, User, LogOut } from 'lucide-react';
 import './StudentLayout.css';
+import { authService } from '../../api/services/authService';
+import { jwtDecode } from 'jwt-decode';
 
 export default function StudentLayout() {
   const location = useLocation();
@@ -9,7 +11,50 @@ export default function StudentLayout() {
   
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  const [userInfo, setUserInfo] = useState({
+    name: 'Loading...',
+    avatar: '..'
+  });
+
   const isActive = (path: string) => location.pathname.includes(path) ? 'active' : '';
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+
+        // check role from token first
+        const decoded: any = jwtDecode(token);
+        if (decoded.role !== 'STUDENT') {
+          navigate('/login'); 
+          return;
+        }
+
+        // get profile data from backend to display name in layout
+        const response = await authService.getProfile();
+        const dbData = response.data;
+
+        const fullName =  `${dbData.profile.firstName} ${dbData.profile.lastName}` ||'Student';
+
+        const initials = `${dbData.profile.firstName?.[0]}${dbData.profile.lastName?.[0]}` || 'ST';
+
+        setUserInfo({
+          name: fullName,
+          avatar: initials
+        });
+
+      } catch (error) {
+        console.error("Failed to fetch layout profile:", error);
+        navigate('/login');
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
@@ -67,8 +112,8 @@ export default function StudentLayout() {
 
           <div className="nav-user-zone">
             <Link to="/student/profile" className={`nav-profile ${isActive('profile')}`}>
-              <div className="avatar">JD</div>
-              <span className="user-name">John Doe</span>
+              <div className="avatar">{userInfo.avatar}</div>
+              <span className="user-name">{userInfo.name}</span>
             </Link>
             
             <button 

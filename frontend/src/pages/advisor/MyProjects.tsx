@@ -13,7 +13,7 @@ import {
   ArrowRight,
   FolderCheck
 } from 'lucide-react'; 
-import { projectService } from '../../api/projectService'; // 🌟 นำเข้า API Service
+import { projectService } from '../../api/services/projectService'; // 🌟 นำเข้า API Service
 import './Advisor.css';
 
 export default function MyProjects() {

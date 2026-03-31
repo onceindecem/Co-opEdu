@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Clock, CheckCircle2, AlertCircle } from 'lucide-react'; 
-import { projectService } from '../../api/projectService';
+import { projectService } from '../../api/services/projectService';
 import axios from 'axios';
 import './Company.css';
 

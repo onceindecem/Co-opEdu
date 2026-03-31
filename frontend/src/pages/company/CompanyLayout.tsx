@@ -1,16 +1,58 @@
-import { useState } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Briefcase, Building2, LogOut } from 'lucide-react';
-import './Company.css';
+import { useEffect, useState } from "react";
+import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
+import { Briefcase, Building2, LogOut } from "lucide-react";
+import "./Company.css";
+import { jwtDecode } from "jwt-decode";
+import { authService } from "../../api/services/authService";
 
 export default function CompanyLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  
+
   // State สำหรับจัดการ Popup Logout
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const isActive = (path: string) => location.pathname.includes(path) ? 'active' : '';
+  const [userInfo, setUserInfo] = useState({
+    name: "Loading...",
+  });
+
+  const isActive = (path: string) =>
+    location.pathname.includes(path) ? "active" : "";
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        // check role from token first
+        const decoded: any = jwtDecode(token);
+        if (decoded.role !== "HR") {
+          navigate("/login");
+          return;
+        }
+
+        // get profile data from backend to display name in layout
+        const response = await authService.getProfile();
+        const dbData = response.data;
+
+        const fullName =
+          `${dbData.profile.hrFirstName} ${dbData.profile.hrLastName}` || "Company";
+
+        setUserInfo({
+          name: fullName
+        });
+      } catch (error) {
+        console.error("Failed to fetch layout profile:", error);
+        navigate("/login");
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
@@ -18,7 +60,7 @@ export default function CompanyLayout() {
 
   const confirmLogout = () => {
     setShowLogoutModal(false);
-    navigate('/login');
+    navigate("/login");
   };
 
   const cancelLogout = () => {
@@ -27,7 +69,6 @@ export default function CompanyLayout() {
 
   return (
     <div className="company-app">
-      
       {/* --- Logout Confirmation Modal --- */}
       {showLogoutModal && (
         <div className="logout-modal-overlay">
@@ -56,23 +97,29 @@ export default function CompanyLayout() {
           </Link>
 
           <div className="nav-menu">
-            <Link to="/company/projects" className={`nav-item ${isActive('projects')}`}>
+            <Link
+              to="/company/projects"
+              className={`nav-item ${isActive("projects")}`}
+            >
               <Briefcase size={18} /> <span>โครงการ</span>
             </Link>
             {/* หากบริษัทมีเมนูอื่นในอนาคต สามารถเพิ่มตรงนี้ได้ */}
           </div>
 
           <div className="nav-user-zone">
-            <Link to="/company/profile" className={`nav-profile ${isActive('profile')}`}>
+            <Link
+              to="/company/profile"
+              className={`nav-profile ${isActive("profile")}`}
+            >
               <div className="avatar">
                 <Building2 size={16} />
               </div>
-              <span className="user-name">บริษัท เอบีซี จำกัด</span>
+              <span className="user-name">{userInfo.name}</span>
             </Link>
-            
-            <button 
-              className="btn-logout" 
-              title="ออกจากระบบ" 
+
+            <button
+              className="btn-logout"
+              title="ออกจากระบบ"
               onClick={handleLogoutClick}
             >
               <LogOut size={18} />

@@ -8,7 +8,7 @@ import {
   Calendar,
   ChevronRight
 } from 'lucide-react';
-import { projectService } from '../../api/projectService'; // 🌟 อย่าลืมเช็ค path ตรงนี้นะครับว่าตรงกับไฟล์ API ในโปรเจกต์ของคุณ
+import { projectService } from '../../api/services/projectService'; // 🌟 อย่าลืมเช็ค path ตรงนี้นะครับว่าตรงกับไฟล์ API ในโปรเจกต์ของคุณ
 import './Advisor.css';
 
 export default function AvailableProjects() {

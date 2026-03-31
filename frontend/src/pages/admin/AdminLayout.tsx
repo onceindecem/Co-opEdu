@@ -1,9 +1,51 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Shield, Users, Activity, LogOut, UserCircle, ClipboardCheck } from 'lucide-react';
 import './Admin.css';
+import { useEffect, useState } from 'react';
+import { jwtDecode } from 'jwt-decode';
+import { authService } from '../../api/services/authService';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const [userInfo, setUserInfo] = useState({
+      name: "Loading...",
+    });
+  
+    useEffect(() => {
+      const fetchUserData = async () => {
+        try {
+          const token = localStorage.getItem("accessToken");
+          console.log("🕵️‍♂️ 1. Token ที่ดึงได้:", token);
+          if (!token) {
+            navigate("/login");
+            return;
+          }
+  
+          // check role from token first
+          const decoded: any = jwtDecode(token);
+          if (decoded.role !== "ADMIN") {
+            navigate("/login");
+            return;
+          }
+  
+          // get profile data from backend to display name in layout
+          const response = await authService.getProfile();
+          const dbData = response.data;
+  
+          const fullName =
+            `${dbData.accountInfo.email}` || "Admin";
+  
+          setUserInfo({
+            name: fullName
+          });
+        } catch (error) {
+          console.error("Failed to fetch layout profile:", error);
+          navigate("/login");
+        }
+      };
+  
+      fetchUserData();
+    }, [navigate]);
 
   const handleLogout = () => {
     navigate('/login');
@@ -48,7 +90,7 @@ export default function AdminLayout() {
           <div className="advisor-profile">
             <UserCircle size={32} className="profile-avatar-icon" />
             <div className="profile-info">
-              <p className="name">Admin01</p>
+              <p className="name">{userInfo.name}</p>
               <p className="dept">Administrator</p>
             </div>
           </div>
