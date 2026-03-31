@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, MinLength, IsEmail } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, MinLength, IsEmail, MaxLength } from "class-validator";
 
 export class RegisterHRDto {
   // login info
@@ -14,10 +14,12 @@ export class RegisterHRDto {
   // hr info
   @IsString()
   @IsNotEmpty({ message: 'first name is required' })
+  @MaxLength(100, { message: 'first name is too long' })
   hrFirstName: string;
 
   @IsString()
   @IsNotEmpty({ message: 'last name is required' })
+  @MaxLength(100, { message: 'last name is too long' })
   hrLastName: string;
 
   @IsString()
@@ -26,6 +28,8 @@ export class RegisterHRDto {
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(9, { message: 'telephone must be at least 9 characters long' })
+  @MaxLength(10, { message: 'telephone must be at most 10 characters long' })
   hrTel: string;
 
   // company info
@@ -43,6 +47,8 @@ export class RegisterHRDto {
 
   @IsString()
   @IsNotEmpty({ message: 'company telephone is required' })
+  @MinLength(9, { message: 'telephone must be at least 9 characters long' })
+  @MaxLength(10, { message: 'telephone must be at most 10 characters long' })
   coTel: string;
 
   @IsString()

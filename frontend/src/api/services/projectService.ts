@@ -1,4 +1,4 @@
-import api from './axiosInstance';
+import api from '../axiosInstance';
 
 export const projectService = {
   // สำหรับหน้า StudentProjects และ AvailableProjects

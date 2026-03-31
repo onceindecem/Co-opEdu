@@ -2,7 +2,7 @@ import { useState } from 'react';
 import './Company.css'; 
 import { ClipboardList, Users, Wrench, MapPin, Upload, Save, ArrowLeft, Mail, Phone, Info, Building2, UserCircle, UserCheck, Plus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { projectService } from '../../api/projectService'; // 👈 นำเข้า Service (เช็ค Path ให้ตรงกับโปรเจกต์คุณด้วยนะครับ)
+import { projectService } from '../../api/services/projectService'; // 👈 นำเข้า Service (เช็ค Path ให้ตรงกับโปรเจกต์คุณด้วยนะครับ)
 
 export default function CreateProject() {
   const isEdit = false;

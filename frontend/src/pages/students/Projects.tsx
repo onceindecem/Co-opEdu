@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'; // 👈 เพิ่ม useState, u
 import './Projects.css';
 import { Search, MapPin, Briefcase, Loader2 } from 'lucide-react'; // เพิ่ม Loader2 ไว้ทำ Loading
 import { useNavigate } from 'react-router-dom';
-import { projectService } from '../../api/projectService'; // 👈 Import service ที่เราสร้าง
+import { projectService } from '../../api/services/projectService'; // 👈 Import service ที่เราสร้าง
 
 export default function StudentProjects() {
   const navigate = useNavigate();
