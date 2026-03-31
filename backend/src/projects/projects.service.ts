@@ -63,4 +63,48 @@ export class ProjectsService {
     await project.destroy(); 
     return { message: `ลบโปรเจกต์รหัส ${id} เรียบร้อยแล้ว` };
   }
+  // ==========================================
+  // 🌟 4. ดึงโครงการที่รอการอนุมัติ (Status: PENDING และยังไม่มีอาจารย์)
+  // ==========================================
+  async findAvailable() {
+    return await this.projectModel.findAll({
+      where: {
+        projStat: 'PENDING', // กรองเฉพาะที่รออนุมัติ
+        advID: null          // และยังไม่มีอาจารย์รับไปดูแล
+      },
+      include: [Company, ProjectManager], // Join ข้อมูลที่จำเป็นต้องโชว์ในตารางหน้าบ้าน
+    });
+  }
+
+  // ==========================================
+  // 🌟 5. ดึงโครงการที่อาจารย์ท่านนี้ดูแลอยู่ (Status: APPROVED)
+  // ==========================================
+  async findMyProjects(advisorId?: string) {
+    // หมายเหตุ: advisorId ปกติจะได้มาจาก JWT Token ใน Request
+    // ถ้ายังไม่ได้ทำระบบ Login ให้ดึงทั้งหมดที่ APPROVED ไปก่อนเพื่อเช็ค UI
+    const whereCondition = advisorId ? { advID: advisorId } : { projStat: 'APPROVED' };
+    
+    return await this.projectModel.findAll({
+      where: whereCondition,
+      include: [Company],
+    });
+  }
+
+  // ==========================================
+  // 🌟 6. อัปเดตสถานะเป็น APPROVED และผูกชื่ออาจารย์ที่ปรึกษา
+  // ==========================================
+  async approveProject(id: string, advisorId?: string) {
+    const project = await this.projectModel.findByPk(id);
+    if (!project) {
+      throw new NotFoundException(`ไม่พบโปรเจกต์รหัส ${id}`);
+    }
+
+    // อัปเดตข้อมูลใน Database
+    await project.update({
+      projStat: 'APPROVED',
+      advID: advisorId || null // ใส่ ID ของอาจารย์ที่กดรับ (ถ้ามีระบบ Login แล้ว)
+    });
+
+    return { message: 'อนุมัติและรับดูแลโครงการเรียบร้อยแล้ว', project };
+  }
 }

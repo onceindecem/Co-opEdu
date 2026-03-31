@@ -28,6 +28,7 @@ import AdminLayout from './pages/admin/AdminLayout';
 import UserManagement from './pages/admin/UserManagement';
 import AuditLogs from './pages/admin/AuditLogs';
 import ApproveDeleteRequests from './pages/admin/ApproveDeleteRequests';
+import EditProject from './pages/company/EditProject';
 
 function App() {
   return (
@@ -50,11 +51,12 @@ function App() {
           <Route path="profile" element={<Profile />} />
         </Route>
 
-        {/* 2. Company Journey */}
+       {/* 2. Company Journey */}
         <Route path="/company" element={<CompanyLayout />}>
           <Route index element={<Navigate to="/company/projects" replace />} />
           <Route path="projects" element={<CompanyProjects />} />
           <Route path="projects/create" element={<CreateProject />} />
+          <Route path="projects/edit/:id" element={<EditProject />} /> {/* 🌟 แก้ตรงนี้ */}
           <Route path="profile" element={<Profile />} />
         </Route>
 
