@@ -4,6 +4,7 @@ import { User, Building2, Phone, Mail, Briefcase, MapPin, Save, CheckCircle } fr
 import './Profile.css';
 import { authService } from '../api/services/authService';
 import { jwtDecode } from 'jwt-decode';
+import { hrService } from '../api/services/hrService';
 
 const StudentView = ({ accountInfo, profileData }: { accountInfo: any, profileData: any }) => {
 
@@ -46,8 +47,8 @@ const StudentView = ({ accountInfo, profileData }: { accountInfo: any, profileDa
 
 const CompanyView = ({ accountInfo, profileData }: { accountInfo: any, profileData: any }) => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  console.log("ข้อมูล Account ที่ได้มา:", accountInfo);
-  console.log("ข้อมูล Profile ที่ได้มา:", profileData);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const [profile, setProfile] = useState({
     firstName: profileData?.hrFirstName || '', 
@@ -61,10 +62,34 @@ const CompanyView = ({ accountInfo, profileData }: { accountInfo: any, profileDa
     address: profileData?.company?.coAddr || ''
   });
 
-  const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Saving Company Data:", profile);
-    setShowSuccessModal(true); 
+    setIsSaving(true);
+    setErrorMessage('');
+
+    try {
+      const payload = {
+        hrFirstName: profile.firstName,
+        hrLastName: profile.lastName,
+        hrTel: profile.personalPhone,
+        hrPosition: profile.position,
+        coNameTH: profile.companyNameTH,
+        coNameEN: profile.companyNameEN,
+        coEmail: profile.companyEmail,
+        coTel: profile.companyPhone,
+        coAddr: profile.address,
+      };
+
+      await hrService.updateCompanyProfile(payload);
+
+      setShowSuccessModal(true); 
+
+    } catch (error) {
+      console.error("update Company Profile error:", error);
+      setErrorMessage('Failed to update profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -89,6 +114,12 @@ const CompanyView = ({ accountInfo, profileData }: { accountInfo: any, profileDa
               ตกลง
             </button>
           </div>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div style={{ background: '#fee2e2', color: '#ef4444', padding: '10px 15px', borderRadius: '8px', marginBottom: '15px' }}>
+          {errorMessage}
         </div>
       )}
 
@@ -155,8 +186,18 @@ const CompanyView = ({ accountInfo, profileData }: { accountInfo: any, profileDa
           </div>
         </div>
 
-        <button type="submit" className="btn-save-profile" style={{ background: '#f97316', color: 'white', border: 'none' }}>
-          <Save size={18} /> บันทึกการเปลี่ยนแปลง
+        <button 
+          type="submit" 
+          className="btn-save-profile" 
+          style={{ 
+            background: isSaving ? '#fdba74' : '#f97316',
+            color: 'white', 
+            border: 'none',
+            cursor: isSaving ? 'not-allowed' : 'pointer'
+          }}
+          disabled={isSaving}
+        >
+          <Save size={18} /> {isSaving ? 'กำลังบันทึกข้อมูล...' : 'บันทึกการเปลี่ยนแปลง'}
         </button>
       </form>
     </>
