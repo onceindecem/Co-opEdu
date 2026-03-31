@@ -245,13 +245,18 @@ export default function ProjectDetail() {
             </div>
             <div className="info-grid-2col">
               <div>
-                <strong className="info-label"><Users size={16} /> จำนวนที่รับ:</strong>
-                <p className="info-value">{project.projAmount || project.quota} คน</p>
+                <strong className="info-label"><Users size={16}/> จำนวนที่รับ:</strong>
+                <p className="info-value">{project.projAmount} คน</p>
               </div>
               <div>
-                <strong className="info-label"><MapPin size={16} /> สถานที่ปฏิบัติงาน:</strong>
-                <p className="info-value">{project.company?.coAddr || project.workAddr}</p>
+                <strong className="info-label"><Briefcase size={16}/> สถานะ:</strong>
+                <p className="info-value" style={{ color: '#f97316' }}>{project.projStat}</p>
               </div>
+            </div>
+
+            <div>
+              <strong className="info-label"><MapPin size={16}/> สถานที่ปฏิบัติงาน:</strong>
+              <p className="info-value">{project.company?.coAddr}</p>
             </div>
           </div>
         </div>

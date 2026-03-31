@@ -131,11 +131,16 @@ export class ProjectsService {
     });
   }
 
+  // ==========================================
+  // 3. ใส่ include เพื่อ Join ตารางตอนดึงข้อมูลรายตัว
+  // ==========================================
   async findOne(id: string) {
     const project = await this.projectModel.findByPk(id, {
       include: [Company, HR, ProjectManager, Advisor],
     });
-    if (!project) throw new NotFoundException(`ไม่พบโปรเจกต์รหัส ${id}`);
+    if (!project) {
+      throw new NotFoundException(`ไม่พบโปรเจกต์รหัส ${id}`);
+    }
     return project;
   }
 
@@ -144,16 +149,27 @@ export class ProjectsService {
     await project.destroy(); 
     return { message: `ลบโปรเจกต์รหัส ${id} เรียบร้อยแล้ว` };
   }
-
+  // ==========================================
+  // 🌟 4. ดึงโครงการที่รอการอนุมัติ (Status: PENDING และยังไม่มีอาจารย์)
+  // ==========================================
   async findAvailable() {
     return await this.projectModel.findAll({
-      where: { projStat: 'PENDING', advID: null },
-      include: [Company, ProjectManager],
+      where: {
+        projStat: 'PENDING', // กรองเฉพาะที่รออนุมัติ
+        advID: null          // และยังไม่มีอาจารย์รับไปดูแล
+      },
+      include: [Company, ProjectManager], // Join ข้อมูลที่จำเป็นต้องโชว์ในตารางหน้าบ้าน
     });
   }
 
+  // ==========================================
+  // 🌟 5. ดึงโครงการที่อาจารย์ท่านนี้ดูแลอยู่ (Status: APPROVED)
+  // ==========================================
   async findMyProjects(advisorId?: string) {
+    // หมายเหตุ: advisorId ปกติจะได้มาจาก JWT Token ใน Request
+    // ถ้ายังไม่ได้ทำระบบ Login ให้ดึงทั้งหมดที่ APPROVED ไปก่อนเพื่อเช็ค UI
     const whereCondition = advisorId ? { advID: advisorId } : { projStat: 'APPROVED' };
+    
     return await this.projectModel.findAll({
       where: whereCondition,
       include: [Company],

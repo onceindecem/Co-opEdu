@@ -152,6 +152,7 @@ export default function EditProject() {
   };
 
   // 🌟 [แก้ไข] ฟังก์ชัน Submit ให้ใช้ FormData เพื่อส่งไฟล์
+  // 🌟 ฟังก์ชัน Submit ส่งข้อมูลไป Backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -489,21 +490,13 @@ export default function EditProject() {
           </div>
           
           <div className="file-upload-zone">
-            <label className="upload-label" style={{ cursor: 'pointer' }}>
+            <label className="upload-label">
               <Upload size={30} className="upload-icon" />
-              <p className="upload-text">คลิกเพื่ออัปโหลดเอกสารแนบใหม่ (PDF)</p>
-              <input type="file" hidden multiple accept=".pdf" onChange={handleFileChange} />
+              <p className="upload-text">คลิกเพื่ออัปโหลดเอกสารแนบ</p>
+              <span className="upload-subtext">(รองรับ PDF ขนาดไม่เกิน 5MB)</span>
+              <input type="file" hidden multiple />
             </label>
           </div>
-
-          {/* รายชื่อไฟล์ที่เลือกใหม่ */}
-          {selectedFiles.map((file, idx) => (
-            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', background: '#f8fafc', borderRadius: '8px', marginTop: '8px', border: '1px solid #e2e8f0' }}>
-              <FileText size={18} color="#ef4444" />
-              <span style={{ flex: 1, fontSize: '14px' }}>{file.name}</span>
-              <button type="button" onClick={() => removeFile(idx)} style={{ color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer' }}><Trash2 size={16} /></button>
-            </div>
-          ))}
 
           <div className="form-actions">
             <button type="button" onClick={() => navigate(-1)} className="btn-cancel" disabled={loading}>

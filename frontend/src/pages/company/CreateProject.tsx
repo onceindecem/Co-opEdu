@@ -2,7 +2,7 @@ import { useState } from 'react';
 import './Company.css'; 
 import { ClipboardList, Users, Wrench, MapPin, Upload, Save, ArrowLeft, Mail, Phone, Info, Building2, UserCircle, UserCheck, Plus, Trash2, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { projectService } from '../../api/services/projectService'; 
+import { projectService } from '../../api/services/projectService'; // 👈 นำเข้า Service (เช็ค Path ให้ตรงกับโปรเจกต์คุณด้วยนะครับ)
 
 export default function CreateProject() {
   const isEdit = false;
@@ -205,6 +205,7 @@ export default function CreateProject() {
 
           <div className="form-group span-full">
             <label>ชื่อ-นามสกุล *</label>
+            {/* 🌟 ผูก State ของ PM */}
             <input type="text" name="name" value={pmData.name} onChange={handlePmChange} placeholder="ระบุชื่อ-นามสกุล ผู้จัดการโครงการ" required />
           </div>
 
@@ -379,6 +380,7 @@ export default function CreateProject() {
               <h4 className="coordinator-title">รายละเอียดผู้ประสานงานของสถานประกอบการ/หน่วยงาน</h4>
               <div className="form-group span-full">
                 <label>ชื่อ-นามสกุล ผู้ประสานงาน *</label>
+                {/* 🌟 ผูก State ของ Coordinator */}
                 <input type="text" name="name" value={coordData.name} onChange={handleCoordChange} placeholder="ระบุชื่อ-นามสกุล ผู้ประสานงาน (เช่น HR)" required />
               </div>
               <div className="input-row">
@@ -398,7 +400,7 @@ export default function CreateProject() {
                 </div>
                 <div className="form-group">
                   <label>อีเมลติดต่อ *</label>
-                  <input type="email" name="email" value={coordData.email} placeholder="hr@company.com" onChange={handleCoordChange} required />
+                  <input type="email" name="email" value={coordData.email} onChange={handleCoordChange} placeholder="hr@company.com" required />
                 </div>
               </div>
             </div>

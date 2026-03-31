@@ -24,9 +24,13 @@ export class ProjectsController {
     return this.projectsService.findAll();
   }
 
-  // 🌟 Route พิเศษต้องอยู่เหนือ :id
+  // ==========================================
+  // 🌟 เพิ่ม Route ใหม่ตรงนี้! (ต้องอยู่บน :id เสมอ)
+  // ==========================================
+
   @Get('available')
   findAvailable() {
+    // อย่าลืมไปเขียนฟังก์ชัน findAvailable() ใน projects.service.ts ด้วยนะครับ
     return this.projectsService.findAvailable(); 
   }
 

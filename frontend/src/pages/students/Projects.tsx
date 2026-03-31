@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react'; 
+import { useEffect, useState } from 'react'; // 👈 เพิ่ม useState, useEffect
 import './Projects.css';
-import { Search, MapPin, Briefcase, Loader2 } from 'lucide-react'; 
+import { Search, MapPin, Briefcase, Loader2 } from 'lucide-react'; // เพิ่ม Loader2 ไว้ทำ Loading
 import { useNavigate } from 'react-router-dom';
-import { projectService } from '../../api/services/projectService'; 
+import { projectService } from '../../api/services/projectService'; // 👈 Import service ที่เราสร้าง
 
 export default function StudentProjects() {
   const navigate = useNavigate();
   
+  // --- 1. สร้าง State สำหรับเก็บข้อมูล ---
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -64,21 +65,7 @@ export default function StudentProjects() {
           {filteredProjects.length > 0 ? (
             filteredProjects.map((proj: any) => (
               <div className="project-card" key={proj.projID}>
-                
-                {/* 🌟 2. เปลี่ยนป้ายสถานะเป็น "เปิดรับสมัคร" ให้ดูเป็นมิตรกับนักศึกษา 🌟 */}
-                <div style={{ 
-                  display: 'inline-block',
-                  backgroundColor: '#dcfce7', 
-                  color: '#166534', 
-                  padding: '4px 12px', 
-                  borderRadius: '20px', 
-                  fontSize: '0.75rem', 
-                  fontWeight: 'bold',
-                  marginBottom: '10px'
-                }}>
-                  ✅ เปิดรับสมัคร
-                </div>
-
+                <div className="status-badge">{proj.projStat}</div>
                 <h3>{proj.projNameTH}</h3>
                 <p className='position'>{proj.projNameEN || 'General Position'}</p>
                 <p className="company">{proj.company?.coNameTH || 'ไม่ระบุชื่อบริษัท'}</p>

@@ -10,13 +10,13 @@ import {
   ChevronRight,
   AlertTriangle // 🌟 เพิ่ม Icon สำหรับหน้า Reject
 } from 'lucide-react';
-import { projectService } from '../../api/services/projectService';
+import { projectService } from '../../api/services/projectService'; // 🌟 อย่าลืมเช็ค path ตรงนี้นะครับว่าตรงกับไฟล์ API ในโปรเจกต์ของคุณ
 import './Advisor.css';
 
 export default function AvailableProjects() {
   const navigate = useNavigate();
 
-  // --- State สำหรับข้อมูล ---
+  // 🌟 เปลี่ยน state มารองรับข้อมูลจริง และเพิ่ม loading / search
   const [pendingProjects, setPendingProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -198,6 +198,7 @@ export default function AvailableProjects() {
         <div className="table-actions">
           <div className="search-wrapper">
             <Search size={18} />
+            {/* 🌟 ผูก state กับช่องค้นหา */}
             <input
               type="text"
               placeholder="ค้นหาชื่อโครงการ หรือ บริษัท..."
@@ -207,6 +208,7 @@ export default function AvailableProjects() {
           </div>
         </div>
 
+        {/* 🌟 แสดงสถานะ Loading ระหว่างรอข้อมูล */}
         {loading ? (
           <div style={{ textAlign: 'center', padding: '40px' }}>กำลังโหลดข้อมูล...</div>
         ) : filteredProjects.length === 0 ? (
@@ -223,6 +225,7 @@ export default function AvailableProjects() {
               </tr>
             </thead>
             <tbody>
+              {/* 🌟 ใช้ข้อมูลที่กรองแล้วมาแสดงผล */}
               {filteredProjects.map((proj) => (
                 <tr key={proj.projID || proj.id}>
                   <td className="proj-title-cell">
@@ -241,6 +244,7 @@ export default function AvailableProjects() {
                   </td>
                   <td>
                     <div className="date-cell">
+                      {/* จัดรูปแบบวันที่จาก Backend ให้สวยงาม */}
                       <Calendar size={16} />
                       {proj.createdAt ? new Date(proj.createdAt).toLocaleDateString('th-TH') : proj.date}
                     </div>

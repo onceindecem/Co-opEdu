@@ -1,5 +1,4 @@
-import { useState } from 'react'; // 🌟 เพิ่ม useState
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'; // 🌟 เพิ่ม useNavigate
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   FolderSearch, 
@@ -9,6 +8,9 @@ import {
   UserCircle 
 } from 'lucide-react';
 import './Advisor.css';
+import { useEffect, useState } from 'react';
+import { jwtDecode } from 'jwt-decode';
+import { authService } from '../../api/services/authService';
 
 export default function AdvisorLayout() {
   const location = useLocation();
@@ -42,6 +44,45 @@ export default function AdvisorLayout() {
       label: 'ตรวจรายงาน / Report' 
     },
   ];
+
+  const [userInfo, setUserInfo] = useState({
+      name: "Loading...",
+    });
+  
+    useEffect(() => {
+      const fetchUserData = async () => {
+        try {
+          const token = localStorage.getItem("accessToken");
+          if (!token) {
+            navigate("/login");
+            return;
+          }
+  
+          // check role from token first
+          const decoded: any = jwtDecode(token);
+          if (decoded.role !== "ADVISOR") {
+            navigate("/login");
+            return;
+          }
+  
+          // get profile data from backend to display name in layout
+          const response = await authService.getProfile();
+          const dbData = response.data;
+  
+          const fullName =
+            `${dbData.profile.firstName} ${dbData.profile.lastName}` || "Advisor";
+  
+          setUserInfo({
+            name: fullName
+          });
+        } catch (error) {
+          console.error("Failed to fetch layout profile:", error);
+          navigate("/login");
+        }
+      };
+  
+      fetchUserData();
+    }, [navigate]);
 
   return (
     <div className="advisor-layout">
@@ -93,7 +134,7 @@ export default function AdvisorLayout() {
           <div className="advisor-profile">
             <UserCircle size={32} color="#94a3b8" />
             <div className="profile-info">
-              <p className="name">ดร. สมชาย สายชล</p>
+              <p className="name">{userInfo.name}</p>
               <p className="dept">Computer Science</p>
             </div>
           </div>
