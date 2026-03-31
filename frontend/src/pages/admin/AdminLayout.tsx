@@ -1,3 +1,4 @@
+import { useState } from 'react'; // 🌟 เพิ่ม useState
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Shield, Users, Activity, LogOut, UserCircle, ClipboardCheck } from 'lucide-react';
 import './Admin.css';
@@ -5,12 +6,41 @@ import './Admin.css';
 export default function AdminLayout() {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  // 🌟 State สำหรับควบคุม Popup Logout
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // 🌟 ฟังก์ชันจัดการ Logout
+  const handleLogoutClick = () => setShowLogoutModal(true);
+  const cancelLogout = () => setShowLogoutModal(false);
+  const confirmLogout = () => {
+    setShowLogoutModal(false);
     navigate('/login');
   };
 
   return (
     <div className="admin-container">
+
+      {/* 🌟 Popup ยืนยันการออกจากระบบ */}
+      {showLogoutModal && (
+        <div className="logout-modal-overlay">
+          <div className="logout-modal-content">
+            <div className="logout-modal-icon">
+              <LogOut size={40} color="#ef4444" />
+            </div>
+            <h2>ออกจากระบบ</h2>
+            <p>คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบบัญชีของคุณ?</p>
+            <div className="logout-modal-actions">
+              <button onClick={cancelLogout} className="btn-cancel-logout">
+                ยกเลิก
+              </button>
+              <button onClick={confirmLogout} className="btn-confirm-logout">
+                ยืนยันการออก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <aside className="admin-sidebar">
         <div className="admin-logo">
           <div className="admin-logo-icon">
@@ -35,7 +65,7 @@ export default function AdminLayout() {
           >
             <Activity size={20} /> <span>บันทึกระบบ (Audit Logs)</span>
           </NavLink>
-          
+
           <NavLink
             to="/admin/approve-delete"
             className={({ isActive }) => isActive ? "admin-nav-item active" : "admin-nav-item"}
@@ -52,7 +82,8 @@ export default function AdminLayout() {
               <p className="dept">Administrator</p>
             </div>
           </div>
-          <button className="btn-logout-sidebar" onClick={handleLogout}>
+          {/* 🌟 เปลี่ยนมาใช้ฟังก์ชัน handleLogoutClick */}
+          <button className="btn-logout-sidebar" onClick={handleLogoutClick}>
             <LogOut size={18} /> <span>ออกจากระบบ</span>
           </button>
         </div>

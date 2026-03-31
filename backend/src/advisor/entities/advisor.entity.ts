@@ -1,0 +1,34 @@
+import {
+  Table,
+  Column,
+  Model,
+  DataType,
+  PrimaryKey,
+  ForeignKey,
+  BelongsTo,
+  HasMany,
+} from 'sequelize-typescript';
+
+// TODO: ปลดคอมเมนต์เมื่อสร้าง Model Users และ Project เสร็จแล้ว
+import { User } from 'src/users/entities/user.entity';
+// import { Project } from 'src/projects/entities/project.entity';
+
+@Table({
+  tableName: 'Advisor',
+  timestamps: false,
+})
+export class Advisor extends Model {
+  @ForeignKey(() => User)  
+  @PrimaryKey
+  @Column({ type: DataType.UUID })
+  declare userID: string;
+
+  @Column({ type: DataType.STRING, allowNull: false })
+  declare firstName: string;
+
+  @Column({ type: DataType.STRING, allowNull: false })
+  declare lastName: string;
+
+  @BelongsTo(() => User, { onDelete: 'CASCADE' })
+  declare user: User;
+}

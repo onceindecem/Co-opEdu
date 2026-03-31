@@ -1,313 +1,364 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { 
-  ArrowLeft, Building2, MapPin, Users, Wrench, 
-  UserCheck, Phone, Mail, FileText, CheckCircle, 
-  Briefcase, GraduationCap, Paperclip, UserCircle, 
-  Contact 
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+import {
+  ArrowLeft, Building2, MapPin, Users, Wrench,
+  UserCheck, Phone, Mail, FileText, CheckCircle,
+  Briefcase, UserCircle, Paperclip, Loader2, ShieldAlert, AlertTriangle
 } from 'lucide-react';
 import './students/Projects.css';
+import { projectService } from '../api/services/projectService';
 
 export default function ProjectDetail() {
-  const location = useLocation();
+  const { id } = useParams();
   const navigate = useNavigate();
 
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [project, setProject] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [isApproving, setIsApproving] = useState(false);
 
-  let currentRole = '';
-  if (location.pathname.includes('/student')) {
-    currentRole = 'STUDENT';
-  } else if (location.pathname.includes('/advisor')) {
-    currentRole = 'ADVISOR';
+  // --- 🌟 State สำหรับ Popup (Modals) ---
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false); // ของนักศึกษา (สมัคร)
+  const [showApproveModal, setShowApproveModal] = useState(false); // ของอาจารย์ (อนุมัติ)
+  const [showRejectModal, setShowRejectModal] = useState(false); // ของอาจารย์ (ปฏิเสธ)
+  const [rejectReason, setRejectReason] = useState(''); // เหตุผลตอนปฏิเสธ
+
+  // --- สิทธิ์การใช้งาน ---
+  const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+  let currentRole = 'STUDENT';
+  let currentUserId = "";
+
+  if (token) {
+    try {
+      const decodedToken: any = jwtDecode(token);
+      currentRole = (decodedToken.role || decodedToken.userRole || decodedToken.type)?.toUpperCase() || 'STUDENT';
+      currentUserId = decodedToken.id || decodedToken.sub || decodedToken.userId;
+    } catch (error) {
+      console.error("Token is invalid:", error);
+    }
   }
 
-  // อัปเดต Mock Data ให้ตรงกับฟอร์ม CreateProject ใหม่
-  const [project] = useState({
-    id: 1,
-    title: 'AI Chatbot for Customer Service',
-    company: 'Tech Innovate Co., Ltd.',
-    objective: 'พัฒนาระบบ AI Chatbot เพื่อช่วยตอบคำถามลูกค้าอัตโนมัติตลอด 24 ชั่วโมง ลดภาระของพนักงานและเพิ่มความรวดเร็วในการให้บริการ',
-    studentsNeeded: 2,
-    allowance: '500 บาท/วัน',
-    jobDescription: '1. ออกแบบและพัฒนา Chatbot Flow\n2. เทรนโมเดล AI ด้วยข้อมูลของบริษัท\n3. เชื่อมต่อ API กับระบบฐานข้อมูลลูกค้า',
-    skills: 'Python, TensorFlow, React, Node.js, Dialogflow',
-    workLocation: '123 อาคารซอฟต์แวร์ ชั้น 5 เขตปทุมวัน กรุงเทพมหานคร 10330',
-    
-    // 1. ข้อมูลพี่เลี้ยง (รองรับหลายคน)
-    mentors: [
-      { id: 1, name: 'คุณสมศักดิ์ นำพา', position: 'Senior AI Engineer', phone: '0819997999', email: 'somsak@techinnovate.com' },
-      { id: 2, name: 'คุณวิภาดา เรียนดี', position: 'Data Scientist', phone: '0821112222', email: 'wipada@techinnovate.com' }
-    ],
+  useEffect(() => {
+    const fetchDetail = async () => {
+      try {
+        setLoading(true);
+        if (id) {
+          const res = await projectService.getOne(id);
+          const data = res.data;
 
-    // 2. ข้อมูลผู้จัดการโครงการ
-    manager: {
-      name: 'คุณประเสริฐ ยอดเยี่ยม',
-      position: 'CTO',
-      department: 'IT & Engineering',
-      phone: '0834445555',
-      email: 'prasert@techinnovate.com'
-    },
+          if (currentRole === 'STUDENT' && data.projStat !== 'APPROVED') {
+            alert("โครงการนี้ยังไม่ได้รับการอนุมัติ");
+            navigate('/student/projects');
+            return;
+          }
+          setProject(data);
+        }
+      } catch (err: any) {
+        if (err.response?.status === 401) navigate('/login');
+        console.error("Error fetching project detail:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDetail();
+  }, [id, navigate, currentRole]);
 
-    // 3. ข้อมูลผู้ประสานงาน (ถ้ามี)
-    contactMethod: 'coordinator', // 'manager' | 'coordinator'
-    coordinator: {
-      name: 'คุณสมใจ บริการ',
-      position: 'HR Manager',
-      department: 'Human Resources',
-      phone: '0898887777',
-      email: 'hr@techinnovate.com'
-    },
-
-    advisorName: 'รศ.ดร. ใจดี รักเรียน',
-    advisorEmail: 'jaidee.ru@kmitl.ac.th',
-    attachments: 'company_profile_2026.pdf'
-  });
-
-  const handleApprove = () => {
-    navigate('/advisor/projects');
+  // --- 🟢 ฟังก์ชันยืนยันการอนุมัติ (ยิง API) ---
+  const confirmApprove = async () => {
+    try {
+      setIsApproving(true);
+      if (!currentUserId) {
+        alert("ไม่พบ ID อาจารย์ กรุณาล็อกอินใหม่");
+        return;
+      }
+      
+      await projectService.updateStatus(id as string, currentUserId);
+      setShowApproveModal(false); // ปิด Popup
+      
+      // ดึงข้อมูลใหม่มาอัปเดตหน้าจอ
+      const updated = await projectService.getOne(id as string);
+      setProject(updated.data);
+    } catch (err) {
+      alert('❌ เกิดข้อผิดพลาดในการอนุมัติ');
+      console.error(err);
+    } finally {
+      setIsApproving(false);
+    }
   };
 
-  const handleApplyClick = () => {
-    const savedApps = JSON.parse(localStorage.getItem('myApplications') || '[]');
-    
-    if (savedApps.length >= 2) {
-      alert('คุณสามารถสมัครโครงการได้สูงสุด 2 รายการเท่านั้น');
+  // --- 🔴 ฟังก์ชันยืนยันการปฏิเสธ (ยิง API) ---
+  const confirmReject = async () => {
+    if (!rejectReason.trim()) {
+      alert("กรุณาระบุเหตุผลการปฏิเสธ");
       return;
     }
 
-    const isAlreadyApplied = savedApps.some((app: any) => app.title === project.title);
-    if (isAlreadyApplied) {
-      alert('คุณได้ทำการสมัครโครงการนี้ไปแล้ว!');
-      return;
+    try {
+      setIsApproving(true);
+      await projectService.reject(id as string); 
+      
+      alert('❌ ปฏิเสธโครงการเรียบร้อยแล้ว');
+      setShowRejectModal(false); // ปิด Popup
+      navigate(-1); // ถอยกลับไปหน้าก่อนหน้า เพราะปฏิเสธไปแล้ว
+    } catch (err) {
+      alert('เกิดข้อผิดพลาดในการปฏิเสธโครงการ');
+      console.error(err);
+    } finally {
+      setIsApproving(false);
     }
-
-    setIsConfirmOpen(true);
   };
 
   const confirmApply = () => {
-    const savedApps = JSON.parse(localStorage.getItem('myApplications') || '[]');
-    const newApplication = {
-      id: Date.now(), 
-      title: project.title,
-      company: project.company,
-      status: "PENDING",
-      date: new Date().toLocaleDateString('th-TH')
-    };
-
-    localStorage.setItem('myApplications', JSON.stringify([...savedApps, newApplication]));
-    setIsConfirmOpen(false); 
-    navigate('/student/applications'); 
+    setIsConfirmOpen(false);
+    navigate('/student/applications');
   };
 
+  if (loading) return <div className="loading-screen"><Loader2 className="animate-spin" /> กำลังโหลด...</div>;
+  if (!project) return <div className="error-screen">ไม่พบข้อมูลโครงการ</div>;
+
   return (
-    <div className="project-detail-container text-left">
-      
-      {/* Modal ยืนยันการสมัคร */}
+    <div className="project-detail-container">
+
+      {/* 🌟 ==========================================
+          MODAL SECTION (รวม Popup ทุกอันไว้ตรงนี้)
+      ========================================== */}
+
+      {/* 1. Modal ยืนยันการสมัคร (STUDENT) */}
       {isConfirmOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
-            <div className="modal-icon-wrapper">
-              <Briefcase size={32} color="#f97316" />
-            </div>
-            
             <h3>ยืนยันการสมัครโครงการ</h3>
-            <p>
-              ต้องการส่งใบสมัครเข้าโครงการ <br/>
-              <strong style={{ color: '#0f172a' }}>{project.title}</strong> <br/>
-              ของ <strong>{project.company}</strong> ใช่หรือไม่?
-            </p>
-            
+            <p>ต้องการส่งใบสมัครเข้าโครงการ <strong>{project.projNameTH}</strong> ใช่หรือไม่?</p>
             <div className="modal-actions">
-              <button className="btn-outline-cancel" onClick={() => setIsConfirmOpen(false)}>
+              <button className="btn-outline-cancel" onClick={() => setIsConfirmOpen(false)}>ยกเลิก</button>
+              <button className="btn-confirm-apply" onClick={confirmApply}>ยืนยันการสมัคร</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. 🟢 Modal ยืนยันการอนุมัติ (ADVISOR) */}
+      {showApproveModal && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ textAlign: 'center' }}>
+            <CheckCircle size={50} color="#10b981" style={{ margin: '0 auto 15px' }} />
+            <h3 style={{ color: '#10b981', marginBottom: '10px' }}>ยืนยันการอนุมัติโครงการ</h3>
+            <p style={{ color: '#4b5563', marginBottom: '20px' }}>
+              คุณต้องการรับเป็นอาจารย์ที่ปรึกษาให้กับโครงการ <br/>
+              <strong>{project.projName}</strong> ใช่หรือไม่?
+            </p>
+            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+              <button 
+                className="btn-outline-cancel" 
+                onClick={() => setShowApproveModal(false)}
+                disabled={isApproving}
+              >
                 ยกเลิก
               </button>
-              <button className="btn-confirm-apply" onClick={confirmApply}>
-                ยืนยันการสมัคร
+              <button 
+                className="btn-approve" 
+                onClick={confirmApprove} 
+                disabled={isApproving}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                {isApproving ? <Loader2 className="animate-spin" size={18} /> : <CheckCircle size={18} />}
+                {isApproving ? 'กำลังดำเนินการ...' : 'ยืนยันการอนุมัติ'}
               </button>
             </div>
           </div>
         </div>
       )}
 
+     {/* 3. 🔴 Modal ยืนยันการปฏิเสธ (ADVISOR) */}
+      {showRejectModal && (
+        <div className="modal-overlay">
+          <div className="modal-content modal-center">
+            
+            <div className="modal-icon-danger">
+              <AlertTriangle size={50} />
+            </div>
+            
+            <h3 className="modal-title-danger">ยืนยันการปฏิเสธโครงการ</h3>
+            
+            <p className="modal-subtitle">
+              คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธโครงการ <strong>{project.projName}</strong>?
+            </p>
+            
+            <div className="modal-actions-center">
+              <button 
+                className="btn-outline-cancel" 
+                onClick={() => setShowRejectModal(false)}
+                disabled={isApproving}
+              >
+                ยกเลิก
+              </button>
+              
+              <button 
+                className="btn-confirm-danger"
+                onClick={confirmReject} 
+                disabled={isApproving}
+              >
+                {isApproving ? <Loader2 className="animate-spin" size={18} /> : <ShieldAlert size={18} />}
+                {isApproving ? 'กำลังดำเนินการ...' : 'ยืนยันการปฏิเสธ'}
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* 🌟 ==========================================
+          MAIN CONTENT SECTION
+      ========================================== */}
+
       <button className="btn-back" onClick={() => navigate(-1)}>
         <ArrowLeft size={18} /> กลับ
       </button>
 
       <div className="detail-card">
-        
-        {/* ส่วนหัวโครงการ */}
+        {/* Header Section */}
         <div className="detail-header-section">
-          <h1>{project.title}</h1>
+          <div className="header-title-row">
+            <div>
+              <h1>{project.projName || 'ไม่มีชื่อโครงการ'}</h1>
+              <p className="subtitle-en">{project.projNameEN}</p>
+            </div>
+            {currentRole === 'ADVISOR' && (
+              <span className={`status-badge ${project.projStat?.toLowerCase()}`}>
+                {project.projStat === 'APPROVED' ? 'อนุมัติแล้ว' : 'รอการตรวจสอบ'}
+              </span>
+            )}
+          </div>
           <div className="company-badge">
-            <Building2 size={20} color="#f97316" />
-            <strong>{project.company}</strong>
+            <Building2 size={20} className="icon-orange" />
+            <strong>{project.company?.coNameTH || 'ไม่ระบุบริษัท'}</strong>
           </div>
         </div>
 
-        {/* 1. รายละเอียดโครงการ */}
+        {/* รายละเอียดโครงการ */}
         <div className="detail-section">
-          <h3><FileText size={20} color="#3b82f6" /> รายละเอียดโครงการ</h3>
+          <h3><FileText size={20} className="icon-blue" /> รายละเอียดโครงการ</h3>
           <div className="info-box">
-            <div>
-              <strong className="info-label">วัตถุประสงค์:</strong>
-              <p className="info-value">{project.objective}</p>
+            <div className="info-row-full">
+              <strong className="info-label">วัตถุประสงค์โครงการ:</strong>
+              <p className="info-value">{project.projDetail || 'ไม่มีข้อมูล'}</p>
             </div>
-            
-            <div style={{ display: 'flex', gap: '40px', flexWrap: 'wrap' }}>
+            <div className="info-grid-2col">
               <div>
-                <strong className="info-label"><Users size={16}/> จำนวนที่รับ:</strong>
-                <p className="info-value">{project.studentsNeeded} คน</p>
+                <strong className="info-label"><Users size={16} /> จำนวนที่รับ:</strong>
+                <p className="info-value">{project.projAmount || project.quota} คน</p>
               </div>
-
-              {currentRole === 'ADVISOR' && (
-                <div>
-                  <strong className="info-label"><Briefcase size={16}/> ค่าตอบแทน:</strong>
-                  <p className="info-value" style={{ color: '#16a34a', fontWeight: 'bold' }}>{project.allowance}</p>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <strong className="info-label">ลักษณะงาน (Job Description):</strong>
-              <p className="info-value" style={{ whiteSpace: 'pre-line' }}>{project.jobDescription}</p>
-            </div>
-            <div>
-              <strong className="info-label"><Wrench size={16}/> เครื่องมือและทักษะที่ต้องใช้:</strong>
-              <p className="info-value">{project.skills}</p>
-            </div>
-            <div>
-              <strong className="info-label"><MapPin size={16}/> สถานที่ปฏิบัติงาน:</strong>
-              <p className="info-value">{project.workLocation}</p>
+              <div>
+                <strong className="info-label"><MapPin size={16} /> สถานที่ปฏิบัติงาน:</strong>
+                <p className="info-value">{project.company?.coAddr || project.workAddr}</p>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 2. ข้อมูลพี่เลี้ยง (Mentors) */}
+        {/* ลักษณะงาน */}
         <div className="detail-section">
-          <h3><UserCheck size={20} color="#f59e0b" /> ข้อมูลพนักงานที่ปรึกษา (พี่เลี้ยง)</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {project.mentors.map((mentor, index) => (
-              <div key={mentor.id} className="mentor-grid info-box">
-                <div style={{ gridColumn: '1 / -1', borderBottom: '1px solid #e2e8f0', paddingBottom: '8px', marginBottom: '8px' }}>
-                  <strong style={{ color: '#475569' }}>พี่เลี้ยงคนที่ {index + 1}</strong>
-                </div>
-                <div>
-                  <strong className="info-label">ชื่อ-นามสกุล:</strong>
-                  <div className="info-value" style={{ fontWeight: 500 }}>{mentor.name}</div>
-                </div>
-                <div>
-                  <strong className="info-label">ตำแหน่ง:</strong>
-                  <div className="info-value">{mentor.position}</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Phone size={16} color="#64748b"/> <span>{mentor.phone}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Mail size={16} color="#64748b"/> <span>{mentor.email}</span>
-                </div>
-              </div>
-            ))}
+          <h3><Wrench size={20} className="icon-amber" /> ลักษณะงานและทักษะที่ใช้</h3>
+          <div className="info-box border-amber">
+            <div className="info-row-item">
+              <strong className="info-label">ลักษณะงานที่ต้องปฏิบัติ:</strong>
+              <p className="info-value pre-wrap">{project.jobDescription || project.jd || 'ไม่ได้ระบุ'}</p>
+            </div>
+            <div>
+              <strong className="info-label">เครื่องมือและทักษะที่ต้องการ:</strong>
+              <p className="info-value">{project.skills || 'ไม่ได้ระบุ'}</p>
+            </div>
           </div>
         </div>
 
-        {/* 3. ข้อมูลผู้จัดการโครงการ */}
+        {/* ข้อมูล PM */}
         <div className="detail-section">
-          <h3><UserCircle size={20} color="#8b5cf6" /> ข้อมูลผู้จัดการโครงการ/หัวหน้าหน่วยงาน</h3>
+          <h3><UserCircle size={20} className="icon-purple" /> ข้อมูลผู้จัดการโครงการ (PM)</h3>
           <div className="mentor-grid info-box">
-            <div>
-              <strong className="info-label">ชื่อ-นามสกุล:</strong>
-              <div className="info-value" style={{ fontWeight: 500 }}>{project.manager.name}</div>
-            </div>
-            <div>
-              <strong className="info-label">ตำแหน่ง:</strong>
-              <div className="info-value">{project.manager.position}</div>
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <strong className="info-label">แผนก/ฝ่าย:</strong>
-              <div className="info-value">{project.manager.department}</div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Phone size={16} color="#64748b"/> <span>{project.manager.phone}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Mail size={16} color="#64748b"/> <span>{project.manager.email}</span>
+            <div><strong className="info-label">ชื่อ-นามสกุล:</strong><div className="info-value">{project.projectManager?.pmName || '-'}</div></div>
+            <div><strong className="info-label">ตำแหน่ง:</strong><div className="info-value">{project.projectManager?.pmPos || '-'}</div></div>
+            <div className="contact-row-full">
+              <span><Phone size={14} /> {project.projectManager?.pmTel || '-'}</span>
+              <span><Mail size={14} /> {project.projectManager?.pmEmail || '-'}</span>
             </div>
           </div>
         </div>
 
-        {/* 4. ข้อมูลผู้ประสานงาน (ถ้ามี) */}
-        {project.contactMethod === 'coordinator' && project.coordinator && (
+       {/* ข้อมูลอาจารย์ที่ปรึกษา */}
+        {(project.advisor || project.Advisor || project.advID) && (
           <div className="detail-section">
-            <h3><Contact size={20} color="#10b981" /> ข้อมูลผู้ติดต่อประสานงาน (HR/Coordinator)</h3>
-            <div className="mentor-grid info-box" style={{ borderLeft: '4px solid #10b981' }}>
-              <div>
-                <strong className="info-label">ชื่อ-นามสกุล:</strong>
-                <div className="info-value" style={{ fontWeight: 500 }}>{project.coordinator.name}</div>
-              </div>
-              <div>
-                <strong className="info-label">ตำแหน่ง:</strong>
-                <div className="info-value">{project.coordinator.position}</div>
-              </div>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <strong className="info-label">แผนก/ฝ่าย:</strong>
-                <div className="info-value">{project.coordinator.department}</div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Phone size={16} color="#64748b"/> <span>{project.coordinator.phone}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Mail size={16} color="#64748b"/> <span>{project.coordinator.email}</span>
+            <h3><UserCheck size={20} className="icon-green" /> อาจารย์ที่ปรึกษาโครงการ</h3>
+            <div className="info-box border-green">
+              <strong className="info-label">ชื่ออาจารย์ที่ปรึกษา:</strong>
+              <div className="info-value advisor-name">
+                {
+                  project.advisor?.firstName ? `อ. ${project.advisor.firstName} ${project.advisor.lastName}` :
+                  project.Advisor?.firstName ? `อ. ${project.Advisor.firstName} ${project.Advisor.lastName}` :
+                  project.advisor?.advName ? `อ. ${project.advisor.advName}` :
+                  project.advID ? `(รหัสอาจารย์: ${project.advID})` : 
+                  "รอการอนุมัติ"
+                }
               </div>
             </div>
           </div>
         )}
 
-        {/* 5. อาจารย์ผู้ดูแลโครงการ */}
-        <div className="detail-section">
-          <h3><GraduationCap size={20} color="#8b5cf6" /> อาจารย์ผู้ดูแลโครงการ</h3>
-          <div className="info-box-purple">
-            <div>
-              <strong className="info-label">ชื่ออาจารย์:</strong>
-              <div className="info-value" style={{ fontWeight: 500 }}>{project.advisorName || 'ยังไม่มีอาจารย์ที่ปรึกษา'}</div>
-            </div>
-            <div>
-              <strong className="info-label">อีเมล:</strong>
-              <div className="info-value">{project.advisorEmail || '-'}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* 6. เอกสารแนบ (เฉพาะที่ปรึกษา) */}
-        {currentRole === 'ADVISOR' && (
-          <div className="detail-section">
-            <h3><Paperclip size={20} color="#64748b" /> เอกสารแนบ</h3>
-            <div className="attachment-box">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#334155' }}>
-                <FileText size={20} color="#ef4444"/>
-                <span>{project.attachments}</span>
-              </div>
-              <button className="btn-download">ดาวน์โหลด</button>
-            </div>
-          </div>
-        )}
-
-        {/* ปุ่มดำเนินการ */}
+       {/* Footer Buttons */}
         <div className="action-buttons">
-          <button className="btn-close" onClick={() => navigate(-1)}>ปิด</button>
-          
-          {currentRole === 'ADVISOR' && (
-            <button className="btn-approve" onClick={handleApprove}>
-              <CheckCircle size={18} /> อนุมัติโครงการและรับดูแล
-            </button>
-          )}
+          <button className="btn-close" onClick={() => navigate(-1)}>ปิดหน้าต่าง</button>
 
           {currentRole === 'STUDENT' && (
-            <button className="btn-apply-main" onClick={handleApplyClick}>
+            <button className="btn-apply-main" onClick={() => setIsConfirmOpen(true)}>
               <Briefcase size={18} /> สมัครโครงการนี้
             </button>
           )}
-        </div>
 
+          {/* ปุ่ม เปิด Popup อนุมัติ / ปฏิเสธ (ADVISOR) */}
+          {currentRole === 'ADVISOR' && project.projStat === 'PENDING' && (
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button 
+                className="btn-approve" 
+                onClick={() => setShowApproveModal(true)} 
+              >
+                <CheckCircle size={18} /> อนุมัติโครงการ
+              </button>
+
+              <button 
+                className="btn-reject" 
+                onClick={() => {
+                  setRejectReason(''); // เคลียร์ข้อความเก่าทุกครั้งที่เปิดใหม่
+                  setShowRejectModal(true);
+                }} 
+                style={{ 
+                  backgroundColor: '#ef4444', 
+                  color: 'white', 
+                  padding: '10px 20px', 
+                  borderRadius: '8px', 
+                  border: 'none', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontWeight: 'bold'
+                }}
+              >
+                <ShieldAlert size={18} /> ปฏิเสธโครงการ
+              </button>
+            </div>
+          )}
+
+          {currentRole === 'ADVISOR' && project.projStat === 'APPROVED' && (
+            <div className="approved-badge-status">
+              <CheckCircle size={18} /> อนุมัติเรียบร้อยแล้ว
+            </div>
+          )}
+          
+          {currentRole === 'ADVISOR' && project.projStat === 'REJECTED' && (
+            <div style={{ color: '#ef4444', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <ShieldAlert size={18} /> ปฏิเสธโครงการนี้แล้ว
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

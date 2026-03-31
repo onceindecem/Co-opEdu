@@ -1,7 +1,7 @@
 .project-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+  gap: 1.5em;
   margin-top: 2rem;
 }
 
@@ -281,9 +281,22 @@
   font-weight: 600;
   cursor: pointer;
   transition: 0.2s;
+  
+  /* 🚨 2 บรรทัดนี้แหละครับที่เป็นตัวทุบกระจก ดันปุ่มให้ทะลุขึ้นมา! 🚨 */
+  position: relative;
+  z-index: 50;
 }
 
-.btn-approve:hover { background: #059669; }
+.btn-approve:hover:not(:disabled) { 
+  background: #059669; 
+}
+
+/* 🌟 แถมให้ครับ: ทำให้ปุ่มเป็นสีเทาเวลากำลังโหลด (กดซ้ำไม่ได้) */
+.btn-approve:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
 
 .btn-apply-main {
   display: flex;
@@ -383,4 +396,97 @@
   color: white;
   font-weight: 600;
   cursor: pointer;
+}
+/* คลาสที่ใช้แทน Inline Styles */
+.project-detail-container { text-align: left; }
+.header-title-row { display: flex; justify-content: space-between; align-items: flex-start; }
+.subtitle-en { color: #6b7280; }
+.icon-orange { color: #f97316; }
+.icon-blue { color: #3b82f6; }
+.icon-amber { color: #f59e0b; }
+.icon-purple { color: #8b5cf6; }
+.icon-green { color: #10b981; }
+.icon-red { color: #ef4444; }
+
+.info-row-full { margin-bottom: 1rem; }
+.info-grid-2col { display: flex; gap: 40px; flex-wrap: wrap; }
+.border-amber { border-left: 4px solid #f59e0b; }
+.border-green { border-left: 4px solid #10b981; }
+.pre-wrap { white-space: pre-wrap; }
+
+.contact-row-full { 
+  display: flex; align-items: center; gap: 15px; 
+  grid-column: 1 / -1; margin-top: 5px; 
+}
+
+.advisor-name { font-weight: bold; color: #059669; font-size: 1.1rem; }
+.contact-subtext { margin-top: 5px; font-size: 0.9rem; color: #666; }
+.inline-icon { display: inline; margin-right: 5px; }
+
+.text-advisor-only { color: #d97706; }
+.border-advisor-only { border-left: 4px solid #d97706; }
+.bg-advisor-only { background-color: #fffbeb; }
+
+.mentor-list-container { margin-top: 8px; }
+.mentor-name-title { font-weight: 600; }
+.mentor-contact-text { font-size: 0.85rem; }
+
+.file-attachment-section { padding-top: 15px; border-top: 1px dashed #fcd34d; }
+.file-list { margin-top: 10px; }
+.text-muted-italic { color: #9ca3af; font-style: italic; }
+
+/* ==========================================
+   สไตล์สำหรับ Modal ปฏิเสธโครงการ
+========================================== */
+
+.modal-center {
+  text-align: center;
+}
+
+.modal-icon-danger {
+  color: #ef4444;
+  margin: 0 auto 15px auto;
+  display: flex;
+  justify-content: center;
+}
+
+.modal-title-danger {
+  color: #ef4444;
+  margin-bottom: 10px;
+}
+
+.modal-subtitle {
+  color: #4b5563;
+  margin-bottom: 25px;
+}
+
+.modal-actions-center {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ปุ่มยืนยันสีแดง */
+.btn-confirm-danger {
+  background-color: #ef4444;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.btn-confirm-danger:hover:not(:disabled) {
+  background-color: #dc2626; /* สีแดงเข้มขึ้นตอนเอาเมาส์ชี้ */
+}
+
+/* สไตล์ตอนที่ปุ่มกำลังโหลด (Disabled) */
+.btn-confirm-danger:disabled {
+  background-color: #fca5a5;
+  cursor: not-allowed;
 }

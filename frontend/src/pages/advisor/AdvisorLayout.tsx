@@ -1,4 +1,5 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { useState } from 'react'; // 🌟 เพิ่ม useState
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'; // 🌟 เพิ่ม useNavigate
 import { 
   LayoutDashboard, 
   FolderSearch, 
@@ -11,6 +12,18 @@ import './Advisor.css';
 
 export default function AdvisorLayout() {
   const location = useLocation();
+  const navigate = useNavigate(); // 🌟 ใช้งาน useNavigate
+
+  // 🌟 State สำหรับควบคุม Popup Logout
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  // 🌟 ฟังก์ชันจัดการ Logout
+  const handleLogoutClick = () => setShowLogoutModal(true);
+  const cancelLogout = () => setShowLogoutModal(false);
+  const confirmLogout = () => {
+    setShowLogoutModal(false);
+    navigate('/login');
+  };
 
   const menuItems = [
     { 
@@ -32,6 +45,28 @@ export default function AdvisorLayout() {
 
   return (
     <div className="advisor-layout">
+      
+      {/* 🌟 Popup ยืนยันการออกจากระบบ */}
+      {showLogoutModal && (
+        <div className="logout-modal-overlay">
+          <div className="logout-modal-content">
+            <div className="logout-modal-icon">
+              <LogOut size={40} color="#ef4444" />
+            </div>
+            <h2>ออกจากระบบ</h2>
+            <p>คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบบัญชีของคุณ?</p>
+            <div className="logout-modal-actions">
+              <button onClick={cancelLogout} className="btn-cancel-logout">
+                ยกเลิก
+              </button>
+              <button onClick={confirmLogout} className="btn-confirm-logout">
+                ยืนยันการออก
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <aside className="advisor-sidebar">
         <div className="sidebar-header">
           <div className="logo-box">CS</div>
@@ -62,7 +97,8 @@ export default function AdvisorLayout() {
               <p className="dept">Computer Science</p>
             </div>
           </div>
-          <button className="btn-logout-sidebar">
+          {/* 🌟 ผูกฟังก์ชันเปิด Popup เข้ากับปุ่ม */}
+          <button className="btn-logout-sidebar" onClick={handleLogoutClick}>
             <LogOut size={18} /> <span>ออกจากระบบ</span>
           </button>
         </div>

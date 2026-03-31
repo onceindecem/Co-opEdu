@@ -1,13 +1,19 @@
 // src/users/users.module.ts
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User } from './entities/user.entity';
+import { Company } from 'src/company/entities/company.entity';
+import { HR } from 'src/hr/entities/hr.entity';
+import { Student } from 'src/student/entities/student.entity';
+import { Advisor } from 'src/advisor/entities/advisor.entity';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([User]) 
+    SequelizeModule.forFeature([User, Student, Advisor, HR, Company]), 
+    forwardRef(() => AuthModule)
   ],
   controllers: [UsersController],
   providers: [UsersService],
