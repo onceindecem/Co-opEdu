@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // สมมติว่าใช้สำหรับ navigate
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { 
   Plus, 
   Edit2, 
@@ -13,26 +13,31 @@ import {
   ArrowRight,
   FolderCheck
 } from 'lucide-react'; 
-import { Link } from 'react-router-dom';
+import { projectService } from '../../api/projectService'; // 🌟 นำเข้า API Service
 import './Advisor.css';
 
 export default function MyProjects() {
-  const [myProjects] = useState([
-    { 
-      id: 101, 
-      title: 'Web Application for Inventory Management', 
-      company: 'ABC Tech Solutions', 
-      appliedCount: 3, 
-      status: 'OPEN' // แทนรอบที่ 1
-    },
-    { 
-      id: 102, 
-      title: 'Data Analysis Dashboard', 
-      company: 'Global Data Co.', 
-      appliedCount: 5, 
-      status: 'CLOSED' // แทนรอบที่ 2
+  // 🌟 เปลี่ยน State เป็น Array ว่างเพื่อรอรับข้อมูลจาก API และเพิ่ม Loading
+  const [myProjects, setMyProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 🌟 ใช้ useEffect เพื่อดึงข้อมูลตอนเปิดหน้านี้ขึ้นมา
+  useEffect(() => {
+    fetchMyProjects();
+  }, []);
+
+  const fetchMyProjects = async () => {
+    try {
+      setLoading(true);
+      // สมมติว่าใน projectService มี API ดึงโครงการเฉพาะของอาจารย์ที่ล็อกอินอยู่
+      const res = await projectService.getMyAdvisorProjects(); 
+      setMyProjects(res.data || []);
+    } catch (error) {
+      console.error("ดึงข้อมูลโครงการไม่สำเร็จ:", error);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
   return (
     <div className="advisor-page">
@@ -41,51 +46,69 @@ export default function MyProjects() {
         <p className="page-subtitle">จัดการและติดตามสถานะนักศึกษาในโครงการที่คุณเป็นที่ปรึกษา</p>
       </div>
 
-      <div className="project-grid">
-        {myProjects.map((proj) => (
-          <div key={proj.id} className="advisor-card project-item-card">
-            <div className="card-top">
-              {/* เปลี่ยนข้อความเป็น รอบที่ 1 และ 2 */}
-              <span className={`status-tag ${proj.status.toLowerCase()}`}>
-                {proj.status === 'OPEN' ? '🟢 รอบที่ 1' : '🔴 รอบที่ 2'}
-              </span>
-              <div className="company-tag">
-                <Building2 size={14} /> {proj.company}
-              </div>
-            </div>
-
-            <h3 className="project-card-title">{proj.title}</h3>
-
-            <div className="card-stats">
-              <div className="stat-box">
-                <span className="stat-label">นักศึกษาที่สมัคร</span>
-                <span className="stat-value">
-                  <Users size={18} /> {proj.appliedCount} คน
-                </span>
-              </div>
-              <div className="stat-box">
-                <span className="stat-label">รายงานความคืบหน้า</span>
-                <span className="stat-value">
-                  <ClipboardCheck size={18} /> 08 / 12
-                </span>
-              </div>
-            </div>
-
-            <div className="card-actions">
-              <Link to={`/advisor/projects/${proj.id}/students`} className="btn-manage-students">
-                จัดการรายชื่อนักศึกษา <ArrowRight size={16} />
-              </Link>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {myProjects.length === 0 && (
-        <div className="empty-state">
-          <FolderCheck size={48} className="empty-icon" />
-          <p>คุณยังไม่มีโครงการในความดูแล เริ่มต้นโดยการอนุมัติโครงการใหม่</p>
-          <Link to="/advisor/projects/available" className="btn-primary">ไปหน้าอนุมัติโครงการ</Link>
+      {/* 🌟 แสดงข้อความระหว่างรอโหลดข้อมูล */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
+          กำลังโหลดโครงการของคุณ...
         </div>
+      ) : (
+        <>
+          <div className="project-grid">
+            {myProjects.map((proj) => {
+              // ดึงค่า status หรือ round จาก Backend มาเช็ค (เผื่อฟิลด์ชื่อไม่ตรงกัน)
+              const statusValue = proj.status || proj.projStat || 'OPEN';
+              const isRound1 = statusValue === 'OPEN' || proj.round === 1;
+
+              return (
+                <div key={proj.id || proj.projID} className="advisor-card project-item-card">
+                  <div className="card-top">
+                    {/* เปลี่ยนข้อความเป็น รอบที่ 1 และ 2 ตามข้อมูลจริง */}
+                    <span className={`status-tag ${isRound1 ? 'open' : 'closed'}`}>
+                      {isRound1 ? '🟢 รอบที่ 1' : '🔴 รอบที่ 2'}
+                    </span>
+                    <div className="company-tag">
+                      <Building2 size={14} /> {proj.company || proj.companyName}
+                    </div>
+                  </div>
+
+                  <h3 className="project-card-title">{proj.title || proj.projName}</h3>
+
+                  <div className="card-stats">
+                    <div className="stat-box">
+                      <span className="stat-label">นักศึกษาที่สมัคร</span>
+                      <span className="stat-value">
+                        {/* สมมติ Backend ส่งจำนวนนักศึกษามาในชื่อ studentCount หรือ appliedCount */}
+                        <Users size={18} /> {proj.appliedCount || proj.studentCount || 0} คน
+                      </span>
+                    </div>
+                    <div className="stat-box">
+                      <span className="stat-label">รายงานความคืบหน้า</span>
+                      <span className="stat-value">
+                        {/* สมมติ Backend ส่งจำนวนรายงานมา */}
+                        <ClipboardCheck size={18} /> {proj.reportCount || '08'} / 12
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="card-actions">
+                    <Link to={`/advisor/projects/${proj.id || proj.projID}/students`} className="btn-manage-students">
+                      จัดการรายชื่อนักศึกษา <ArrowRight size={16} />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 🌟 ซ่อน Empty State ถ่ายังโหลดไม่เสร็จ หรือถ้ามีข้อมูลแล้ว */}
+          {myProjects.length === 0 && (
+            <div className="empty-state">
+              <FolderCheck size={48} className="empty-icon" />
+              <p>คุณยังไม่มีโครงการในความดูแล เริ่มต้นโดยการอนุมัติโครงการใหม่</p>
+              <Link to="/advisor/projects/available" className="btn-primary">ไปหน้าอนุมัติโครงการ</Link>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './Company.css'; 
 import { ClipboardList, Users, Wrench, MapPin, Upload, Save, ArrowLeft, Mail, Phone, Info, Building2, UserCircle, UserCheck, Plus, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { projectService } from '../../api/projectService'; // 👈 นำเข้า Service (เช็ค Path ให้ตรงกับโปรเจกต์คุณด้วยนะครับ)
+import { useNavigate, useParams } from 'react-router-dom';
+import { projectService } from '../../api/projectService';
 
-export default function CreateProject() {
-  const isEdit = false;
+export default function EditProject() {
   const navigate = useNavigate();
+  // 🌟 รับ ID จาก URL (ถ้ามี id แปลว่าเป็นโหมด Edit)
+  const { id } = useParams(); 
+  const isEdit = Boolean(id); 
+
   const [loading, setLoading] = useState(false);
 
   // --- State สำหรับข้อมูลที่ต้องส่งไป Backend ---
@@ -25,15 +28,16 @@ export default function CreateProject() {
     { id: Date.now(), name: '', position: '', phone: '', email: '' }
   ]);
 
-  // 🌟 [เพิ่มใหม่] State สำหรับเก็บข้อมูล PM
   const [pmData, setPmData] = useState({
     name: '', position: '', department: '', phone: '', email: ''
   });
 
-  // 🌟 [เพิ่มใหม่] State สำหรับเก็บข้อมูลผู้ประสานงาน
   const [coordData, setCoordData] = useState({
     name: '', position: '', department: '', phone: '', email: ''
   });
+
+  // 🌟 เพิ่ม State สำหรับเก็บ ID ของ PM เดิม เพื่อจะได้ไม่ต้องยิง API ซ้ำตอนกด Save
+  const [currentPmID, setCurrentPmID] = useState<string>('');
 
   const companyData = {
     nameTh: "บริษัท เทคโนโลยีและนวัตกรรม จำกัด",
@@ -43,87 +47,148 @@ export default function CreateProject() {
     email: "contact@techinnovation.co.th"
   };
 
+  // 🌟 ดึงข้อมูลเก่ามาใส่ฟอร์ม ถ้าเป็นโหมด Edit
+  useEffect(() => {
+    const fetchOldData = async () => {
+      if (!isEdit || !id) return;
+      
+      try {
+        setLoading(true);
+        const res = await projectService.getById(id); 
+        const data = res.data;
+
+        setFormData({
+          projNameTH: data.projName || '',
+          projDetail: data.obj || '',
+          projAmount: data.quota || 1,
+          jobDescription: data.jd || '',
+          skills: data.skills || '',
+          workLocation: data.workAddr === companyData.address ? '' : data.workAddr || '',
+        });
+
+        if (data.contact === 'COORD' && data.contDetail) {
+          setContactMethod('coordinator');
+          setCoordData(JSON.parse(data.contDetail));
+        } else {
+          setContactMethod('manager');
+        }
+
+        if (data.mentor) {
+          try {
+             setMentors(JSON.parse(data.mentor));
+          } catch(e) {
+             console.error("Parse mentor error", e);
+          }
+        }
+
+        // 🌟 แก้ไขตรงนี้: เปลี่ยนจาก data.pm เป็น data.projectManager
+        if (data.projectManager) {
+          setCurrentPmID(data.projectManager.pmID || data.pmID || ''); // 🌟 เก็บ PM ID ไว้ใน State
+          setPmData({
+            name: data.projectManager.pmName || '',
+            position: data.projectManager.pmPos || '',
+            department: data.projectManager.pmDept || '',
+            phone: data.projectManager.pmTel || '',
+            email: data.projectManager.pmEmail || ''
+          });
+        }
+
+      } catch (error) {
+        console.error("ดึงข้อมูลเก่าไม่สำเร็จ:", error);
+        alert("ไม่พบข้อมูลโครงการนี้");
+        navigate('/company/projects');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOldData();
+  }, [id, isEdit]);
+
   const handleAddMentor = () => {
     setMentors([...mentors, { id: Date.now(), name: '', position: '', phone: '', email: '' }]);
   };
 
-  const handleRemoveMentor = (id: number) => {
+  const handleRemoveMentor = (mentorId: number) => {
     if (mentors.length > 1) {
-      setMentors(mentors.filter(mentor => mentor.id !== id));
+      setMentors(mentors.filter(mentor => mentor.id !== mentorId));
     }
   };
 
-  const handleMentorChange = (id: number, field: string, value: string) => {
+  const handleMentorChange = (mentorId: number, field: string, value: string) => {
     setMentors(mentors.map(mentor => 
-      mentor.id === id ? { ...mentor, [field]: value } : mentor
+      mentor.id === mentorId ? { ...mentor, [field]: value } : mentor
     ));
   };
 
-  // ฟังก์ชันจัดการ Input ของ Project
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🌟 [เพิ่มใหม่] ฟังก์ชันจัดการ Input ของ PM
   const handlePmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPmData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🌟 [เพิ่มใหม่] ฟังก์ชันจัดการ Input ของ Coordinator
   const handleCoordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setCoordData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🌟 [แก้ไข] ฟังก์ชัน Submit ส่งข้อมูลไป Backend 2 ขั้นตอน (PM -> Project)
+  // 🌟 ฟังก์ชัน Submit ส่งข้อมูลไป Backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const currentCoID = '214e1528-7f61-4d33-a0c8-8a8dd92bd3c3';  // จำลอง UUID ของ Company
-      const currentUserID = 'ff887e9e-9e30-4a37-aaeb-cc423b810c92'; // จำลอง UUID ของ HR
+      const currentCoID = '214e1528-7f61-4d33-a0c8-8a8dd92bd3c3';  
+      const currentUserID = 'ff887e9e-9e30-4a37-aaeb-cc423b810c92'; 
       
-      // --- STEP 1: สร้างตัวตน PM ---
-      // (ใช้ window.crypto เพื่อป้องกัน TypeScript error)
-      const generatedPmID = window.crypto.randomUUID(); 
-      
-      await projectService.createPM({
-        pmID: generatedPmID,
-        coID: currentCoID,
-        pmName: pmData.name,
-        pmPos: pmData.position,
-        pmDept: pmData.department,
-        pmTel: pmData.phone,
-        pmEmail: pmData.email
-      });
+      // 🚩 ใช้ ID จาก State ที่เก็บไว้ตอนโหลดหน้า ไม่ต้องยิง API ซ้ำ
+      const pmID = isEdit && currentPmID ? currentPmID : window.crypto.randomUUID(); 
 
-      // --- STEP 2: สร้างโปรเจกต์ ---
+      if (!isEdit) {
+        await projectService.createPM({
+          pmID: pmID,
+          coID: currentCoID,
+          pmName: pmData.name,
+          pmPos: pmData.position,
+          pmDept: pmData.department,
+          pmTel: pmData.phone,
+          pmEmail: pmData.email
+        });
+      }
+
       const payload = {
-        projID: window.crypto.randomUUID(), 
-        coID: currentCoID,
-        userID: currentUserID,
-        pmID: generatedPmID, // นำ ID จาก Step 1 มาเชื่อม
-        
+        // แพ็คข้อมูลโปรเจกต์
         projName: formData.projNameTH,
         obj: formData.projDetail,
         quota: Number(formData.projAmount),
         jd: formData.jobDescription,
         skills: formData.skills,
-        workAddr: formData.workLocation || companyData.address,
+        workAddr: formData.workLocation,
         
         contact: contactMethod === 'manager' ? 'PM' : 'COORD',
-        
-        // ผูก State จริงของผู้ประสานงาน
         contDetail: contactMethod === 'coordinator' ? JSON.stringify(coordData) : null,
+        
+        // 🌟 จุดสำคัญ: แปลง Array พี่เลี้ยงกลับเป็น String เพื่อเซฟลง Backend
         mentor: JSON.stringify(mentors), 
-        round: '1', 
-      };
 
-      await projectService.create(payload);
-      alert("บันทึกข้อมูลและส่งโครงการเรียบร้อย!");
+        // แนบข้อมูล PM ไปใน Payload ตามโครงสร้างเดิม
+        pmName: pmData.name, 
+        pmPos: pmData.position,
+        pmDept: pmData.department,
+        pmTel: pmData.phone,
+        pmEmail: pmData.email,
+        
+        // 🌟 ให้สถานะกลับไปรอตรวจสอบใหม่เมื่อมีการแก้ไขข้อมูล
+        projStat: 'PENDING'
+      };
+      
+      // ส่ง payload ไปที่ update
+      await projectService.update(id!, payload);
+      alert("บันทึกการแก้ไขเรียบร้อย!");
       navigate('/company/projects');
     } catch (error: any) {
       console.error("Submit Error:", error);
@@ -132,7 +197,6 @@ export default function CreateProject() {
       setLoading(false);
     }
   };
-  
 
   return (
     <div className="company-page-container">
@@ -191,7 +255,7 @@ export default function CreateProject() {
             </div>
           </div>
 
-            {/* =========================================
+           {/* =========================================
               2. ข้อมูลผู้จัดการโครงการ/หัวหน้าหน่วยงาน
           ========================================= */}
           <div className="form-section-title mt-40">
@@ -200,7 +264,6 @@ export default function CreateProject() {
 
           <div className="form-group span-full">
             <label>ชื่อ-นามสกุล *</label>
-            {/* 🌟 ผูก State ของ PM */}
             <input type="text" name="name" value={pmData.name} onChange={handlePmChange} placeholder="ระบุชื่อ-นามสกุล ผู้จัดการโครงการ" required />
           </div>
 
@@ -375,7 +438,6 @@ export default function CreateProject() {
               <h4 className="coordinator-title">รายละเอียดผู้ประสานงานของสถานประกอบการ/หน่วยงาน</h4>
               <div className="form-group span-full">
                 <label>ชื่อ-นามสกุล ผู้ประสานงาน *</label>
-                {/* 🌟 ผูก State ของ Coordinator */}
                 <input type="text" name="name" value={coordData.name} onChange={handleCoordChange} placeholder="ระบุชื่อ-นามสกุล ผู้ประสานงาน (เช่น HR)" required />
               </div>
               <div className="input-row">

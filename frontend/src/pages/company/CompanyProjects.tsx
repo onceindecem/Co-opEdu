@@ -1,32 +1,74 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Clock, CheckCircle2, AlertCircle } from 'lucide-react'; 
+import { projectService } from '../../api/projectService';
+import axios from 'axios';
 import './Company.css';
+
+// สร้าง Interface ให้ TypeScript รู้จักฟิลด์ที่ดึงมาจาก Backend
+interface ProjectData {
+  projID: string;
+  projName: string;
+  jd: string; // สมมติว่า role คือ jd
+  quota: number; // สมมติว่า slots คือ quota
+  projStat: string; // PENDING, APPROVED, DENIED
+  deleteRequested?: boolean; // ฟิลด์จำลองสำหรับการลบในหน้าบ้าน
+}
 
 export default function CompanyProjects() {
     const navigate = useNavigate();
     
     // State สำหรับจัดการ Modal
-    const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
+    
+    // State สำหรับเก็บข้อมูลจาก Backend
+    const [projects, setProjects] = useState<ProjectData[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const [projects, setProjects] = useState([
-        { id: 1, name: "TTB tech & data Internship 2026", role: "UX/UI", slots: 2, status: "APPROVED", deleteRequested: false },
-        { id: 2, name: "TTB tech & data Internship 2026", role: "Software Engineering", slots: 1, status: "PENDING", deleteRequested: false }
-    ]);
+    // 🌟 ฟังก์ชันดึงข้อมูลจาก Backend
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                // อย่าลืมแก้ URL ให้ตรงกับพอร์ต Backend ของคุณนะครับ
+                const response = await projectService.getAll();
+                
+                // นำข้อมูลที่ได้มาใส่ใน State (อาจจะต้องเพิ่ม deleteRequested ไปด้วย)
+                const formattedProjects = response.data.map((proj: any) => ({
+                    ...proj,
+                    deleteRequested: false // ตั้งค่าเริ่มต้นให้ไม่มีคำขอลบ
+                }));
+                
+                setProjects(formattedProjects);
+            } catch (error) {
+                console.error("Error fetching projects:", error);
+                alert("เกิดข้อผิดพลาดในการดึงข้อมูลโครงการ");
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    // ฟังก์ชันเมื่อกดยืนยันใน Popup
-    const confirmDeleteRequest = () => {
+        fetchProjects();
+    }, []);
+
+   // 🌟 ฟังก์ชันเมื่อกดยืนยันใน Popup ลบ (รวมร่างแล้ว)
+    const confirmDeleteRequest = async () => {
         if (deleteTarget !== null) {
-            setProjects(prevProjects => 
-                prevProjects.map(project => 
-                    project.id === deleteTarget 
-                        ? { ...project, deleteRequested: true } 
-                        : project
-                )
-            );
-            setDeleteTarget(null); // ปิดหน้าต่างยืนยัน
-            setShowSuccess(true);   // เปิดหน้าต่างสำเร็จ
+            try {
+                // 1. เรียก API ยิงไปลบข้อมูลที่ Backend จริงๆ
+                await projectService.delete(deleteTarget);
+
+                // 2. อัปเดตตาราง: ลบโปรเจกต์นั้นออกจากหน้าเว็บทันที
+                setProjects(prevProjects => prevProjects.filter(p => p.projID !== deleteTarget));
+
+                // 3. ปิด Popup ยืนยัน และแสดง Popup สำเร็จ
+                setDeleteTarget(null); 
+                setShowSuccess(true);  
+                
+            } catch (error: any) {
+                console.error("ลบไม่สำเร็จ:", error);
+                alert("เกิดข้อผิดพลาดในการลบโครงการ: " + (error.response?.data?.message || 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'));
+            }
         }
     };
 
@@ -43,51 +85,65 @@ export default function CompanyProjects() {
             </div>
 
             <div className="card form-card">
-                <table className="project-table">
-                    <thead>
-                        <tr>
-                            <th>ชื่อโครงการ</th>
-                            <th>ตำแหน่ง</th>
-                            <th>จำนวนรับ</th>
-                            <th>สถานะ</th>
-                            <th className="text-center">จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {projects.map(item => (
-                            <tr key={item.id}>
-                                <td><strong className="project-name">{item.name}</strong></td>
-                                <td className="project-role-text">{item.role}</td>
-                                <td className="project-slots-text">{item.slots}</td>
-                                <td>
-                                    <span className={`status-badge ${item.status.toLowerCase()}`}>
-                                        {item.status}
-                                    </span>
-                                </td>
-                                <td className="text-center">
-                                    <div className="action-group">
-                                        <button className="btn-edit-outline" onClick={() => navigate(`/company/projects/create`)}>
-                                            <Edit2 size={16} /> แก้ไข
-                                        </button>
-                                        
-                                        {item.deleteRequested ? (
-                                            <button className="btn-pending-delete" disabled>
-                                                <Clock size={16} /> รออนุมัติลบ
-                                            </button>
-                                        ) : (
-                                            <button className="btn-delete-outline" onClick={() => setDeleteTarget(item.id)}>
-                                                <Trash2 size={16} /> ลบ
-                                            </button>
-                                        )}
-                                    </div>
-                                </td>
+                {/* 🌟 แสดงข้อความกำลังโหลด */}
+                {loading ? (
+                    <div className="text-center p-4">กำลังโหลดข้อมูล...</div>
+                ) : (
+                    <table className="project-table">
+                        <thead>
+                            <tr>
+                                <th>ชื่อโครงการ</th>
+                                <th>ตำแหน่ง</th>
+                                <th>จำนวนรับ</th>
+                                <th>สถานะ</th>
+                                <th className="text-center">จัดการ</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {/* 🌟 ถ้าไม่มีข้อมูลให้โชว์ข้อความนี้ */}
+                            {projects.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="text-center p-4">ยังไม่มีโครงการในระบบ</td>
+                                </tr>
+                            ) : (
+                                projects.map(item => (
+                                    <tr key={item.projID}>
+                                        {/* 🌟 ดึงข้อมูลจากฟิลด์จริงของ Backend มาโชว์ */}
+                                        <td><strong className="project-name">{item.projName}</strong></td>
+                                        <td className="project-role-text">{item.jd}</td>
+                                        <td className="project-slots-text">{item.quota}</td>
+                                        <td>
+                                            <span className={`status-badge ${item.projStat.toLowerCase()}`}>
+                                                {item.projStat}
+                                            </span>
+                                        </td>
+                                        <td className="text-center">
+                                            <div className="action-group">
+                                                {/* 🌟 ลิงก์ไปหน้า Edit (ส่ง projID ไปด้วย) */}
+                                                <button className="btn-edit-outline" onClick={() => navigate(`/company/projects/edit/${item.projID}`)}>
+                                                    <Edit2 size={16} /> แก้ไข
+                                                </button>
+                                                
+                                                {item.deleteRequested ? (
+                                                    <button className="btn-pending-delete" disabled>
+                                                        <Clock size={16} /> รออนุมัติลบ
+                                                    </button>
+                                                ) : (
+                                                    <button className="btn-delete-outline" onClick={() => setDeleteTarget(item.projID)}>
+                                                        <Trash2 size={16} /> ลบ
+                                                    </button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                )}
             </div>
 
-            {/* --- Popup 1: ยืนยันการส่งคำขอ (แทน Alert/Confirm) --- */}
+            {/* --- Popup 1: ยืนยันการส่งคำขอ --- */}
             {deleteTarget && (
                 <div className="logout-modal-overlay">
                     <div className="logout-modal-content">
