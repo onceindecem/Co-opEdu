@@ -1000,3 +1000,177 @@
     background: #eef2ff; 
     color: #6366f1; 
 }
+.btn-reject {
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px; 
+  font-weight: 500;
+  transition: background-color 0.2s; 
+}
+
+.btn-reject:hover {
+  background-color: #dc2626;
+}
+/* ==========================================
+   🌟 ADVISOR MODAL STYLES (Student Style)
+========================================== */
+
+/* 1. Overlay (พื้นหลังสีดำโปร่งแสง) */
+.advisor-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5); /* สีดำจางๆ */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* ให้อยู่บนสุด */
+  backdrop-filter: blur(2px); /* เบลอหลังเล็กน้อยเพื่อความสวยงาม */
+  animation: fadeInModal 0.2s ease-out;
+}
+
+/* 2. Content Box (กล่องสีขาว) */
+.advisor-modal-content {
+  background-color: white;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 500px;
+  text-align: center; /* จัดตัวอักษรกึ่งกลางเหมือน Student */
+  position: relative;
+  animation: slideUpModal 0.3s ease-out;
+}
+
+/* Animation */
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUpModal {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* 3. Icon Zone */
+.advisor-modal-icon {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+}
+.icon-success { color: #10b981; } /* สีเขียว */
+.icon-danger { color: #ef4444; }  /* สีแดง */
+
+/* 4. Text Zone */
+.advisor-modal-content h2 {
+  margin: 0 0 10px 0;
+  font-size: 1.5rem;
+  color: #111827;
+  font-weight: 700;
+}
+.advisor-modal-content p {
+  margin: 0 0 25px 0;
+  font-size: 1rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+.advisor-modal-content p strong {
+  color: #111827;
+}
+
+/* 5. Textarea for Reject Reason */
+.modal-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: none; /* ห้ามลากปรับขนาด */
+}
+.modal-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 6. Actions Zone (ปุ่มกด) */
+.advisor-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* Common Button Styles */
+.advisor-modal-actions button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  min-width: 120px;
+}
+
+/* ปุ่มยกเลิก (สีเทา) */
+.btn-modal-cancel {
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+.btn-modal-cancel:hover {
+  background-color: #e5e7eb;
+}
+
+/* ปุ่มยืนยัน อนุมัติ (สีเขียว) */
+.btn-modal-confirm-success {
+  background-color: #10b981;
+  color: white;
+}
+.btn-modal-confirm-success:hover {
+  background-color: #059669;
+}
+
+/* ปุ่มยืนยัน ปฏิเสธ (สีแดง) */
+.btn-modal-confirm-danger {
+  background-color: #ef4444;
+  color: white;
+}
+.btn-modal-confirm-danger:hover {
+  background-color: #dc2626;
+}
+
+/* Additional utility class for action buttons in table */
+.action-buttons-group {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+/* สไตล์ปุ่มปฏิเสธในตาราง (เพื่อให้ดูเป็นปุ่มอันตราย) */
+.btn-reject {
+  background-color: white;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+.btn-reject:hover {
+  background-color: #fef2f2;
+}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './Company.css'; 
-import { ClipboardList, Users, Wrench, MapPin, Upload, Save, ArrowLeft, Mail, Phone, Info, Building2, UserCircle, UserCheck, Plus, Trash2 } from 'lucide-react';
+import { ClipboardList, Users, Wrench, MapPin, Upload, Save, ArrowLeft, Mail, Phone, Info, Building2, UserCircle, UserCheck, Plus, Trash2, FileText } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { projectService } from '../../api/services/projectService';
 
@@ -38,6 +38,9 @@ export default function EditProject() {
 
   // 🌟 เพิ่ม State สำหรับเก็บ ID ของ PM เดิม เพื่อจะได้ไม่ต้องยิง API ซ้ำตอนกด Save
   const [currentPmID, setCurrentPmID] = useState<string>('');
+
+  // 🌟 [เพิ่มใหม่] State สำหรับเก็บไฟล์ PDF ที่เลือกใหม่
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const companyData = {
     nameTh: "บริษัท เทคโนโลยีและนวัตกรรม จำกัด",
@@ -136,58 +139,60 @@ export default function EditProject() {
     setCoordData(prev => ({ ...prev, [name]: value }));
   };
 
+  // 🌟 [เพิ่มใหม่] ฟังก์ชันจัดการไฟล์
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setSelectedFiles(prev => [...prev, ...filesArray]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // 🌟 [แก้ไข] ฟังก์ชัน Submit ให้ใช้ FormData เพื่อส่งไฟล์
   // 🌟 ฟังก์ชัน Submit ส่งข้อมูลไป Backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const currentCoID = '214e1528-7f61-4d33-a0c8-8a8dd92bd3c3';  
-      const currentUserID = 'ff887e9e-9e30-4a37-aaeb-cc423b810c92'; 
+      const data = new FormData();
       
-      // 🚩 ใช้ ID จาก State ที่เก็บไว้ตอนโหลดหน้า ไม่ต้องยิง API ซ้ำ
-      const pmID = isEdit && currentPmID ? currentPmID : window.crypto.randomUUID(); 
+      // 1. ข้อมูล Project
+      data.append('projName', formData.projNameTH);
+      data.append('obj', formData.projDetail);
+      data.append('quota', String(formData.projAmount));
+      data.append('jd', formData.jobDescription);
+      data.append('skills', formData.skills);
+      data.append('workAddr', formData.workLocation || companyData.address);
+      data.append('contact', contactMethod === 'manager' ? 'PM' : 'COORD');
+      data.append('contDetail', contactMethod === 'coordinator' ? JSON.stringify(coordData) : "");
+      data.append('mentor', JSON.stringify(mentors));
+      data.append('projStat', 'PENDING');
 
-      if (!isEdit) {
-        await projectService.createPM({
-          pmID: pmID,
-          coID: currentCoID,
-          pmName: pmData.name,
-          pmPos: pmData.position,
-          pmDept: pmData.department,
-          pmTel: pmData.phone,
-          pmEmail: pmData.email
-        });
-      }
-
-      const payload = {
-        // แพ็คข้อมูลโปรเจกต์
-        projName: formData.projNameTH,
-        obj: formData.projDetail,
-        quota: Number(formData.projAmount),
-        jd: formData.jobDescription,
-        skills: formData.skills,
-        workAddr: formData.workLocation,
-        
-        contact: contactMethod === 'manager' ? 'PM' : 'COORD',
-        contDetail: contactMethod === 'coordinator' ? JSON.stringify(coordData) : null,
-        
-        // 🌟 จุดสำคัญ: แปลง Array พี่เลี้ยงกลับเป็น String เพื่อเซฟลง Backend
-        mentor: JSON.stringify(mentors), 
-
-        // แนบข้อมูล PM ไปใน Payload ตามโครงสร้างเดิม
-        pmName: pmData.name, 
+      // 2. ข้อมูล PM
+      data.append('pmData', JSON.stringify({
+        pmID: currentPmID || null,
+        pmName: pmData.name,
         pmPos: pmData.position,
         pmDept: pmData.department,
         pmTel: pmData.phone,
-        pmEmail: pmData.email,
-        
-        // 🌟 ให้สถานะกลับไปรอตรวจสอบใหม่เมื่อมีการแก้ไขข้อมูล
-        projStat: 'PENDING'
-      };
+        pmEmail: pmData.email
+      }));
+
+      // 3. IDs
+      data.append('coID', '214e1528-7f61-4d33-a0c8-8a8dd92bd3c3');
+      data.append('userID', 'ff887e9e-9e30-4a37-aaeb-cc423b810c92');
+
+      // 4. แนบไฟล์ใหม่
+      selectedFiles.forEach(file => {
+        data.append('files', file);
+      });
       
-      // ส่ง payload ไปที่ update
-      await projectService.update(id!, payload);
+      await projectService.update(id!, data);
+      
       alert("บันทึกการแก้ไขเรียบร้อย!");
       navigate('/company/projects');
     } catch (error: any) {

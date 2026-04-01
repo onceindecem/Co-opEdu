@@ -1,15 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { 
+  Controller, Get, Post, Body, Patch, Param, Delete, 
+  UseInterceptors, UploadedFiles 
+} from '@nestjs/common';
 import { ProjectsService } from './projects.service';
-import { CreateProjectDto } from './dto/create-project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
+  // 1. สร้างโครงการ (ปรับให้รับ FormData/Files ได้เหมือนกัน)
   @Post()
-  create(@Body() createProjectDto: CreateProjectDto) {
-    return this.projectsService.create(createProjectDto);
+  @UseInterceptors(FilesInterceptor('files'))
+  create(
+    @Body() createDto: any, 
+    @UploadedFiles() files: Array<Express.Multer.File>
+  ) {
+    return this.projectsService.create(createDto, files);
   }
 
   @Get()
@@ -29,31 +36,41 @@ export class ProjectsController {
 
   @Get('my-projects')
   findMyProjects() {
-    // สำหรับหน้า "โครงการในความดูแล" (ดึงเฉพาะของอาจารย์ที่ล็อกอิน)
-    // อย่าลืมสร้าง findMyProjects() ใน Service ด้วย
     return this.projectsService.findMyProjects(); 
   }
 
-  @Patch(':id/approve')
-  approveProject(@Param('id') id: string) {
-    // สำหรับปุ่ม "อนุมัติและรับดูแล"
-    // อย่าลืมสร้าง approveProject(id) ใน Service ด้วย
-    return this.projectsService.approveProject(id);
-  }
+@Patch(':id/approve')
+  approveProject(
+    @Param('id') id: string, 
+    @Body('advisorId') advisorId: string
+  ) {
+    // 🌟 วางกับดัก! ดูว่าข้อมูลวิ่งมาถึง NestJS ไหม
+    console.log('✅ ก๊อกๆ! มีการเรียก API อนุมัติโปรเจกต์:', id);
+    console.log('✅ รหัสอาจารย์ที่ส่งมาคือ:', advisorId);
 
-  // ==========================================
-  // 🌟 เส้นทางที่เป็น Dynamic Parameter (:id) ต้องอยู่ล่างสุด
-  // ==========================================
+    return this.projectsService.approveProject(id, advisorId);
+  }
+ @Patch(':id/reject')
+  async rejectProject(@Param('id') id: string) {
+    return this.projectsService.rejectProject(id); 
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.projectsService.findOne(id);
   }
 
+  // 2. แก้ไขโครงการ (เหลือแค่อันนี้อันเดียวพอ)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectsService.update(id, updateProjectDto);
+  @UseInterceptors(FilesInterceptor('files'))
+  update(
+    @Param('id') id: string, 
+    @Body() updateDto: any, 
+    @UploadedFiles() files: Array<Express.Multer.File>
+  ) {
+    return this.projectsService.update(id, updateDto, files);
   }
+  
 
   @Delete(':id')
   remove(@Param('id') id: string) {

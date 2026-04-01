@@ -79,7 +79,7 @@ export class HrService {
   async findOne(id: string) {
     const hr = await this.hrModel.findByPk(id);
     if (!hr) {
-      throw new NotFoundException(`HR not found`);
+      throw new NotFoundException(`ไม่พบ HR รหัส ${id}`);
     }
     return hr;
   }

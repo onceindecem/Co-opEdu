@@ -12,24 +12,28 @@ export default function StudentProjects() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // --- 2. ฟังก์ชันดึงข้อมูลจาก API ---
-  const fetchProjects = async () => {
-    try {
-      setLoading(true);
-      const res = await projectService.getAll();
-      setProjects(res.data);
-    } catch (err) {
-      console.error("Error loading projects:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+ const fetchProjects = async () => {
+  try {
+    setLoading(true);
+    const res = await projectService.getAll();
+    
+    // 🌟 เพิ่มบรรทัดนี้: กรองเอาเฉพาะโครงการที่ "APPROVED" เท่านั้น 🌟
+    // ถ้าสถานะใน DB เป็นตัวเล็ก (approved) ให้แก้เป็น .toLowerCase() === 'approved' นะครับ
+    const approvedProjects = res.data.filter((p: any) => p.projStat === 'APPROVED');
+    
+    setProjects(approvedProjects);
+  } catch (err) {
+    console.error("Error loading projects:", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchProjects();
   }, []);
 
-  // --- 3. ฟิลเตอร์ค้นหา (Client-side Search) ---
+  // ฟิลเตอร์ค้นหาจากชื่อโครงการและบริษัท
   const filteredProjects = projects.filter(p => 
     p.projNameTH?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.company?.coNameTH?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -83,7 +87,7 @@ export default function StudentProjects() {
               </div>
             ))
           ) : (
-            <div className="no-data">ไม่พบโปรเจกต์ที่ตรงกับการค้นหา</div>
+            <div className="no-data">ไม่พบโปรเจกต์ที่เปิดรับสมัครในขณะนี้</div>
           )}
         </div>
       )}
