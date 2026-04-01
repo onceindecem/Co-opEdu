@@ -27,7 +27,6 @@ export default function LoginPage() {
 
     if (token) {
       authService.setToken(token);
-      console.log("Got token from Google Callback!", role);
 
       if (role === "STUDENT") {
         navigate("/student", { replace: true });
@@ -64,8 +63,6 @@ export default function LoginPage() {
         authService.setToken(token);
       }
 
-      console.log("Login Success:", response.data);
-
       if (role === "STUDENT") {
         navigate("/student");
       } else if (role === "ADVISOR") {
@@ -78,7 +75,6 @@ export default function LoginPage() {
         navigate("/");
       }
     } catch (error: any) {
-      console.error("Login Failed:", error);
       setApiError(
         error.response?.data?.message ||
           "email or password is incorrect, please try again.",

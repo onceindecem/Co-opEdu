@@ -85,7 +85,6 @@ const CompanyView = ({ accountInfo, profileData }: { accountInfo: any, profileDa
       setShowSuccessModal(true); 
 
     } catch (error) {
-      console.error("update Company Profile error:", error);
       setErrorMessage('Failed to update profile. Please try again.');
     } finally {
       setIsSaving(false);
@@ -212,20 +211,16 @@ export default function UserProfile() {
   let currentRole = '';
   let isTokenValid = true;
   const token = localStorage.getItem('accessToken');
-  console.log("Token in localStorage:", token);
 
   if (token) {
     try {
       const decodedToken: any = jwtDecode(token);
       currentRole = decodedToken.role; 
-      console.log("Decoded token data:", decodedToken);
     } catch (error) {
-      console.error("Token is invalid or expired:", error);
       isTokenValid = false;
     }
   } else {
     // if no token, redirect to login page
-    console.log("No token found, redirecting to login.");
     isTokenValid = false;
   }
 

@@ -9,7 +9,7 @@ export default function CompanyLayout() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // State สำหรับจัดการ Popup Logout
+  // State for controlling the visibility of the logout confirmation modal
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const [userInfo, setUserInfo] = useState({
@@ -103,7 +103,6 @@ export default function CompanyLayout() {
             >
               <Briefcase size={18} /> <span>โครงการ</span>
             </Link>
-            {/* หากบริษัทมีเมนูอื่นในอนาคต สามารถเพิ่มตรงนี้ได้ */}
           </div>
 
           <div className="nav-user-zone">

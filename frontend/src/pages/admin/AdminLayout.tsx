@@ -15,7 +15,6 @@ export default function AdminLayout() {
       const fetchUserData = async () => {
         try {
           const token = localStorage.getItem("accessToken");
-          console.log("🕵️‍♂️ 1. Token ที่ดึงได้:", token);
           if (!token) {
             navigate("/login");
             return;
