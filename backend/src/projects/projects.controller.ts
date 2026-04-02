@@ -1,9 +1,14 @@
 import { 
   Controller, Get, Post, Body, Patch, Param, Delete, 
-  UseInterceptors, UploadedFiles 
+  UseInterceptors, UploadedFiles, 
+  UseGuards,
+  Req
 } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { Roles } from 'src/auth/roles.decorator';
+import { JwtAuthGuard } from 'src/auth/jwt.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
 
 @Controller('projects')
 export class ProjectsController {
@@ -27,6 +32,14 @@ export class ProjectsController {
   // ==========================================
   // 🌟 เพิ่ม Route ใหม่ตรงนี้! (ต้องอยู่บน :id เสมอ)
   // ==========================================
+
+  @Get('hr-projects')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('HR')
+  findHRProjects(@Req() req) {
+    console.log('🔍 ตรวจสอบข้อมูลใน JWT Token:', req.user); // 🌟 เช็คข้อมูลที่ได้จาก Token ว่ามีอะไรบ้าง
+    return this.projectsService.findHRProjects(req.user.sub);
+  }
 
   @Get('available')
   findAvailable() {

@@ -17,6 +17,8 @@ export const projectService = {
     });
   },
 
+  getHRProjects: () => api.get('/projects/hr-projects'), // สำหรับ HR ดึงโปรเจกต์ของบริษัทตัวเอง
+
   // 🌟 สำหรับการแก้ไข (ปรับให้รับ FormData เพื่อให้อัปโหลดไฟล์ใหม่ตอน Edit ได้)
   update: (id: string, data: FormData | any) => {
     // เช็คว่าเป็น FormData ไหม ถ้าใช่ให้ใส่ Header multipart

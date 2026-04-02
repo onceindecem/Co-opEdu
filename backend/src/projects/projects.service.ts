@@ -131,6 +131,13 @@ export class ProjectsService {
     });
   }
 
+  async findHRProjects(userId: string) {
+    return await this.projectModel.findAll({
+      where: { userID: userId },
+      include: [Company, HR, ProjectManager, Advisor],
+    });
+  }
+
   // ==========================================
   // 3. ใส่ include เพื่อ Join ตารางตอนดึงข้อมูลรายตัว
   // ==========================================

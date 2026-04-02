@@ -57,7 +57,7 @@ export default function AvailableProjects() {
       const token = localStorage.getItem('accessToken');
       
       if (!token) {
-        alert("ไม่พบข้อมูลผู้ใช้งาน กรุณาล็อกอินใหม่");
+        navigate("/login");
         return;
       }
 
