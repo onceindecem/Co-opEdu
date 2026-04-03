@@ -60,4 +60,9 @@ updateStatus: (id: string, advisorId: string) => {
   reject: (id: string) => {
     return api.patch(`/projects/${id}/reject`); 
   },
+  applyProject: async (data: { projID: string; studentID: string }) => {
+    // หมายเหตุ: ตรง '/applications' ให้เปลี่ยนเป็น Route API ฝั่ง Backend 
+    // ของคุณที่ใช้สำหรับรับข้อมูลการสมัครนะครับ (เช่น '/projects/apply' หรือ '/applications')
+    return await api.post('/applications', data);
+  },
 };

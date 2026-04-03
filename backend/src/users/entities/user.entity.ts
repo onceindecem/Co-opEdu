@@ -1,5 +1,7 @@
 // src/users/entities/user.entity.ts
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { Column, DataType, Model, Table, HasMany, HasOne } from 'sequelize-typescript'; // 🌟 เพิ่ม HasMany
+import { Application } from 'src/applications/entities/application.entity'; // 🌟 Import Application (เช็ก Path ให้ตรงกับโฟลเดอร์ของคุณนะครับ)
+import { Student } from 'src/student/entities/student.entity';
 
 @Table({ tableName: 'Users', timestamps: false })
 export class User extends Model {
@@ -34,4 +36,13 @@ export class User extends Model {
     allowNull: false,
   })
   declare provider: string;
+
+  // ==========================================
+  // 🌟 เพิ่มความสัมพันธ์ (Associations)
+  // ==========================================
+  @HasMany(() => Application)
+  declare applications: Application[];
+
+  @HasOne(() => Student)
+declare student: Student;
 }

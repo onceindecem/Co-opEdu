@@ -11,6 +11,7 @@ import { HrModule } from './hr/hr.module';
 import { ProjectManagerModule } from './project-manager/project-manager.module';
 import { StudentModule } from './student/student.module';
 import { AdvisorModule } from './advisor/advisor.module';
+import { ApplicationsModule } from './applications/applications.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { AdvisorModule } from './advisor/advisor.module';
     HrModule,
     StudentModule,
     AdvisorModule,
+    ApplicationsModule,
   ],
 
   controllers: [AppController],

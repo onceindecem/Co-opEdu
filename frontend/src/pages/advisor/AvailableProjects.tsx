@@ -93,8 +93,6 @@ export default function AvailableProjects() {
   };
 
   // --- 🌟 ฟังก์ชันยืนยันการปฏิเสธ (เรียก API) ---
-  // --- 🌟 ฟังก์ชันยืนยันการปฏิเสธ (เรียก API) ---
-  // --- 🌟 ฟังก์ชันยืนยันการปฏิเสธ (เรียก API) ---
   const confirmReject = async () => {
     if (!selectedProjectId) return;
 

@@ -16,6 +16,7 @@ export default function ProjectDetail() {
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isApproving, setIsApproving] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
 
   // --- 🌟 State สำหรับ Popup (Modals) ---
   const [isConfirmOpen, setIsConfirmOpen] = useState(false); // ของนักศึกษา (สมัคร)
@@ -108,9 +109,32 @@ export default function ProjectDetail() {
     }
   };
 
-  const confirmApply = () => {
-    setIsConfirmOpen(false);
-    navigate('/student/applications');
+ // --- 🔵 ฟังก์ชันยืนยันการสมัครโครงการ (ยิง API) ---
+  const confirmApply = async () => {
+    try {
+      setIsApplying(true);
+      if (!currentUserId) {
+        alert("ไม่พบ ID นักศึกษา กรุณาล็อกอินใหม่");
+        return;
+      }
+
+      // TODO: เปลี่ยนเป็นชื่อ Service ของคุณที่ใช้ส่งข้อมูลการสมัคร
+      // สมมติว่าส่ง projID และ studentID ไปให้ Backend บันทึก
+      await projectService.applyProject({
+        projID: id as string,
+        studentID: currentUserId
+      });
+
+      alert('✅ ส่งใบสมัครเข้าร่วมโครงการเรียบร้อยแล้ว!');
+      setIsConfirmOpen(false);
+      navigate('/student/applications'); // พาไปหน้าติดตามสถานะการสมัคร
+
+    } catch (err: any) {
+      alert(err.response?.data?.message || '❌ เกิดข้อผิดพลาดในการสมัครโครงการ');
+      console.error(err);
+    } finally {
+      setIsApplying(false);
+    }
   };
 
   if (loading) return <div className="loading-screen"><Loader2 className="animate-spin" /> กำลังโหลด...</div>;

@@ -8,11 +8,13 @@ import {
   CreatedAt,
   UpdatedAt,
   BelongsTo,
+  HasMany,
 } from 'sequelize-typescript';
 import { Company } from '../../company/entities/company.entity';
 import { HR } from '../../hr/entities/hr.entity';
 import { ProjectManager } from '../../project-manager/entities/project-manager.entity';
 import { Advisor } from '../../advisor/entities/advisor.entity';
+import { Application } from 'src/applications/entities/application.entity';
 
 @Table({
   tableName: 'Projects',
@@ -108,4 +110,7 @@ export class Project extends Model {
 
   @BelongsTo(() => Advisor)
   advisor: Advisor;
+
+  @HasMany(() => Application)
+  declare applications: Application[];
 }

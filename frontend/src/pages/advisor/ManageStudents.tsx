@@ -1,44 +1,91 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
-  Users, 
-  CheckCircle2, 
-  XCircle, 
-  Search, 
-  ArrowLeft,
-  Mail,
-  GraduationCap
+  Users, CheckCircle2, XCircle, Search, ArrowLeft, Mail, GraduationCap, Loader2 
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import './Advisor.css';
+import { applicationService } from '../../api/services/applicationService'; 
+import { projectService } from '../../api/services/projectService';
 
 export default function ManageStudents() {
+  const { projectId } = useParams(); 
 
-  const [students] = useState([
-    { 
-      id: 1, 
-      name: 'นายสมชาย วิทยา', 
-      studentId: '66050001', 
-      email: '66050001@kmitl.ac.th',
-      status: 'PENDING_CONFIRM', 
-      hiredStatus: 'WAITING' 
-    },
-    { 
-      id: 2, 
-      name: 'นางสาววิภาดา เรียนดี', 
-      studentId: '66050015', 
-      email: '66050015@kmitl.ac.th',
-      status: 'CONFIRMED', 
-      hiredStatus: 'WAITING' 
-    },
-    { 
-      id: 3, 
-      name: 'นายมานะ อดทน', 
-      studentId: '66050099', 
-      email: '66050099@kmitl.ac.th',
-      status: 'CONFIRMED', 
-      hiredStatus: 'HIRED'
-    },
-  ]);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [projectDetail, setProjectDetail] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // 🌟 แยกฟังก์ชันโหลดรายชื่อออกมา เพื่อให้กดปุ่มปุ๊บ โหลดข้อมูลใหม่ปั๊บ
+  const fetchApplications = useCallback(async () => {
+    if (!projectId) return;
+    try {
+      const appRes = await applicationService.getApplicationsByProject(projectId);
+      setApplications(appRes.data);
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+    }
+  }, [projectId]);
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      if (!projectId) return;
+      try {
+        setLoading(true);
+        const projRes = await projectService.getById(projectId);
+        setProjectDetail(projRes.data);
+        await fetchApplications();
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInitialData();
+  }, [projectId, fetchApplications]);
+
+  // ==========================================
+  // 🟢 1. ฟังก์ชันอนุมัติ (เปลี่ยน appStat เป็น APPROVED)
+  // ==========================================
+  const handleApprove = async (appId: string) => {
+    if (!window.confirm("ต้องการ 'ยืนยัน' การสมัครของนักศึกษาคนนี้ใช่หรือไม่?")) return;
+    try {
+      await applicationService.updateAppStat(appId, 'APPROVED');
+      fetchApplications(); // โหลดข้อมูลใหม่
+    } catch (error) {
+      console.error(error);
+      alert("เกิดข้อผิดพลาดในการอนุมัติ");
+    }
+  };
+
+  // ==========================================
+  // 🔴 2. ฟังก์ชันปฏิเสธ (เปลี่ยน appStat เป็น DENIED)
+  // ==========================================
+  const handleReject = async (appId: string) => {
+    if (!window.confirm("ต้องการ 'ปฏิเสธ' การสมัครของนักศึกษาคนนี้ใช่หรือไม่?")) return;
+    try {
+      await applicationService.updateAppStat(appId, 'DENIED');
+      fetchApplications(); // โหลดข้อมูลใหม่
+    } catch (error) {
+      console.error(error);
+      alert("เกิดข้อผิดพลาดในการปฏิเสธ");
+    }
+  };
+
+  // ==========================================
+  // 🔽 3. ฟังก์ชันอัปเดตผลการจ้างงาน (hiredStat)
+  // ==========================================
+  const handleHiredChange = async (appId: string, newHiredStat: string) => {
+    try {
+      await applicationService.updateHiredStat(appId, newHiredStat);
+      fetchApplications(); // โหลดข้อมูลใหม่
+    } catch (error) {
+      console.error(error);
+      alert("เกิดข้อผิดพลาดในการอัปเดตผลการจ้างงาน");
+    }
+  };
+
+  if (loading) {
+    return <div style={{ textAlign: 'center', marginTop: '50px' }}><Loader2 className="animate-spin" /> กำลังโหลดข้อมูล...</div>;
+  }
 
   return (
     <div className="advisor-page">
@@ -50,11 +97,11 @@ export default function ManageStudents() {
           <h2 className="title-with-icon">
             <Users size={28} /> จัดการรายชื่อนักศึกษา
           </h2>
-          <p className="subtitle">โครงการ: Web Application for Inventory Management</p>
+          <p className="subtitle">โครงการ: {projectDetail?.projNameTH || 'ไม่ระบุชื่อโครงการ'}</p>
         </div>
         <div className="header-right">
           <div className="project-cap-badge">
-             <GraduationCap size={18} /> นักศึกษาที่สมัคร: {students.length} คน
+             <GraduationCap size={18} /> นักศึกษาที่สมัคร: {applications.length} คน
           </div>
         </div>
       </div>
@@ -71,58 +118,84 @@ export default function ManageStudents() {
           <thead>
             <tr>
               <th>ข้อมูลนักศึกษา</th>
-              <th>สถานะ</th>
+              <th>สถานะการสมัคร</th>
               <th>ผลการจ้างงาน (Final)</th>
               <th style={{ textAlign: 'center' }}>การดำเนินการ</th>
             </tr>
           </thead>
           <tbody>
-            {students.map((std) => (
-              <tr key={std.id}>
-                <td>
-                  <div className="student-info-cell">
-                    <div className="std-avatar">{std.name[0]}</div>
-                    <div className="std-details">
-                      <span className="std-name">{std.name}</span>
-                      <span className="std-id">ID: {std.studentId}</span>
-                      <span className="std-contact"><Mail size={12}/> {std.email}</span>
+            {applications.map((app) => {
+              const userAccount = app.user || {}; 
+              const studentProfile = userAccount.student || {}; 
+              const studentName = `${studentProfile.firstName || ''} ${studentProfile.lastName || ''}`.trim() || 'ไม่ระบุชื่อ';
+
+              return (
+                <tr key={app.appID}>
+                  <td>
+                    <div className="student-info-cell">
+                      <div className="std-avatar">{studentName.charAt(0) || 'U'}</div>
+                      <div className="std-details">
+                        <span className="std-name">{studentName}</span>
+                        <span className="std-id">ID: {studentProfile.studentID || '-'}</span> 
+                        <span className="std-contact"><Mail size={12}/> {userAccount.email || '-'}</span>
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td>
-                  <span className={`status-pill ${std.status.toLowerCase()}`}>
-                    {std.status === 'CONFIRMED' ? '🟢 ยืนยันสิทธิแล้ว' : '🟡 รอการยืนยัน'}
-                  </span>
-                </td>
-                <td>
-                  <select 
-                    className={`hired-select ${std.hiredStatus.toLowerCase()}`}
-                    defaultValue={std.hiredStatus}
-                    disabled={std.status !== 'CONFIRMED'}
-                  >
-                    <option value="WAITING">⌛ รอสรุปผล</option>
-                    <option value="HIRED">✅ HIRED (ได้งาน)</option>
-                    <option value="NOT_HIRED">❌ NOT HIRED</option>
-                  </select>
-                </td>
-                <td style={{ textAlign: 'center' }}>
-                  <div className="action-group">
-                    {std.status === 'PENDING_CONFIRM' ? (
-                      <>
-                        <button className="btn-action-confirm" title="ยืนยันสิทธิ">
-                          <CheckCircle2 size={20} />
-                        </button>
-                        <button className="btn-action-reject" title="ปฏิเสธสิทธิ">
-                          <XCircle size={20} />
-                        </button>
-                      </>
-                    ) : (
-                      <span style={{ color: '#cbd5e1', fontWeight: 'bold' }}>-</span>
-                    )}
-                  </div>
+                  </td>
+                  <td>
+                    <span className={`status-pill ${app.appStat?.toLowerCase() || 'pending'}`}>
+                      {app.appStat === 'APPROVED' ? '🟢 ยืนยันสิทธิแล้ว' : 
+                       app.appStat === 'DENIED' ? '🔴 ปฏิเสธ' : '🟡 รอยืนยัน'}
+                    </span>
+                  </td>
+                  <td>
+                    {/* 🌟 ผูกฟังก์ชัน onChange กับ Dropdown */}
+                    <select 
+                      className={`hired-select ${app.hiredStat?.toLowerCase() || 'WAITING'}`}
+                      value={app.hiredStat || 'WAITING'}
+                      disabled={app.appStat !== 'APPROVED'}
+                      onChange={(e) => handleHiredChange(app.appID, e.target.value)}
+                    >
+                      <option value="WAITING">⌛ รอสรุปผล</option>
+                      <option value="HIRED">✅ HIRED (ได้งาน)</option>
+                      <option value="NOT_HIRED">❌ NOT HIRED</option>
+                    </select>
+                  </td>
+                  <td style={{ textAlign: 'center' }}>
+                    <div className="action-group">
+                      {/* 🌟 ซ่อนปุ่มถ้าอนุมัติหรือปฏิเสธไปแล้ว */}
+                      {app.appStat === 'PENDING' ? (
+                        <>
+                          <button 
+                            className="btn-action-confirm" 
+                            title="อนุมัติ"
+                            onClick={() => handleApprove(app.appID)}
+                          >
+                            <CheckCircle2 size={20} />
+                          </button>
+                          <button 
+                            className="btn-action-reject" 
+                            title="ปฏิเสธ"
+                            onClick={() => handleReject(app.appID)}
+                          >
+                            <XCircle size={20} />
+                          </button>
+                        </>
+                      ) : (
+                        <span style={{ color: '#cbd5e1', fontWeight: 'bold' }}>-</span>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+            
+            {applications.length === 0 && (
+              <tr>
+                <td colSpan={4} style={{ textAlign: 'center', padding: '30px' }}>
+                  ยังไม่มีนักศึกษาสมัครในโครงการนี้
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>
