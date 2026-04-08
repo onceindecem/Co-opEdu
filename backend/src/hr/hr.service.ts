@@ -4,6 +4,8 @@ import { Sequelize } from 'sequelize-typescript';
 import { UpdateHRProfileDto } from './dto/update-hr-profile.dto';
 import { HR } from './entities/hr.entity';
 import { Company } from '../company/entities/company.entity';
+// 🌟 1. อย่าลืม Import ActivityLogsService (แก้ path ให้ตรงกับโปรเจกต์ของคุณ)
+import { ActivityLogsService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class HrService {
@@ -13,7 +15,9 @@ export class HrService {
     @InjectModel(Company)
     private companyModel: typeof Company,
     private sequelize: Sequelize,
-  ) {}
+    // 🌟 2. Inject Service เข้ามาใน Constructor
+    private readonly activityLogsService: ActivityLogsService,
+  ) { }
 
   async updateHrProfile(userID: string, updateData: any) {
     const t = await this.sequelize.transaction();
@@ -22,8 +26,8 @@ export class HrService {
 
     try {
       // find HR profile by userID
-      const hrProfile = await this.hrModel.findOne({ 
-        where: { userID: userID } 
+      const hrProfile = await this.hrModel.findOne({
+        where: { userID: userID }
       });
 
       if (!hrProfile) {
@@ -40,8 +44,8 @@ export class HrService {
 
       // update company info if coID exists in HR profile and update data contains company fields
       if (hrProfile.coID) {
-        const company = await this.companyModel.findOne({ 
-          where: { coID: hrProfile.coID } 
+        const company = await this.companyModel.findOne({
+          where: { coID: hrProfile.coID }
         });
 
         if (company) {
@@ -58,15 +62,27 @@ export class HrService {
       // commit transaction
       await t.commit();
 
-      return { 
+      // 🌟 3. บันทึก Activity Log หลังจาก Commit ข้อมูลลง DB สำเร็จ
+      try {
+        await this.activityLogsService.createLog(
+          userID,
+          'UPDATE_PROFILE',
+          `อัปเดตข้อมูลผู้ประสานงานและสถานประกอบการ (${updateData.coNameTH ?? 'ไม่ระบุชื่อบริษัท'})`
+        );
+      } catch (logError) {
+        // ดัก Error ไว้เผื่อระบบ Log มีปัญหา จะได้ไม่กระทบกับการอัปเดตโปรไฟล์ที่สำเร็จไปแล้ว
+        console.error('Failed to save activity log:', logError);
+      }
+
+      return {
         message: 'HR profile updated successfully',
-        updatedProfile: hrProfile, 
+        updatedProfile: hrProfile,
       };
 
-    } catch (error) {
+    } catch (error: any) {
       await t.rollback();
       throw new HttpException(
-        'Failed to update HR profile' + (error.message ? `: ${error.message}` : ''), 
+        'Failed to update HR profile' + (error.message ? `: ${error.message}` : ''),
         HttpStatus.INTERNAL_SERVER_ERROR
       );
     }

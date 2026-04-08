@@ -7,18 +7,18 @@ export default function UserManagement() {
   const [userList, setUserList] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: 'STUDENT' });
-  const [newPassword, setNewPassword] = useState(''); 
+  const [newUser, setNewUser] = useState({ firstName: '', lastName: '', email: '', password: '', role: 'STUDENT' });
+  const [newPassword, setNewPassword] = useState('');
 
   const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; userId: string | null; userName: string }>({ isOpen: false, userId: null, userName: '' });
   const [roleConfirm, setRoleConfirm] = useState<{ isOpen: boolean; userId: string | null; userName: string; oldRole: string; newRole: string }>({ isOpen: false, userId: null, userName: '', oldRole: '', newRole: '' });
   const [resetPwdConfirm, setResetPwdConfirm] = useState<{ isOpen: boolean; userId: string | null; userName: string }>({ isOpen: false, userId: null, userName: '' });
 
   useEffect(() => {
-    const currentUser = JSON.parse(localStorage.getItem('user') || '{"role": "ADMIN"}'); 
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{"role": "ADMIN"}');
     if (currentUser.role !== 'ADMIN') {
       alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้!');
-      window.location.href = '/'; 
+      window.location.href = '/';
       return;
     }
     fetchUsers();
@@ -28,8 +28,8 @@ export default function UserManagement() {
     try {
       const response = await adminService.getAllUsers();
       const formattedUsers = response.data.map((u: any) => ({
-        id: u.userID, 
-        name: u.name || u.email, 
+        id: u.userID,
+        name: u.name || u.email,
         email: u.email,
         role: u.role,
         provider: u.provider || 'LOCAL',
@@ -42,16 +42,18 @@ export default function UserManagement() {
   };
 
   const handleAddUser = async () => {
-    if (!newUser.email || !newUser.password) {
-      alert('กรุณากรอก Email และ Password ให้ครบถ้วน');
+    // 🌟 บังคับให้กรอกชื่อและนามสกุลด้วย
+    if (!newUser.email || !newUser.password || !newUser.firstName || !newUser.lastName) {
+      alert('กรุณากรอกข้อมูลให้ครบถ้วน (ชื่อ, นามสกุล, Email, Password)');
       return;
     }
     try {
       await adminService.createUser(newUser);
       alert('สร้างบัญชีผู้ใช้งานสำเร็จ!');
       setShowAddModal(false);
-      setNewUser({ name: '', email: '', password: '', role: 'STUDENT' });
-      fetchUsers(); 
+      // 🌟 รีเซ็ต State กลับเป็นค่าว่าง
+      setNewUser({ firstName: '', lastName: '', email: '', password: '', role: 'STUDENT' });
+      fetchUsers();
     } catch (error) {
       console.error(error);
       alert('เกิดข้อผิดพลาดในการสร้างบัญชี');
@@ -63,7 +65,7 @@ export default function UserManagement() {
       try {
         await adminService.deleteUser(deleteConfirm.userId);
         setDeleteConfirm({ isOpen: false, userId: null, userName: '' });
-        fetchUsers(); 
+        fetchUsers();
       } catch (error) {
         console.error(error);
         alert('ไม่สามารถลบผู้ใช้งานได้');
@@ -76,7 +78,7 @@ export default function UserManagement() {
       try {
         await adminService.updateUserRole(roleConfirm.userId, roleConfirm.newRole);
         setRoleConfirm({ ...roleConfirm, isOpen: false });
-        fetchUsers(); 
+        fetchUsers();
       } catch (error) {
         console.error(error);
         alert('ไม่สามารถเปลี่ยนสิทธิ์ได้');
@@ -106,8 +108,8 @@ export default function UserManagement() {
     setNewPassword(password);
   };
 
-  const filteredUsers = userList.filter(user => 
-    (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())) || 
+  const filteredUsers = userList.filter(user =>
+    (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -125,9 +127,9 @@ export default function UserManagement() {
       </div>
 
       <div className="search-container">
-        <input 
-          type="text" 
-          placeholder="ค้นหาชื่อ หรือ Email..." 
+        <input
+          type="text"
+          placeholder="ค้นหาชื่อ หรือ Email..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="search-input"
@@ -155,7 +157,7 @@ export default function UserManagement() {
                   <div className="user-email">{user.email}</div>
                 </td>
                 <td>
-                  <select 
+                  <select
                     value={user.role}
                     onChange={(e) => setRoleConfirm({ isOpen: true, userId: user.id, userName: user.name, oldRole: user.role, newRole: e.target.value })}
                     className="role-select"
@@ -254,12 +256,19 @@ export default function UserManagement() {
               <UserPlus size={22} color="#f97316" /> สร้างบัญชีผู้ใช้ใหม่
             </h3>
             <div className="modal-form-group">
-              <div><label>ชื่อ-นามสกุล</label><input type="text" value={newUser.name} onChange={(e) => setNewUser({...newUser, name: e.target.value})} className="modal-input" /></div>
-              <div><label>Email</label><input type="email" value={newUser.email} onChange={(e) => setNewUser({...newUser, email: e.target.value})} className="modal-input" /></div>
-              <div><label>รหัสผ่าน</label><input type="password" value={newUser.password} onChange={(e) => setNewUser({...newUser, password: e.target.value})} className="modal-input" /></div>
+              <div>
+                <label>ชื่อ</label>
+                <input type="text" value={newUser.firstName} onChange={(e) => setNewUser({ ...newUser, firstName: e.target.value })} className="modal-input" placeholder="ไม่ต้องใส่คำนำหน้า" />
+              </div>
+              <div>
+                <label>นามสกุล</label>
+                <input type="text" value={newUser.lastName} onChange={(e) => setNewUser({ ...newUser, lastName: e.target.value })} className="modal-input" />
+              </div>
+              <div><label>Email</label><input type="email" value={newUser.email} onChange={(e) => setNewUser({ ...newUser, email: e.target.value })} className="modal-input" /></div>
+              <div><label>รหัสผ่าน</label><input type="password" value={newUser.password} onChange={(e) => setNewUser({ ...newUser, password: e.target.value })} className="modal-input" /></div>
               <div>
                 <label>บทบาท (Role)</label>
-                <select value={newUser.role} onChange={(e) => setNewUser({...newUser, role: e.target.value})} className="modal-input" style={{ cursor: 'pointer' }}>
+                <select value={newUser.role} onChange={(e) => setNewUser({ ...newUser, role: e.target.value })} className="modal-input" style={{ cursor: 'pointer' }}>
                   <option value="STUDENT">STUDENT</option>
                   <option value="ADVISOR">ADVISOR</option>
                   <option value="HR">COMPANY</option>

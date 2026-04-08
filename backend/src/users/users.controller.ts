@@ -51,17 +51,27 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    // ⚠️ เอาเครื่องหมาย + ออกแล้ว
-    return this.usersService.update(id, updateUserDto); 
+  @Post('admin')
+  createAsAdmin(@Body() createUserDto: CreateUserDto, @Req() req: any) {
+    const adminId = req.user.sub || req.user.id || req.user.userID;
+    return this.usersService.create(createUserDto, adminId);
   }
 
+  // 🌟 ส่ง adminId ไปเก็บ Log ตอน Update
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Req() req: any) {
+    const adminId = req.user.sub || req.user.id || req.user.userID;
+    return this.usersService.update(id, updateUserDto, adminId); 
+  }
+
+  // 🌟 ส่ง adminId ไปเก็บ Log ตอน Delete
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    // ⚠️ เอาเครื่องหมาย + ออกแล้ว
-    return this.usersService.remove(id); 
+  remove(@Param('id') id: string, @Req() req: any) {
+    const adminId = req.user.sub || req.user.id || req.user.userID;
+    return this.usersService.remove(id, adminId); 
   }
 }
