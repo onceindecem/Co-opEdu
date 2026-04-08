@@ -12,6 +12,8 @@ import { ProjectManagerModule } from './project-manager/project-manager.module';
 import { StudentModule } from './student/student.module';
 import { AdvisorModule } from './advisor/advisor.module';
 import { ApplicationsModule } from './applications/applications.module';
+import { ReportsModule } from './report/report.module';
+import { ActivityLogsModule } from './activity-log/activity-log.module';
 
 @Module({
   imports: [
@@ -41,6 +43,8 @@ import { ApplicationsModule } from './applications/applications.module';
     StudentModule,
     AdvisorModule,
     ApplicationsModule,
+    ReportsModule,
+    ActivityLogsModule,
   ],
 
   controllers: [AppController],

@@ -554,22 +554,23 @@
   background: #e2e8f0;
 }
 
+/* แก้ไขบรรทัดที่ประมาณ 426 */
 .btn-primary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #f97316;
-  color: white;
-  border: none;
-  padding: 12px 28px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f97316 !important; /* 🌟 เติมสีส้มและใช้ !important เพื่อบังคับ */
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
 }
 
 .btn-primary:hover {
-  background: #ea580c;
+    background: #ea580c !important; /* 🌟 สีส้มเข้มตอนเอาเมาส์วาง */
 }
 /* --- Project Table Page Specific Styles --- */
 

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'; // 👈 เพิ่ม BadRequestException
+import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common'; // 👈 เพิ่ม BadRequestException
 import { InjectModel } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { Project } from './entities/project.entity';
@@ -8,6 +8,8 @@ import { HR } from '../hr/entities/hr.entity';
 import { Advisor } from '../advisor/entities/advisor.entity';
 import { randomUUID } from 'crypto';
 import { Application } from '../applications/entities/application.entity'; // เช็ก Path ให้ตรง
+import model from 'sequelize/lib/model';
+import { ActivityLogsService } from '../activity-log/activity-log.service';
 
 @Injectable()
 export class ProjectsService {
@@ -16,6 +18,7 @@ export class ProjectsService {
     @InjectModel(ProjectManager) private pmModel: typeof ProjectManager,
     @InjectModel(Advisor) private advisorModel: typeof Advisor, // 🌟 1. เพิ่มบรรทัดนี้ เพื่อให้เรียกใช้ตาราง Advisor ได้
     private sequelize: Sequelize,
+    private activityLogsService: ActivityLogsService,
   ) {}
 
   // --- 1. สร้างโครงการใหม่ ---
@@ -177,12 +180,10 @@ async create(dto: any, files?: Array<Express.Multer.File>) {
     
     return await this.projectModel.findAll({
       where: whereCondition,
-      // 🌟 แก้ตรงนี้! เพิ่ม Application เข้าไปเพื่อให้หน้าการ์ดนับจำนวนคนได้
       include: [
         Company, 
         {
           model: Application,
-          attributes: ['appID'], // ดึงมาแค่ ID เพื่อเอาไว้นับจำนวน (ช่วยให้ Database ทำงานเร็ว)
         }
       ],
     });
@@ -227,4 +228,102 @@ async approveProject(id: string, userIdFromToken: string) {
 
     return { message: 'ปฏิเสธเรียบร้อยแล้ว', project };
   }
+
+  async findByCompanyId(coId: string) {
+    return await this.projectModel.findAll({
+      where: { coID: coId }, // ค้นหาเฉพาะโปรเจกต์ที่มี coID ตรงกับที่ส่งมา
+      include: [Company, HR, ProjectManager, Advisor, Application],
+    });
+  }
+  // ==========================================
+  // 🌟 ส่วนจัดการคำขอลบโครงการ (Admin อนุมัติ/ปฏิเสธ)
+  // ==========================================
+
+  // 1. ดึงข้อมูลโครงการที่รอการอนุมัติลบ (สำหรับหน้าตาราง Admin)
+async getPendingDeleteRequests() {
+    console.log(`🔵 [Admin] กำลังดึงข้อมูลโปรเจกต์ที่รออนุมัติลบ...`);
+
+    const data = await this.projectModel.findAll({
+      where: { isPendingDelete: true },
+      include: [ { model: Company } ], // 👈 บางทีอาจจะพังตรงการ Join ตาราง ลองแก้เป็นแบบนี้ดูครับ
+    });
+
+    console.log(`✅ [Admin] ดึงข้อมูลได้ทั้งหมด: ${data.length} รายการ`); // 👈 ดักดูว่าดึงมาได้กี่ตัว (ถ้าเป็น 0 แปลว่าใน Database ไม่มี)
+    return data;
+  }
+
+ // 1. ตรวจสอบว่ารับ adminId เข้ามา (ไม่มีเครื่องหมาย ?)
+async approveDeleteRequest(id: string, adminId: string) { 
+  const project = await this.projectModel.findByPk(id);
+  if (!project) throw new NotFoundException(`ไม่พบโครงการรหัส ${id}`);
+
+  // เก็บชื่อโครงการไว้ก่อนสั่งลบ (เอาไว้ใส่ใน Log)
+  const projectName = project.projName || 'ไม่ระบุชื่อ';
+
+  // 🔥 คำสั่งลบจริงใน Database
+  await project.destroy(); 
+
+  // 🌟 บันทึก Log ด้วย ID คนกดจริง และใส่ชื่อโครงการที่โดนลบ
+  await this.activityLogsService.createLog(
+    adminId,
+    'APPROVE_DELETE_PROJECT',
+    `Admin อนุมัติการลบโครงการ`
+  );
+
+  return { message: `อนุมัติการลบโครงการ ${projectName} เรียบร้อยแล้ว` };
+}
+
+  // 3. ปฏิเสธคำขอลบโครงการ (Admin กดปฏิเสธ)
+async rejectDeleteRequest(id: string, adminId: string) { // 👈 เพิ่ม adminId
+  const project = await this.projectModel.findByPk(id);
+  if (!project) throw new NotFoundException(`ไม่พบโครงการรหัส ${id}`);
+
+  // เปลี่ยนสถานะกลับไปเป็นปกติ
+  await project.update({
+    projStat: 'APPROVED', 
+    isPendingDelete: false, // 🌟 เคลียร์ flag ออกเพื่อให้ปุ่มลบกลับมาขึ้นใหม่ได้
+    deleteReason: null      // 🌟 ลบเหตุผลทิ้ง
+  });
+
+  // 🌟 บันทึก Log
+  await this.activityLogsService.createLog(
+    adminId,
+    'REJECT_DELETE_PROJECT',
+    `Admin ปฏิเสธคำขอลบโครงการ `
+  );
+
+  return { message: `ปฏิเสธคำขอลบโครงการรหัส ${id} เรียบร้อยแล้ว`, project };
+}
+  
+
+async requestDeleteProject(id: string, userId: string, reason?: string) { 
+  console.log(`🟡 [HR] กำลังยื่นขอลบโปรเจกต์ ID: ${id} โดย User ID: ${userId}`);
+
+  // 1. ค้นหา Project
+  const project = await this.projectModel.findByPk(id);
+  if (!project) {
+    throw new NotFoundException(`ไม่พบโครงการรหัส ${id}`);
+  }
+
+  // TODO: แนะนำให้ใช้ Transaction ครอบการทำงานส่วนนี้ (Sequelize Transaction)
+  // 2. อัปเดตสถานะโครงการ
+  await project.update({
+    isPendingDelete: true,
+    deleteReason: reason || 'ต้องการลบโครงการ'
+  });
+
+  // 3. บันทึก Activity Log (นำ if เช็ก service ออก เพื่อให้ชัวร์ว่าระบบบังคับบันทึก Log เสมอ)
+  await this.activityLogsService.createLog(
+  userId, 
+  'REQUEST_DELETE_PROJECT', 
+  `HR ยื่นขอลบโครงการ`
+);
+
+  console.log(`✅ [HR] อัปเดต isPendingDelete เป็น true สำเร็จ!`);
+  
+  return { 
+    message: 'ส่งคำขอลบเรียบร้อยแล้ว', 
+    project 
+  };
+}
 }

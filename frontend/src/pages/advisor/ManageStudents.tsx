@@ -97,7 +97,7 @@ export default function ManageStudents() {
           <h2 className="title-with-icon">
             <Users size={28} /> จัดการรายชื่อนักศึกษา
           </h2>
-          <p className="subtitle">โครงการ: {projectDetail?.projNameTH || 'ไม่ระบุชื่อโครงการ'}</p>
+          <p className="subtitle">โครงการ: {projectDetail?.projName || 'ไม่ระบุชื่อโครงการ'}</p>
         </div>
         <div className="header-right">
           <div className="project-cap-badge">

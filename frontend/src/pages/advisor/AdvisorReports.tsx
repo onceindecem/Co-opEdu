@@ -1,60 +1,92 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Building2, Activity, Clock, Eye, X, FileText,
   UserCheck, Users, Mail, ClipboardList, UserX,
-  Send, Hourglass // <--- เพิ่ม Icon ใหม่
+  Send, Hourglass 
 } from 'lucide-react';
 import './Advisor.css';
+import { reportService } from '../../api/services/reportService';
+
+const statusMap: { [key: string]: string } = {
+  // เผื่อสถานะเริ่มต้นของ Application ไว้หน่อยเผื่อต้องใช้
+  'PENDING': 'ยังไม่ส่งอีเมล', 
+
+  // ตรงกับ ENUM ใน Database เป๊ะๆ
+  'EMAIL_SENT': 'ส่งอีเมลแล้วรอการตอบกลับ',
+  'TEST_RECEIVED': 'ได้รับแบบทดสอบ',
+  'TEST_SENT': 'ส่งแบบทดสอบแล้ว',
+  'INTERVIEW_SCHEDULED': 'นัดวันสัมภาษณ์แล้ว',
+  'WAITING_FOR_RESULT': 'รอผลสัมภาษณ์',
+  'PASSED': 'ผ่านสัมภาษณ์แล้ว',
+  'NOT_PASSED': 'ไม่ผ่านสัมภาษณ์'
+};
 
 export default function AdvisorReports() {
   const [selectedReport, setSelectedReport] = useState<any>(null);
+  const [reportData, setReportData] = useState<any[]>([]); // 🌟 เปลี่ยนมาใช้ State แทน Mock Data
+  const [isLoading, setIsLoading] = useState<boolean>(true); // 🌟 เพิ่ม State โหลดข้อมูล
 
-  const reportData = [
-    {
-      id: 1,
-      project: "AI Chatbot for Customer Service",
-      company: "TechNova Co.",
-      position: "Frontend Developer",
-      student: "นายสมชาย ใจดี",
-      studentId: "66050001",
-      currentStatus: "นัดวันสัมภาษณ์แล้ว",
-      interviewDate: "25/04/2026",
-      lastUpdate: "24/03/2026",
-      reportTitle: "ส่ง Portfolio และได้รับการติดต่อกลับ",
-      reportDetail: "ทาง HR ของ TechNova ติดต่อมาเพื่อนัดวันสัมภาษณ์ทางออนไลน์ผ่าน Google Meet ครับ ผมได้เตรียมตัวและส่งเอกสารเพิ่มเติมไปให้แล้ว",
-    },
-    {
-      id: 2,
-      project: "Inventory Management System",
-      company: "Global Logistics",
-      position: "Backend Developer",
-      student: "นางสาววิภาดา เรียนดี",
-      studentId: "66050015",
-      currentStatus: "ส่งอีเมลแล้วรอการตอบกลับ",
-      interviewDate: "",
-      lastUpdate: "20/03/2026",
-      reportTitle: "ส่ง Resume ไปยังอีเมลบริษัท",
-      reportDetail: "หนูได้ทำการแนบ Resume และ Transcript ส่งไปยังอีเมล hr@globallogistics.com เรียบร้อยแล้วค่ะ ตอนนี้กำลังรอการตอบกลับเพื่อทำแบบทดสอบ",
-    },
-    {
-      id: 3,
-      project: "Data Analytics Dashboard",
-      company: "DataCorp",
-      position: "Data Analyst",
-      student: "นายมานะ อดทน",
-      studentId: "66050099",
-      currentStatus: "ผ่านการสัมภาษณ์",
-      interviewDate: "",
-      lastUpdate: "22/03/2026",
-      reportTitle: "ผลการสัมภาษณ์รอบสุดท้าย",
-      reportDetail: "พี่ๆ ในทีม Data แจ้งว่าผ่านการสัมภาษณ์แล้วครับ จะเริ่มงานในวันที่ 1 พฤษภาคมนี้ โดยจะมีการปฐมนิเทศก่อนเริ่มงาน 1 วันครับ",
+  // 🌟 ดึงข้อมูลจาก API ทันทีที่เปิดหน้านี้
+  useEffect(() => {
+    fetchAdvisorReports();
+  }, []);
+
+  const fetchAdvisorReports = async () => {
+    try {
+      setIsLoading(true);
+      // ยิง API ไปดึงข้อมูล (Token จะถูกแนบไปอัตโนมัติจาก axiosInstance)
+      const res = await reportService.getAllReportsForAdvisor();
+      
+      // 🌟 แปลงข้อมูลจาก Backend ให้เข้ากับ UI ของตาราง
+      // (ใช้ Optional Chaining (?.) เผื่อข้อมูลบางตัวเป็น null จะได้ไม่พัง)
+ // 🌟 แปลงข้อมูลจาก Backend ให้เข้ากับ UI ของตาราง
+      const formattedData = res.data.map((item: any) => {
+        // ลองส่องดูใน Console ก่อนว่าไอเทมแต่ละตัวหน้าตาเป็นยังไง
+        console.log("Single Item Check:", item);
+
+        const user = item.application?.user;
+        const studentData = user?.student || user?.Student;
+        const email = user?.email || '';
+
+        // 🌟 ทริคดึงรหัสนักศึกษาจากอีเมล (เช่น 66050379@kmitl.ac.th จะได้ 66050379)
+        const extractedId = email.includes('@') ? email.split('@')[0] : '-';
+
+        return {
+          id: item.repID,
+          project: item.application?.project?.projName || 'ไม่ระบุโครงการ',
+          company: item.application?.project?.company?.coNameTH || 'ไม่ระบุบริษัท',
+          position: item.application?.project?.position || 'ตำแหน่งงาน',
+          
+          // ⚠️ จุดสำคัญสำหรับชื่อ: 
+          // ถ้าส่อง Console แล้วพบว่าชื่ออยู่ที่ user ตรงๆ ให้เปลี่ยนเป็น user?.firstName
+          // ตอนนี้ผมตั้งให้มันลองดึงจากทั้ง studentData และ user ดูครับ ถ้าไม่ได้จริงๆ มันจะโชว์อีเมลเหมือนเดิม
+          student: `${studentData?.firstName || user?.firstName || ''} ${studentData?.lastName || user?.lastName || ''}`.trim() || email || 'ไม่ระบุชื่อ',
+          
+          // 🌟 ใส่รหัสที่ได้จาก API ก่อน ถ้าไม่มีให้ใช้ตัวที่สกัดจากอีเมล
+          studentId: studentData?.studentID || studentData?.studentId || extractedId,
+          
+          currentStatus: statusMap[item.repStat] || statusMap[item.application?.appStat] || item.repStat,
+          
+          interviewDate: item.interviewDate ? new Date(item.interviewDate).toLocaleDateString('th-TH') : '',
+          lastUpdate: item.createAt ? new Date(item.createAt).toLocaleDateString('th-TH') : '-',
+          reportTitle: item.repTopic,
+          reportDetail: item.descDetail,
+        };
+      });
+
+      setReportData(formattedData);
+    } catch (error) {
+      console.error('Error fetching advisor reports:', error);
+      // ถ้าอยากเพิ่มแจ้งเตือน Error เช่น SweetAlert ใส่ตรงนี้ได้ครับ
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
-  // Logic การนับจำนวน Summary (เพิ่มของใหม่เข้าไป)
+  // Logic การนับจำนวน Summary (คำนวณสดจาก reportData ที่ได้จาก API)
   const stats = {
-    notSent: reportData.filter(item => item.currentStatus === 'ยังไม่ส่งอีเมล').length, // <--- เพิ่ม
-    pendingResult: reportData.filter(item => item.currentStatus === 'รอผลสัมภาษณ์').length, // <--- เพิ่ม
+    notSent: reportData.filter(item => item.currentStatus === 'ยังไม่ส่งอีเมล').length,
+    pendingResult: reportData.filter(item => item.currentStatus === 'รอผลสัมภาษณ์').length,
     waiting: reportData.filter(item => item.currentStatus === 'นัดวันสัมภาษณ์แล้ว').length,
     interviewed: reportData.filter(item => item.currentStatus === 'ผ่านการสัมภาษณ์').length,
     emailed: reportData.filter(item => item.currentStatus === 'ส่งอีเมลแล้วรอการตอบกลับ').length,
@@ -74,6 +106,15 @@ export default function AdvisorReports() {
 
   const handleCloseModal = () => setSelectedReport(null);
 
+  // 🌟 หน้าจอโหลดข้อมูลระหว่างรอ API
+  if (isLoading) {
+    return (
+      <div className="advisor-page text-center" style={{ padding: '50px' }}>
+        <Hourglass className="icon-inline" size={24} /> กำลังโหลดข้อมูล...
+      </div>
+    );
+  }
+
   return (
     <div className="advisor-page text-left">
       <div className="page-header-section">
@@ -83,7 +124,6 @@ export default function AdvisorReports() {
 
       {/* ส่วนสรุปรายละเอียด (Summary Section) */}
       <div className="summary-grid">
-        {/* --- เพิ่ม Card ใหม่ 2 ใบด้านล่างนี้ --- */}
         <div className="summary-card muted">
           <div className="summary-icon-box"><Send size={20} /></div>
           <div className="summary-content">
@@ -162,37 +202,45 @@ export default function AdvisorReports() {
               </tr>
             </thead>
             <tbody>
-              {reportData.map((item) => (
-                <tr key={item.id}>
-                  <td>
-                    <div className="project-info-mini">
-                      <div className="title-text-small">{item.project}</div>
-                      <div className="company-pos-text">
-                        <Building2 size={12} /> {item.company} • {item.position}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="std-info-small">
-                      <div className="std-name-text">{item.student}</div>
-                      <div className="std-id-text">ID: {item.studentId}</div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className={`status-badge-custom ${getStatusClass(item.currentStatus)}`}>
-                      {item.currentStatus === 'นัดวันสัมภาษณ์แล้ว' && item.interviewDate
-                        ? `${item.currentStatus} (${item.interviewDate})`
-                        : item.currentStatus}
-                    </span>
-                  </td>
-                  <td><span className="last-update-text">{item.lastUpdate}</span></td>
-                  <td>
-                    <button className="btn-view-report" onClick={() => setSelectedReport(item)}>
-                      <Eye size={18} /> ดูบันทึก
-                    </button>
+              {reportData.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="text-center" style={{ padding: '20px' }}>
+                    ไม่มีข้อมูลบันทึกความคืบหน้า
                   </td>
                 </tr>
-              ))}
+              ) : (
+                reportData.map((item) => (
+                  <tr key={item.id}>
+                    <td>
+                      <div className="project-info-mini">
+                        <div className="title-text-small">{item.project}</div>
+                        <div className="company-pos-text">
+                          <Building2 size={12} /> {item.company} • {item.position}
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="std-info-small">
+                        <div className="std-name-text">{item.student}</div>
+                        <div className="std-id-text">ID: {item.studentId}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`status-badge-custom ${getStatusClass(item.currentStatus)}`}>
+                        {item.currentStatus === 'นัดวันสัมภาษณ์แล้ว' && item.interviewDate
+                          ? `${item.currentStatus} (${item.interviewDate})`
+                          : item.currentStatus}
+                      </span>
+                    </td>
+                    <td><span className="last-update-text">{item.lastUpdate}</span></td>
+                    <td>
+                      <button className="btn-view-report" onClick={() => setSelectedReport(item)}>
+                        <Eye size={18} /> ดูบันทึก
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

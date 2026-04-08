@@ -1,41 +1,45 @@
-import { Activity, Search, ShieldCheck, Clock } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Activity, Search, ShieldCheck, Clock, Loader2 } from 'lucide-react';
+import { activityLogService } from '../../api/services/activityLogService'; // ปรับ Path ให้ตรง
 import './Admin.css';
 
+interface ActivityLogData {
+  logID: string;
+  userID: string;
+  action: string;
+  details: string;
+  timestamp: string;
+  user?: { email: string };
+}
+
 export default function AuditLogs() {
-  const logs = [
-    {
-      id: 1,
-      time: '2026-03-28 14:30:15',
-      user: 'admin@system.com',
-      action: 'AUTH: LOGIN_SUCCESS',
-      details: 'เข้าสู่ระบบสำเร็จผ่าน Local Provider',
-      type: 'success'
-    },
-    {
-      id: 2,
-      time: '2026-03-28 10:15:00',
-      user: 'unknown (IP: 192.168.1.10)',
-      action: 'AUTH: LOGIN_FAILED',
-      details: 'พยายามเข้าสู่ระบบด้วยรหัสผ่านผิดซ้ำ 3 ครั้ง (Brute-force Alert)',
-      type: 'error'
-    },
-    {
-      id: 3,
-      time: '2026-03-27 18:45:22',
-      user: 'somchai@student.ac.th',
-      action: 'USER: PASSWORD_CHANGED',
-      details: 'ผู้ใช้ทำการรีเซ็ตรหัสผ่านใหม่สำเร็จ',
-      type: 'warning'
-    },
-    {
-      id: 4,
-      time: '2026-03-27 09:05:11',
-      user: 'advisor.a@university.ac.th',
-      action: 'PROJECT: APPROVED',
-      details: 'อนุมัติโครงการ #PRJ-2026-001 ของนักศึกษา',
-      type: 'info'
-    }
-  ];
+  const [logs, setLogs] = useState<ActivityLogData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // ฟังก์ชันดึงข้อมูลจาก Backend
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const response = await activityLogService.getAll();
+        setLogs(response.data);
+      } catch (error) {
+        console.error("Failed to fetch activity logs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLogs();
+  }, []);
+
+  // ฟังก์ชันคำนวณ Type ของสีจากชื่อ Action (เนื่องจากใน DB ไม่มีฟิลด์ type)
+  const determineLogType = (action: string) => {
+    const act = action.toUpperCase();
+    if (act.includes('SUCCESS') || act.includes('APPROVED')) return 'success';
+    if (act.includes('FAILED') || act.includes('ERROR') || act.includes('DENIED')) return 'error';
+    if (act.includes('WARNING') || act.includes('CHANGED') || act.includes('EDIT')) return 'warning';
+    return 'info';
+  };
 
   const getActionColor = (type: string) => {
     switch(type) {
@@ -46,9 +50,15 @@ export default function AuditLogs() {
     }
   };
 
+  // 🌟 ระบบค้นหา: กรองข้อมูลตาม Email หรือ Action
+  const filteredLogs = logs.filter(log => {
+    const emailMatch = log.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const actionMatch = log.action.toLowerCase().includes(searchTerm.toLowerCase());
+    return emailMatch || actionMatch;
+  });
+
   return (
     <div className="admin-card">
-      
       <div className="admin-header-flex" style={{ marginBottom: '20px', alignItems: 'center' }}>
         <div>
           <h2 style={{ margin: 0, color: '#0f172a', fontSize: '1.5rem', fontWeight: 800 }}>
@@ -66,51 +76,70 @@ export default function AuditLogs() {
           <input 
             type="text" 
             placeholder="ค้นหาด้วย Email หรือ Action..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)} // 🌟 ผูก State กับช่องค้นหา
             style={{ width: '100%', padding: '10px 12px 10px 38px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none', fontSize: '0.9rem' }}
           />
         </div>
       </div>
 
-      <table className="admin-table">
-        <thead>
-          <tr>
-            <th>เวลาที่เกิดเหตุ (Timestamp)</th>
-            <th>อีเมลคนทำ (User)</th>
-            <th>ประเภท Action</th>
-            <th>รายละเอียด (Details)</th>
-          </tr>
-        </thead>
-        <tbody>
-          {logs.map((log) => {
-            const colors = getActionColor(log.type);
-            return (
-              <tr key={log.id}>
-                <td style={{ color: '#64748b', fontSize: '0.85rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Clock size={14} /> {log.time}
-                  </div>
+      {loading ? (
+         <div style={{ display: 'flex', justifyContent: 'center', padding: '40px', color: '#64748b' }}>
+           <Loader2 className="animate-spin" size={24} style={{ marginRight: '10px' }} /> กำลังโหลดข้อมูล...
+         </div>
+      ) : (
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>เวลาที่เกิดเหตุ (Timestamp)</th>
+              <th>อีเมลคนทำ (User)</th>
+              <th>ประเภท Action</th>
+              <th>รายละเอียด (Details)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredLogs.length > 0 ? (
+              filteredLogs.map((log) => {
+                const logType = determineLogType(log.action);
+                const colors = getActionColor(logType);
+                return (
+                  <tr key={log.logID}>
+                    <td style={{ color: '#64748b', fontSize: '0.85rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Clock size={14} /> 
+                        {new Date(log.timestamp).toLocaleString('th-TH')} {/* แปลงวันที่ให้อ่านง่าย */}
+                      </div>
+                    </td>
+                    <td style={{ fontWeight: 600, color: '#1e293b' }}>
+                      {log.user?.email || 'System / Unknown'}
+                    </td>
+                    <td>
+                      <span style={{ 
+                        background: colors.bg, 
+                        color: colors.color, 
+                        padding: '4px 8px', 
+                        borderRadius: '6px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: 700,
+                        fontFamily: 'monospace'
+                      }}>
+                        {log.action}
+                      </span>
+                    </td>
+                    <td style={{ color: '#475569', fontSize: '0.85rem' }}>{log.details}</td>
+                  </tr>
+                );
+              })
+            ) : (
+              <tr>
+                <td colSpan={4} style={{ textAlign: 'center', padding: '30px', color: '#94a3b8' }}>
+                  ไม่พบข้อมูลบันทึกระบบที่ค้นหา
                 </td>
-                <td style={{ fontWeight: 600, color: '#1e293b' }}>{log.user}</td>
-                <td>
-                  <span style={{ 
-                    background: colors.bg, 
-                    color: colors.color, 
-                    padding: '4px 8px', 
-                    borderRadius: '6px', 
-                    fontSize: '0.75rem', 
-                    fontWeight: 700,
-                    fontFamily: 'monospace'
-                  }}>
-                    {log.action}
-                  </span>
-                </td>
-                <td style={{ color: '#475569', fontSize: '0.85rem' }}>{log.details}</td>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      
+            )}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

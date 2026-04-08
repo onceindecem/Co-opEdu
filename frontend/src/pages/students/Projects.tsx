@@ -54,16 +54,14 @@ export default function StudentProjects() {
       <div className="search-section">
         <h1>ค้นหาโอกาสที่ใช่สำหรับคุณ</h1>
         <div className="search-bar">
-          {/* ... ส่วน Search bar เหมือนเดิม ... */}
+          <Search className="search-icon" size={20} />
           <input 
             type="text" 
             placeholder="ค้นหาชื่อโครงการ หรือชื่อบริษัท..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <button className="btn-search">
-            <Search size={18} /> ค้นหา
-          </button>
+          <button className="btn-search">ค้นหา</button>
         </div>
       </div>
 
@@ -75,37 +73,44 @@ export default function StudentProjects() {
         <div className="project-grid">
           {filteredProjects.length > 0 ? (
             filteredProjects.map((proj: any) => {
-              // 🌟 5. เช็กว่าโปรเจกต์การ์ดใบนี้ อยู่ในลิสต์ที่เคยสมัครไปแล้วหรือยัง?
               const isApplied = appliedProjectIds.includes(proj.projID);
 
               return (
                 <div className="project-card" key={proj.projID}>
-                  <div className="status-badge">{proj.projStat}</div>
-                  <h3>{proj.projNameTH}</h3>
-                  <p className='position'>{proj.projNameEN || 'General Position'}</p>
-                  <p className="company">{proj.company?.coNameTH || 'ไม่ระบุชื่อบริษัท'}</p>
-                  
-                  <div className="info-row">
-                    <MapPin size={16} /> <span>{proj.company?.coAddr || 'ไม่ระบุสถานที่'}</span>
-                  </div>
-                  
-                  <div className="info-row">
-                    <Briefcase size={16} /> <span>รับสมัคร {proj.projAmount || 0} คน</span>
+                  <div className="card-content">
+                    <h3 className="project-title">{proj.projNameTH}</h3>
+                    <p className="position-text">{proj.projNameEN || 'General Position'}</p>
+                    
+                    <div className="company-info">
+                      <span className="company-name">{proj.company?.coNameTH || 'ไม่ระบุชื่อบริษัท'}</span>
+                    </div>
+                    
+                    <div className="details-group">
+                      <div className="info-item">
+                        <MapPin size={14} /> 
+                        <span>{proj.company?.coAddr || 'ไม่ระบุสถานที่'}</span>
+                      </div>
+                      <div className="info-item">
+                        <Briefcase size={14} /> 
+                        <span>เปิดรับ {proj.projAmount || 0} ตำแหน่ง</span>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* 🌟 6. เปลี่ยนหน้าตาปุ่มตามสถานะการสมัคร */}
-                  {isApplied ? (
-                    <button className="btn-applied" disabled style={{ backgroundColor: '#22c55e', color: 'white', opacity: 0.8, cursor: 'not-allowed' }}>
-                      <CheckCircle size={16} style={{ display: 'inline', marginRight: '5px' }} /> สมัครแล้ว
-                    </button>
-                  ) : (
-                    <button 
-                      className="btn-view" 
-                      onClick={() => navigate(`/student/projects/${proj.projID}`)}
-                    >
-                      ดูรายละเอียดและสมัคร
-                    </button>
-                  )}
+                  <div className="card-footer">
+                    {isApplied ? (
+                      <button className="btn-applied" disabled>
+                        <CheckCircle size={16} /> สมัครแล้ว
+                      </button>
+                    ) : (
+                      <button 
+                        className="btn-view" 
+                        onClick={() => navigate(`/student/projects/${proj.projID}`)}
+                      >
+                        ดูรายละเอียดและสมัคร
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })
