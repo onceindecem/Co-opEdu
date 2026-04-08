@@ -1,13 +1,18 @@
-import { useState } from 'react';
-import './Company.css'; 
+import { useState, useEffect } from 'react'; // 🌟 1. อย่าลืม import useEffect
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode'; // 🌟 2. import jwt-decode
+import './Company.css';
 import { ClipboardList, Users, Wrench, MapPin, Upload, Save, ArrowLeft, Mail, Phone, Info, Building2, UserCircle, UserCheck, Plus, Trash2, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { projectService } from '../../api/services/projectService'; // 👈 นำเข้า Service (เช็ค Path ให้ตรงกับโปรเจกต์คุณด้วยนะครับ)
+import { authService } from '../../api/services/authService';
 
 export default function CreateProject() {
   const isEdit = false;
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState('');
+  const [coId, setCoId] = useState('');
 
   // --- State สำหรับข้อมูลที่ต้องส่งไป Backend ---
   const [formData, setFormData] = useState({
@@ -38,13 +43,64 @@ export default function CreateProject() {
   // 🌟 [เพิ่มใหม่] State สำหรับเก็บไฟล์ PDF
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  const companyData = {
-    nameTh: "บริษัท เทคโนโลยีและนวัตกรรม จำกัด",
-    nameEn: "Technology and Innovation Co., Ltd.",
-    address: "123 อาคารซอฟต์แวร์พาร์ค ชั้น 10 ถนนแจ้งวัฒนะ ปากเกร็ด นนทบุรี 11120",
-    phone: "021234567", 
-    email: "contact@techinnovation.co.th"
-  };
+  const [companyData, setCompanyData] = useState({
+    nameTh: "",
+    nameEn: "",
+    address: "",
+    phone: "",
+    email: ""
+  });
+  useEffect(() => {
+    // 🌟 เปลี่ยนคำว่า 'token' เป็น 'accessToken' ตรงนี้ครับ
+    const token = localStorage.getItem('accessToken');
+    console.log("Token found:", token);
+
+    // ... โค้ดที่เหลือปล่อยไว้เหมือนเดิมได้เลย ...
+    if (token) {
+      try {
+        const decoded: any = jwtDecode(token);
+        console.log("Decoded Token:", decoded);
+
+        const currentUserId = decoded.sub;
+        const currentCoId = decoded.coID || decoded.companyId;
+
+        setUserId(currentUserId);
+        setCoId(currentCoId);
+
+        if (currentCoId) {
+          const fetchCompanyProfile = async () => {
+            try {
+              // ยิง API ไปดึงข้อมูลบริษัท
+              const response = await axios.get(`http://localhost:3000/company/${currentCoId}`, {
+                headers: {
+                  'Authorization': `Bearer ${token}` // ใช้ตัวแปร token ที่ดึงมาถูกต้องแล้ว
+                }
+              });
+
+              const companyInfo = response.data;
+
+              // เซ็ตข้อมูลลงฟอร์ม
+              setCompanyData({
+                nameTh: companyInfo.nameTh || companyInfo.coNameTH || "ไม่ระบุชื่อบริษัท",
+                nameEn: companyInfo.nameEn || companyInfo.coNameEN || "-",
+                address: companyInfo.address || "-",
+                phone: companyInfo.phone || companyInfo.tel || "-",
+                email: companyInfo.email || "-"
+              });
+
+            } catch (error) {
+              console.error("ดึงข้อมูลบริษัทไม่สำเร็จ:", error);
+            }
+          };
+
+          fetchCompanyProfile();
+        }
+
+      } catch (error) {
+        console.error("Token ไม่ถูกต้อง หรือหมดอายุ:", error);
+      }
+    }
+  }, []);
 
   const handleAddMentor = () => {
     setMentors([...mentors, { id: Date.now(), name: '', position: '', phone: '', email: '' }]);
@@ -57,7 +113,7 @@ export default function CreateProject() {
   };
 
   const handleMentorChange = (id: number, field: string, value: string) => {
-    setMentors(mentors.map(mentor => 
+    setMentors(mentors.map(mentor =>
       mentor.id === id ? { ...mentor, [field]: value } : mentor
     ));
   };
@@ -95,6 +151,12 @@ export default function CreateProject() {
   // 🌟 [แก้ไข] ฟังก์ชัน Submit ส่งข้อมูลไป Backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // เช็กเผื่อไว้ว่าถ้าไม่มี ID แปลว่ายังไม่ได้ล็อกอินหรือดึง JWT ไม่สำเร็จ
+    if (!userId || !coId) {
+      alert('ไม่พบข้อมูลผู้ใช้งาน กรุณาล็อกอินใหม่');
+      return;
+    }
     setLoading(true);
 
     try {
@@ -110,7 +172,7 @@ export default function CreateProject() {
       data.append('contDetail', contactMethod === 'coordinator' ? JSON.stringify(coordData) : "");
       data.append('mentor', JSON.stringify(mentors));
       data.append('round', '1');
-      
+
       data.append('pmData', JSON.stringify({
         pmName: pmData.name,
         pmPos: pmData.position,
@@ -118,9 +180,9 @@ export default function CreateProject() {
         pmTel: pmData.phone,
         pmEmail: pmData.email
       }));
-      
-      data.append('coID', '214e1528-7f61-4d33-a0c8-8a8dd92bd3c3');
-      data.append('userID', 'ff887e9e-9e30-4a37-aaeb-cc423b810c92');
+
+      data.append('coID', coId);
+      data.append('userID', userId);
 
       // แนบไฟล์
       selectedFiles.forEach(file => {
@@ -128,7 +190,7 @@ export default function CreateProject() {
       });
 
       await projectService.create(data);
-      
+
       alert("บันทึกข้อมูลและส่งโครงการเรียบร้อย!");
       navigate('/company/projects');
     } catch (error: any) {
@@ -158,7 +220,7 @@ export default function CreateProject() {
         )}
 
         <form onSubmit={handleSubmit}>
-          
+
           {/* =========================================
               1. ข้อมูลสถานประกอบการ/หน่วยงาน
           ========================================= */}
@@ -196,7 +258,7 @@ export default function CreateProject() {
             </div>
           </div>
 
-            {/* =========================================
+          {/* =========================================
               2. ข้อมูลผู้จัดการโครงการ/หัวหน้าหน่วยงาน
           ========================================= */}
           <div className="form-section-title mt-40">
@@ -240,25 +302,25 @@ export default function CreateProject() {
 
           <div className="form-group span-full">
             <label>ชื่อโครงการ*</label>
-            <input 
-              type="text" 
-              name="projNameTH" 
-              value={formData.projNameTH} 
-              onChange={handleChange} 
-              placeholder="เช่น Web Application for Inventory Management" 
-              required 
+            <input
+              type="text"
+              name="projNameTH"
+              value={formData.projNameTH}
+              onChange={handleChange}
+              placeholder="เช่น Web Application for Inventory Management"
+              required
             />
           </div>
 
           <div className="form-group span-full">
             <label>วัตถุประสงค์ของโครงการ *</label>
-            <textarea 
-              rows={3} 
-              name="projDetail" 
-              value={formData.projDetail} 
-              onChange={handleChange} 
-              placeholder="ระบุสิ่งที่บริษัทต้องการได้รับจากโครงการนี้..." 
-              required 
+            <textarea
+              rows={3}
+              name="projDetail"
+              value={formData.projDetail}
+              onChange={handleChange}
+              placeholder="ระบุสิ่งที่บริษัทต้องการได้รับจากโครงการนี้..."
+              required
             />
           </div>
 
@@ -266,27 +328,27 @@ export default function CreateProject() {
             <label className="label-with-icon">
               <Users size={16} /> จำนวนนักศึกษาที่รับ (คน) *
             </label>
-            <input 
-              type="number" 
-              name="projAmount" 
-              min="1" 
-              value={formData.projAmount} 
-              onChange={handleChange} 
-              placeholder="1" 
-              required 
-              className="input-half" 
+            <input
+              type="number"
+              name="projAmount"
+              min="1"
+              value={formData.projAmount}
+              onChange={handleChange}
+              placeholder="1"
+              required
+              className="input-half"
             />
           </div>
 
           <div className="form-group span-full">
             <label>ลักษณะงานที่ต้องปฏิบัติ (Job Description) *</label>
-            <textarea 
-              rows={5} 
-              name="jobDescription" 
-              value={formData.jobDescription} 
-              onChange={handleChange} 
-              placeholder="ระบุรายละเอียดหน้าที่ความรับผิดชอบของนักศึกษา..." 
-              required 
+            <textarea
+              rows={5}
+              name="jobDescription"
+              value={formData.jobDescription}
+              onChange={handleChange}
+              placeholder="ระบุรายละเอียดหน้าที่ความรับผิดชอบของนักศึกษา..."
+              required
             />
           </div>
 
@@ -294,13 +356,13 @@ export default function CreateProject() {
             <label className="label-with-icon">
               <Wrench size={16} /> เครื่องมือและทักษะที่ต้องใช้ (Skills) *
             </label>
-            <input 
-              type="text" 
-              name="skills" 
-              value={formData.skills} 
-              onChange={handleChange} 
-              placeholder="เช่น React, Node.js, SQL, Docker" 
-              required 
+            <input
+              type="text"
+              name="skills"
+              value={formData.skills}
+              onChange={handleChange}
+              placeholder="เช่น React, Node.js, SQL, Docker"
+              required
             />
           </div>
 
@@ -360,7 +422,7 @@ export default function CreateProject() {
           <div className="form-section-title mt-40">
             <Phone size={20} /> การติดต่อประสานงาน
           </div>
-          
+
           <div className="form-group span-full">
             <label>หากมหาวิทยาลัยฯ ประสงค์จะติดต่อประสานงานในรายละเอียดกับสถานประกอบการ/หน่วยงาน ขอให้ติดต่อที่ใคร *</label>
             <div className="radio-group">
@@ -414,19 +476,19 @@ export default function CreateProject() {
           </div>
           <div className="form-group span-full">
             <label>ระบุสถานที่ปฏิบัติงาน (หากต่างจากที่อยู่บริษัทที่ลงทะเบียนไว้)</label>
-            <textarea 
-              rows={2} 
-              name="workLocation" 
-              value={formData.workLocation} 
-              onChange={handleChange} 
-              placeholder="เลขที่, ถนน, แขวง/ตำบล, เขต/อำเภอ..." 
+            <textarea
+              rows={2}
+              name="workLocation"
+              value={formData.workLocation}
+              onChange={handleChange}
+              placeholder="เลขที่, ถนน, แขวง/ตำบล, เขต/อำเภอ..."
             />
           </div>
 
           <div className="note-info-box">
             <strong>*หมายเหตุ:</strong> รายละเอียดของโครงการสามารถแนบเป็นเอกสารแนบมาได้ และในกรณีที่บริษัทนำเสนอโครงการสหกิจเป็นครั้งแรกให้กับทางภาควิชาวิทยาการคอมพิวเตอร์ คณะวิทยาศาสตร์ สจล. กรุณาแนบเอกสารแนะนำบริษัทของท่านมาในเอกสารแนบด้วย
           </div>
-          
+
           <div className="file-upload-zone">
             <label className="upload-label" style={{ cursor: 'pointer' }}>
               <Upload size={30} className="upload-icon" />

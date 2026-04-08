@@ -1,27 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { 
-  Plus, 
-  Edit2, 
-  Trash2, 
-  Clock, 
-  CheckCircle2, 
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  Clock,
+  CheckCircle2,
   AlertCircle,
   Users,
   ClipboardCheck,
   Building2,
   ArrowRight,
-  FolderCheck
-} from 'lucide-react'; 
-import { projectService } from '../../api/services/projectService'; // 🌟 นำเข้า API Service
+  FolderCheck,
+  UserCheck
+} from 'lucide-react';
+import { projectService } from '../../api/services/projectService';
 import './Advisor.css';
 
 export default function MyProjects() {
-  // 🌟 เปลี่ยน State เป็น Array ว่างเพื่อรอรับข้อมูลจาก API และเพิ่ม Loading
   const [myProjects, setMyProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 🌟 ใช้ useEffect เพื่อดึงข้อมูลตอนเปิดหน้านี้ขึ้นมา
   useEffect(() => {
     fetchMyProjects();
   }, []);
@@ -29,8 +28,7 @@ export default function MyProjects() {
   const fetchMyProjects = async () => {
     try {
       setLoading(true);
-      // สมมติว่าใน projectService มี API ดึงโครงการเฉพาะของอาจารย์ที่ล็อกอินอยู่
-      const res = await projectService.getMyAdvisorProjects(); 
+      const res = await projectService.getMyAdvisorProjects();
       setMyProjects(res.data || []);
     } catch (error) {
       console.error("ดึงข้อมูลโครงการไม่สำเร็จ:", error);
@@ -46,7 +44,6 @@ export default function MyProjects() {
         <p className="page-subtitle">จัดการและติดตามสถานะนักศึกษาในโครงการที่คุณเป็นที่ปรึกษา</p>
       </div>
 
-      {/* 🌟 แสดงข้อความระหว่างรอโหลดข้อมูล */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
           กำลังโหลดโครงการของคุณ...
@@ -55,37 +52,47 @@ export default function MyProjects() {
         <>
           <div className="project-grid">
             {myProjects.map((proj) => {
-              // ดึงค่า status หรือ round จาก Backend มาเช็ค (เผื่อฟิลด์ชื่อไม่ตรงกัน)
-              const statusValue = proj.status || proj.projStat || 'OPEN';
-              const isRound1 = statusValue === 'OPEN' || proj.round === 1;
+              const roundNumber = String(proj.round || '1');
+              const isRound1 = roundNumber === '1';
+
+              // 🌟 1. จำนวนคนสมัครทั้งหมด
+              const totalApplicants = proj.applications ? proj.applications.length : 0;
+
+              // 🌟 2. นับคนที่ "พิจารณาแล้ว" (รวมทั้งอนุมัติและปฏิเสธ)
+              // ดักจับทั้งคำว่า status และ appStat เผื่อไว้เลย
+              const processedCount = proj.applications
+                ? proj.applications.filter((app: any) =>
+                  app.appStat === 'APPROVED' ||
+                  app.appStat === 'DENIED'
+                ).length
+                : 0;
 
               return (
                 <div key={proj.id || proj.projID} className="advisor-card project-item-card">
                   <div className="card-top">
-                    {/* เปลี่ยนข้อความเป็น รอบที่ 1 และ 2 ตามข้อมูลจริง */}
                     <span className={`status-tag ${isRound1 ? 'open' : 'closed'}`}>
-                      {isRound1 ? '🟢 รอบที่ 1' : '🔴 รอบที่ 2'}
+                      {isRound1 ? '🟢 รอบที่ 1' : `🔴 รอบที่ ${roundNumber}`}
                     </span>
                     <div className="company-tag">
-                      <Building2 size={14} /> {proj.company || proj.companyName}
+                      <Building2 size={14} /> {proj.company?.coNameTH || proj.companyName || 'ไม่ระบุชื่อบริษัท'}
                     </div>
                   </div>
 
-                  <h3 className="project-card-title">{proj.title || proj.projName}</h3>
+                  <h3 className="project-card-title">{proj.title || proj.projNameTH || proj.projName || 'ไม่ระบุชื่อโครงการ'}</h3>
 
                   <div className="card-stats">
                     <div className="stat-box">
                       <span className="stat-label">นักศึกษาที่สมัคร</span>
                       <span className="stat-value">
-                        {/* สมมติ Backend ส่งจำนวนนักศึกษามาในชื่อ studentCount หรือ appliedCount */}
-                        <Users size={18} /> {proj.appliedCount || proj.studentCount || 0} คน
+                        <Users size={18} /> {totalApplicants} คน
                       </span>
                     </div>
+
+                    {/* 🌟 แสดงผลเป็น จำนวนที่พิจารณาแล้ว / จำนวนที่สมัครทั้งหมด */}
                     <div className="stat-box">
-                      <span className="stat-label">รายงานความคืบหน้า</span>
+                      <span className="stat-label">พิจารณาแล้ว</span>
                       <span className="stat-value">
-                        {/* สมมติ Backend ส่งจำนวนรายงานมา */}
-                        <ClipboardCheck size={18} /> {proj.reportCount || '08'} / 12
+                        <UserCheck size={18} /> {processedCount} / {totalApplicants} คน
                       </span>
                     </div>
                   </div>
@@ -100,7 +107,6 @@ export default function MyProjects() {
             })}
           </div>
 
-          {/* 🌟 ซ่อน Empty State ถ่ายังโหลดไม่เสร็จ หรือถ้ามีข้อมูลแล้ว */}
           {myProjects.length === 0 && (
             <div className="empty-state">
               <FolderCheck size={48} className="empty-icon" />

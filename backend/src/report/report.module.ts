@@ -1,0 +1,15 @@
+import { Module } from '@nestjs/common';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { ReportsService } from './report.service';
+import { ReportsController } from './report.controller';
+import { Report } from './entities/report.entity'; // path ไฟล์ model
+import { AuthModule } from 'src/auth/auth.module';
+import { Application } from 'src/applications/entities/application.entity';
+
+@Module({
+  imports: [SequelizeModule.forFeature([Report, Application]), AuthModule],
+  controllers: [ReportsController],
+  providers: [ReportsService],
+  exports: [ReportsService],
+})
+export class ReportsModule {}

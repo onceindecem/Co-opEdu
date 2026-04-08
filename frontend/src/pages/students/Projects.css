@@ -490,3 +490,197 @@
   background-color: #fca5a5;
   cursor: not-allowed;
 }
+/* สไตล์สำหรับปุ่มที่สมัครไปแล้ว */
+.btn-applied {
+  margin-top: 1rem;
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  
+  /* สีเขียวสื่อถึงความสำเร็จ */
+  background-color: #22c55e; 
+  color: #ffffff;
+  border: none;
+  
+  /* ทำให้รู้ว่ากดไม่ได้ */
+  cursor: not-allowed;
+  opacity: 0.9;
+  transition: all 0.2s ease;
+}
+
+.btn-applied svg {
+  flex-shrink: 0;
+}
+/* Layout หลัก */
+.projects-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+/* Search Section */
+.search-section {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.search-section h1 {
+  font-size: 2rem;
+  color: #1e293b;
+  margin-bottom: 25px;
+  font-weight: 800;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: white;
+  padding: 8px 8px 8px 20px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+  margin: 0 auto;
+  border: 1px solid #e2e8f0;
+}
+
+.search-bar input {
+  flex: 1;
+  border: none;
+  padding: 10px;
+  font-size: 1rem;
+  outline: none;
+}
+
+.btn-search {
+  background: #f97316;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-search:hover {
+  background: #ea580c;
+}
+
+/* Project Grid */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+/* Project Card */
+.project-card {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.project-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+  border-color: #fdba74; /* ส้มอ่อนๆ ตอน hover */
+}
+
+.card-content {
+  padding: 24px;
+  flex-grow: 1;
+}
+
+.project-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.position-text {
+  color: #f97316;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.company-name {
+  display: block;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 16px;
+}
+
+.details-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+/* Footer & Buttons */
+.card-footer {
+  padding: 0 24px 24px 24px;
+}
+
+.btn-view {
+  width: 100%;
+  padding: 12px;
+  background: #fff7ed;
+  color: #f97316;
+  border: 1.5px solid #fdba74;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-view:hover {
+  background: #f97316;
+  color: white;
+}
+
+.btn-applied {
+  width: 100%;
+  padding: 12px;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: not-allowed;
+}
+
+/* Loading & Empty State */
+.loading-state, .no-data {
+  text-align: center;
+  padding: 100px 0;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+

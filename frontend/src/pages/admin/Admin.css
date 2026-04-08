@@ -616,3 +616,269 @@
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+/* =========================================
+   User Management Container & Header
+========================================= */
+.admin-card {
+  position: relative;
+}
+
+.admin-header-flex {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.admin-title {
+  margin: 0;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+}
+
+.admin-title svg {
+  margin-right: 8px;
+}
+
+.admin-subtitle {
+  margin: 4px 0 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+/* =========================================
+   Inputs & Buttons
+========================================= */
+.btn-add-user {
+  background: #f97316;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.2s;
+}
+
+.btn-add-user:hover {
+  background: #ea580c;
+}
+
+.search-container {
+  margin-bottom: 20px;
+}
+
+.search-input {
+  width: 320px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+/* =========================================
+   Table Elements
+========================================= */
+.text-center {
+  text-align: center;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 20px;
+  color: #64748b;
+}
+
+.user-name {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.user-email {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.role-select {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-weight: 600;
+  cursor: pointer;
+  background: white;
+}
+
+.provider-badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-google {
+  background: #fce7f3;
+  color: #be185d;
+}
+
+.badge-local {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.action-btn:hover {
+  background: #f1f5f9;
+}
+
+.btn-key { color: #f59e0b; }
+.btn-trash { color: #ef4444; }
+
+/* =========================================
+   Modals
+========================================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: white;
+  padding: 32px;
+  border-radius: 20px;
+  width: 400px;
+  box-sizing: border-box;
+}
+
+.modal-content.text-center {
+  text-align: center;
+}
+
+.modal-content.wide {
+  width: 420px;
+}
+
+.modal-content.relative {
+  position: relative;
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #64748b;
+}
+
+/* Modal Icons */
+.modal-icon-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.icon-red { background: #fee2e2; }
+.icon-blue { background: #e0f2fe; }
+.icon-yellow { background: #fef3c7; }
+
+/* Modal Form */
+.modal-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  box-sizing: border-box;
+  margin-top: 4px;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.btn-generate {
+  position: absolute;
+  right: 10px;
+  top: 15px;
+  background: #f1f5f9;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  gap: 4px;
+  font-size: 0.8rem;
+  align-items: center;
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-confirm {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-danger { background: #ef4444; }
+.btn-primary { background: #3b82f6; }
+.btn-warning { background: #f59e0b; }
+.btn-orange { background: #f97316; }
+
+.btn-confirm:disabled {
+  background: #fcd34d;
+  cursor: not-allowed;
+}
+
+.text-strike {
+  text-decoration: line-through;
+  color: #94a3b8;
+}

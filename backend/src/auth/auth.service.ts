@@ -140,10 +140,20 @@ export class AuthService {
       throw new HttpException('email or password is incorrect', HttpStatus.UNAUTHORIZED);
     }
 
+    let companyId: string | null = null;
+
+    if (user.role === 'HR') {
+      const hrProfile = await this.hrModel.findOne({ 
+        where: { userID: user.userID } 
+      });
+      companyId = hrProfile ? hrProfile.coID : null;
+    }
+
     const payload = { 
       sub: user.userID,  
       email: user.email, 
-      role: user.role 
+      role: user.role,
+      coID: companyId
     };
     const token = await this.jwtService.signAsync(payload);
 
@@ -154,6 +164,7 @@ export class AuthService {
       user: {
         email: user.email,
         role: user.role,
+        coID: companyId
       }
     };
   }

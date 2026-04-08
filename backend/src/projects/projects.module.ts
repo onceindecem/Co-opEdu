@@ -8,10 +8,15 @@ import { MulterModule } from '@nestjs/platform-express'; // 👈 เพิ่ม
 import { diskStorage } from 'multer';
 import { extname } from 'path'; // 👈 เพิ่มบรรทัดนี้
 import { Advisor } from '../advisor/entities/advisor.entity';
+import { AuthModule } from '../auth/auth.module';
+import { ActivityLogsModule } from '../activity-log/activity-log.module';
 
 @Module({
   imports: [
     SequelizeModule.forFeature([Project, ProjectManager, Advisor]),
+    AuthModule,
+    ActivityLogsModule,
+
     // 🌟 ตั้งค่าการเก็บไฟล์ PDF
     MulterModule.register({
       storage: diskStorage({

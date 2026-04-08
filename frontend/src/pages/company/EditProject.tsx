@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode'; // 🌟 import jwt-decode
 import './Company.css'; 
 import { ClipboardList, Users, Wrench, MapPin, Upload, Save, ArrowLeft, Mail, Phone, Info, Building2, UserCircle, UserCheck, Plus, Trash2, FileText } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -6,13 +8,24 @@ import { projectService } from '../../api/services/projectService';
 
 export default function EditProject() {
   const navigate = useNavigate();
-  // 🌟 รับ ID จาก URL (ถ้ามี id แปลว่าเป็นโหมด Edit)
   const { id } = useParams(); 
   const isEdit = Boolean(id); 
 
   const [loading, setLoading] = useState(false);
+  
+  // 🌟 เพิ่ม State สำหรับเก็บ ID จาก Token
+  const [userId, setUserId] = useState('');
+  const [coId, setCoId] = useState('');
 
-  // --- State สำหรับข้อมูลที่ต้องส่งไป Backend ---
+  // 🌟 เปลี่ยน Company Data ให้เป็น State แทน Mockup
+  const [companyData, setCompanyData] = useState({
+    nameTh: "",
+    nameEn: "",
+    address: "",
+    phone: "",
+    email: ""
+  });
+
   const [formData, setFormData] = useState({
     projNameTH: '',
     projDetail: '',
@@ -36,77 +49,97 @@ export default function EditProject() {
     name: '', position: '', department: '', phone: '', email: ''
   });
 
-  // 🌟 เพิ่ม State สำหรับเก็บ ID ของ PM เดิม เพื่อจะได้ไม่ต้องยิง API ซ้ำตอนกด Save
   const [currentPmID, setCurrentPmID] = useState<string>('');
-
-  // 🌟 [เพิ่มใหม่] State สำหรับเก็บไฟล์ PDF ที่เลือกใหม่
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  const companyData = {
-    nameTh: "บริษัท เทคโนโลยีและนวัตกรรม จำกัด",
-    nameEn: "Technology and Innovation Co., Ltd.",
-    address: "123 อาคารซอฟต์แวร์พาร์ค ชั้น 10 ถนนแจ้งวัฒนะ ปากเกร็ด นนทบุรี 11120",
-    phone: "021234567", 
-    email: "contact@techinnovation.co.th"
-  };
-
-  // 🌟 ดึงข้อมูลเก่ามาใส่ฟอร์ม ถ้าเป็นโหมด Edit
+  // 🌟 รวมการดึงข้อมูลจาก Token, ดึง Company, และดึงข้อมูล Project เก่าไว้ใน useEffect เดียวกัน
   useEffect(() => {
-    const fetchOldData = async () => {
-      if (!isEdit || !id) return;
-      
+    const initData = async () => {
+      const token = localStorage.getItem('accessToken'); 
+      if (!token) return;
+
+      let currentCoId = '';
+
+      // 1. ถอดรหัส Token และดึงข้อมูลบริษัท
       try {
-        setLoading(true);
-        const res = await projectService.getById(id); 
-        const data = res.data;
+        const decoded: any = jwtDecode(token);
+        const currentUserId = decoded.sub; // ใช้ sub เหมือนหน้า Create
+        currentCoId = decoded.coID || decoded.companyId;
+        
+        setUserId(currentUserId);
+        setCoId(currentCoId);
 
-        setFormData({
-          projNameTH: data.projName || '',
-          projDetail: data.obj || '',
-          projAmount: data.quota || 1,
-          jobDescription: data.jd || '',
-          skills: data.skills || '',
-          workLocation: data.workAddr === companyData.address ? '' : data.workAddr || '',
-        });
-
-        if (data.contact === 'COORD' && data.contDetail) {
-          setContactMethod('coordinator');
-          setCoordData(JSON.parse(data.contDetail));
-        } else {
-          setContactMethod('manager');
-        }
-
-        if (data.mentor) {
-          try {
-             setMentors(JSON.parse(data.mentor));
-          } catch(e) {
-             console.error("Parse mentor error", e);
-          }
-        }
-
-        // 🌟 แก้ไขตรงนี้: เปลี่ยนจาก data.pm เป็น data.projectManager
-        if (data.projectManager) {
-          setCurrentPmID(data.projectManager.pmID || data.pmID || ''); // 🌟 เก็บ PM ID ไว้ใน State
-          setPmData({
-            name: data.projectManager.pmName || '',
-            position: data.projectManager.pmPos || '',
-            department: data.projectManager.pmDept || '',
-            phone: data.projectManager.pmTel || '',
-            email: data.projectManager.pmEmail || ''
+        if (currentCoId) {
+          const companyRes = await axios.get(`http://localhost:3000/company/${currentCoId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          
+          const companyInfo = companyRes.data;
+          setCompanyData({
+            nameTh: companyInfo.nameTh || companyInfo.coNameTH || "ไม่ระบุชื่อบริษัท",
+            nameEn: companyInfo.nameEn || companyInfo.coNameEN || "-",
+            address: companyInfo.address || "-",
+            phone: companyInfo.phone || companyInfo.tel || "-",
+            email: companyInfo.email || "-"
           });
         }
-
       } catch (error) {
-        console.error("ดึงข้อมูลเก่าไม่สำเร็จ:", error);
-        alert("ไม่พบข้อมูลโครงการนี้");
-        navigate('/company/projects');
-      } finally {
-        setLoading(false);
+        console.error("Token ไม่ถูกต้อง หรือดึงข้อมูลบริษัทไม่สำเร็จ:", error);
+      }
+
+      // 2. ดึงข้อมูล Project เก่า (โหมด Edit)
+      if (isEdit && id) {
+        try {
+          setLoading(true);
+          const res = await projectService.getById(id); 
+          const data = res.data;
+
+          setFormData({
+            projNameTH: data.projName || '',
+            projDetail: data.obj || '',
+            projAmount: data.quota || 1,
+            jobDescription: data.jd || '',
+            skills: data.skills || '',
+            workLocation: data.workAddr || '', 
+          });
+
+          if (data.contact === 'COORD' && data.contDetail) {
+            setContactMethod('coordinator');
+            setCoordData(JSON.parse(data.contDetail));
+          } else {
+            setContactMethod('manager');
+          }
+
+          if (data.mentor) {
+            try {
+               setMentors(JSON.parse(data.mentor));
+            } catch(e) {
+               console.error("Parse mentor error", e);
+            }
+          }
+
+          if (data.projectManager) {
+            setCurrentPmID(data.projectManager.pmID || data.pmID || '');
+            setPmData({
+              name: data.projectManager.pmName || '',
+              position: data.projectManager.pmPos || '',
+              department: data.projectManager.pmDept || '',
+              phone: data.projectManager.pmTel || '',
+              email: data.projectManager.pmEmail || ''
+            });
+          }
+        } catch (error) {
+          console.error("ดึงข้อมูลเก่าไม่สำเร็จ:", error);
+          alert("ไม่พบข้อมูลโครงการนี้");
+          navigate('/company/projects');
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
-    fetchOldData();
-  }, [id, isEdit]);
+    initData();
+  }, [id, isEdit, navigate]);
 
   const handleAddMentor = () => {
     setMentors([...mentors, { id: Date.now(), name: '', position: '', phone: '', email: '' }]);
@@ -139,7 +172,6 @@ export default function EditProject() {
     setCoordData(prev => ({ ...prev, [name]: value }));
   };
 
-  // 🌟 [เพิ่มใหม่] ฟังก์ชันจัดการไฟล์
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
@@ -151,16 +183,20 @@ export default function EditProject() {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // 🌟 [แก้ไข] ฟังก์ชัน Submit ให้ใช้ FormData เพื่อส่งไฟล์
-  // 🌟 ฟังก์ชัน Submit ส่งข้อมูลไป Backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 🌟 เช็ก ID ก่อน Submit
+    if (!userId || !coId) {
+      alert('ไม่พบข้อมูลผู้ใช้งาน กรุณาล็อกอินใหม่');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const data = new FormData();
       
-      // 1. ข้อมูล Project
       data.append('projName', formData.projNameTH);
       data.append('obj', formData.projDetail);
       data.append('quota', String(formData.projAmount));
@@ -172,7 +208,6 @@ export default function EditProject() {
       data.append('mentor', JSON.stringify(mentors));
       data.append('projStat', 'PENDING');
 
-      // 2. ข้อมูล PM
       data.append('pmData', JSON.stringify({
         pmID: currentPmID || null,
         pmName: pmData.name,
@@ -182,11 +217,10 @@ export default function EditProject() {
         pmEmail: pmData.email
       }));
 
-      // 3. IDs
-      data.append('coID', '214e1528-7f61-4d33-a0c8-8a8dd92bd3c3');
-      data.append('userID', 'ff887e9e-9e30-4a37-aaeb-cc423b810c92');
+      // 🌟 ใช้ตัวแปร State ที่แกะมาจาก Token ส่งไปแทน Hardcode
+      data.append('coID', coId);
+      data.append('userID', userId);
 
-      // 4. แนบไฟล์ใหม่
       selectedFiles.forEach(file => {
         data.append('files', file);
       });
@@ -223,9 +257,6 @@ export default function EditProject() {
 
         <form onSubmit={handleSubmit}>
           
-          {/* =========================================
-              1. ข้อมูลสถานประกอบการ/หน่วยงาน
-          ========================================= */}
           <div className="form-section-title">
             <Building2 size={20} /> ข้อมูลสถานประกอบการ/หน่วยงาน
           </div>
@@ -260,9 +291,6 @@ export default function EditProject() {
             </div>
           </div>
 
-           {/* =========================================
-              2. ข้อมูลผู้จัดการโครงการ/หัวหน้าหน่วยงาน
-          ========================================= */}
           <div className="form-section-title mt-40">
             <UserCircle size={20} /> ข้อมูลผู้จัดการโครงการ/หัวหน้าหน่วยงาน/ผู้จัดการ
           </div>
@@ -294,9 +322,6 @@ export default function EditProject() {
             </div>
           </div>
 
-          {/* =========================================
-              3. รายละเอียดโครงการที่เสนอ
-          ========================================= */}
           <div className="form-section-title mt-40">
             <ClipboardList size={20} /> รายละเอียดโครงการที่เสนอ
           </div>
@@ -367,9 +392,6 @@ export default function EditProject() {
             />
           </div>
 
-          {/* =========================================
-              4. ข้อมูลพนักงานที่ปรึกษา (พี่เลี้ยง)
-          ========================================= */}
           <div className="form-section-header-flex mt-40">
             <div className="section-title-icon-wrapper">
               <UserCheck size={20} /> ข้อมูลพนักงานที่ปรึกษา (พี่เลี้ยง)
@@ -417,9 +439,6 @@ export default function EditProject() {
             </div>
           ))}
 
-          {/* =========================================
-              5. การติดต่อประสานงาน
-          ========================================= */}
           <div className="form-section-title mt-40">
             <Phone size={20} /> การติดต่อประสานงาน
           </div>
@@ -468,9 +487,6 @@ export default function EditProject() {
             </div>
           )}
 
-          {/* =========================================
-              6. สถานที่ปฏิบัติงาน และ เอกสารแนบ
-          ========================================= */}
           <div className="form-section-title mt-40">
             <MapPin size={20} /> สถานที่ปฏิบัติงาน
           </div>
@@ -490,20 +506,30 @@ export default function EditProject() {
           </div>
           
           <div className="file-upload-zone">
-            <label className="upload-label">
+            <label className="upload-label" style={{ cursor: 'pointer' }}>
               <Upload size={30} className="upload-icon" />
-              <p className="upload-text">คลิกเพื่ออัปโหลดเอกสารแนบ</p>
+              <p className="upload-text">คลิกเพื่ออัปโหลดเอกสารแนบเพิ่ม</p>
               <span className="upload-subtext">(รองรับ PDF ขนาดไม่เกิน 5MB)</span>
-              <input type="file" hidden multiple />
+              {/* 🌟 เพิ่ม onChange เข้าไปให้ Input เลือกไฟล์ทำงานได้ */}
+              <input type="file" hidden multiple accept=".pdf" onChange={handleFileChange} />
             </label>
           </div>
+
+          {/* 🌟 เพิ่ม UI แสดงไฟล์ที่เพิ่งเลือกเข้ามาใหม่ (เหมือนหน้า Create) */}
+          {selectedFiles.map((file, idx) => (
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', background: '#f8fafc', borderRadius: '8px', marginTop: '8px', border: '1px solid #e2e8f0' }}>
+              <FileText size={18} color="#ef4444" />
+              <span style={{ flex: 1, fontSize: '14px' }}>{file.name}</span>
+              <button type="button" onClick={() => removeFile(idx)} style={{ color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer' }}><Trash2 size={16} /></button>
+            </div>
+          ))}
 
           <div className="form-actions">
             <button type="button" onClick={() => navigate(-1)} className="btn-cancel" disabled={loading}>
               ยกเลิก
             </button>
             <button type="submit" className="btn-primary" disabled={loading}>
-              <Save size={18} /> {loading ? 'กำลังบันทึก...' : (isEdit ? 'บันทึกการแก้ไข' : 'ส่งโครงการให้คณะพิจารณา')}
+              <Save size={18} /> {loading ? 'กำลังบันทึก...' : 'บันทึกการแก้ไข'}
             </button>
           </div>
         </form>

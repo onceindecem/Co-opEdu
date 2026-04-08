@@ -1,44 +1,65 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit2, Trash2, Clock, CheckCircle2, AlertCircle } from 'lucide-react'; 
+import { Plus, Edit2, Trash2, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { projectService } from '../../api/services/projectService';
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode'; // 🌟 เพิ่มบรรทัดนี้
 import './Company.css';
 
 // สร้าง Interface ให้ TypeScript รู้จักฟิลด์ที่ดึงมาจาก Backend
 interface ProjectData {
-  projID: string;
-  projName: string;
-  jd: string; // สมมติว่า role คือ jd
-  quota: number; // สมมติว่า slots คือ quota
-  projStat: string; // PENDING, APPROVED, DENIED
-  deleteRequested?: boolean; // ฟิลด์จำลองสำหรับการลบในหน้าบ้าน
+    projID: string;
+    projName: string;
+    jd: string; // สมมติว่า role คือ jd
+    quota: number; // สมมติว่า slots คือ quota
+    projStat: string; // PENDING, APPROVED, DENIED
+    deleteRequested?: boolean; // ฟิลด์จำลองสำหรับการลบในหน้าบ้าน
 }
 
 export default function CompanyProjects() {
     const navigate = useNavigate();
-    
+
     // State สำหรับจัดการ Modal
     const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
-    
+
     // State สำหรับเก็บข้อมูลจาก Backend
     const [projects, setProjects] = useState<ProjectData[]>([]);
     const [loading, setLoading] = useState(true);
 
     // 🌟 ฟังก์ชันดึงข้อมูลจาก Backend
+    // 🌟 ฟังก์ชันดึงข้อมูลจาก Backend (อัปเดตใหม่)
     useEffect(() => {
         const fetchProjects = async () => {
             try {
-                // อย่าลืมแก้ URL ให้ตรงกับพอร์ต Backend ของคุณนะครับ
-                const response = await projectService.getAll();
-                
-                // นำข้อมูลที่ได้มาใส่ใน State (อาจจะต้องเพิ่ม deleteRequested ไปด้วย)
+                // 1. ดึง Token ออกมาจาก Local Storage
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    console.error("ไม่พบ Token กรุณาล็อกอินใหม่");
+                    setLoading(false);
+                    return;
+                }
+
+                // 2. แกะ Token เพื่อเอา coID ของคนที่ล็อกอิน
+                const decoded: any = jwtDecode(token);
+                const currentCoId = decoded.coID;
+
+                if (!currentCoId) {
+                    console.error("ไม่พบ coID ใน Token");
+                    setLoading(false);
+                    return;
+                }
+
+                // 3. 🌟 เปลี่ยนจาก getAll() เป็นฟังก์ชันที่ดึงเฉพาะของบริษัทนี้
+                // (ต้องไปเพิ่มฟังก์ชัน getByCompanyId ในไฟล์ projectService.ts ด้วยนะ)
+                const response = await projectService.getByCompanyId(currentCoId);
+
+                // นำข้อมูลที่ได้มาใส่ใน State
                 const formattedProjects = response.data.map((proj: any) => ({
                     ...proj,
-                    deleteRequested: false // ตั้งค่าเริ่มต้นให้ไม่มีคำขอลบ
+                    deleteRequested: false
                 }));
-                
+
                 setProjects(formattedProjects);
             } catch (error) {
                 console.error("Error fetching projects:", error);
@@ -50,21 +71,27 @@ export default function CompanyProjects() {
 
         fetchProjects();
     }, []);
-
-   // 🌟 ฟังก์ชันเมื่อกดยืนยันใน Popup ลบ (รวมร่างแล้ว)
+ // 🌟 ฟังก์ชันเมื่อกดยืนยันใน Popup ลบ (แก้ไขแล้ว)
     const confirmDeleteRequest = async () => {
         if (deleteTarget !== null) {
             try {
-                // 1. เรียก API ยิงไปลบข้อมูลที่ Backend จริงๆ
-                await projectService.delete(deleteTarget);
+                // 1. เรียก API ส่งคำขอลบ (ใช้ deleteTarget แทน projectId)
+                const reason = "ต้องการยกเลิกโครงการ"; 
+                await projectService.requestDelete(deleteTarget, reason); 
 
-                // 2. อัปเดตตาราง: ลบโปรเจกต์นั้นออกจากหน้าเว็บทันที
-                setProjects(prevProjects => prevProjects.filter(p => p.projID !== deleteTarget));
+                // 2. อัปเดตตาราง: 🌟 เปลี่ยนสถานะแทนการลบทิ้ง!
+                setProjects(prevProjects => 
+                    prevProjects.map(p => 
+                        p.projID === deleteTarget 
+                            ? { ...p, deleteRequested: true } // ให้ตัวที่ถูกกด เปลี่ยนเป็นสถานะรอลบ
+                            : p
+                    )
+                );
 
                 // 3. ปิด Popup ยืนยัน และแสดง Popup สำเร็จ
-                setDeleteTarget(null); 
-                setShowSuccess(true);  
-                
+                setDeleteTarget(null);
+                setShowSuccess(true);
+
             } catch (error: any) {
                 console.error("ลบไม่สำเร็จ:", error);
                 alert("เกิดข้อผิดพลาดในการลบโครงการ: " + (error.response?.data?.message || 'เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'));
@@ -76,8 +103,8 @@ export default function CompanyProjects() {
         <div className="company-page-container">
             <div className="page-header">
                 <h1>จัดการโครงการ</h1>
-                <button 
-                    className="btn-primary" 
+                <button
+                    className="btn-primary"
                     onClick={() => navigate('/company/projects/create')}
                 >
                     <Plus size={18} /> สร้างโครงการใหม่
@@ -123,7 +150,7 @@ export default function CompanyProjects() {
                                                 <button className="btn-edit-outline" onClick={() => navigate(`/company/projects/edit/${item.projID}`)}>
                                                     <Edit2 size={16} /> แก้ไข
                                                 </button>
-                                                
+
                                                 {item.deleteRequested ? (
                                                     <button className="btn-pending-delete" disabled>
                                                         <Clock size={16} /> รออนุมัติลบ
@@ -151,7 +178,7 @@ export default function CompanyProjects() {
                             <AlertCircle size={40} color="#f97316" />
                         </div>
                         <h2>ยืนยันการลบโครงการ</h2>
-                        <p>ระบบจะส่งคำขอลบโครงการนี้ไปยังผู้ดูแลระบบ <br/> คุณต้องการดำเนินการต่อหรือไม่?</p>
+                        <p>ระบบจะส่งคำขอลบโครงการนี้ไปยังผู้ดูแลระบบ <br /> คุณต้องการดำเนินการต่อหรือไม่?</p>
                         <div className="logout-modal-actions">
                             <button className="btn-cancel-logout" onClick={() => setDeleteTarget(null)}>ยกเลิก</button>
                             <button className="btn-confirm-logout" onClick={confirmDeleteRequest}>ยืนยันการลบ</button>
@@ -168,11 +195,11 @@ export default function CompanyProjects() {
                             <CheckCircle2 size={40} color="#22c55e" />
                         </div>
                         <h2>ส่งคำขอสำเร็จ</h2>
-                        <p>ส่งคำขอลบโครงการไปยังผู้ดูแลระบบแล้ว <br/> กรุณารอการตรวจสอบ</p>
+                        <p>ส่งคำขอลบโครงการไปยังผู้ดูแลระบบแล้ว <br /> กรุณารอการตรวจสอบ</p>
                         <div className="logout-modal-actions">
-                            <button 
-                                className="btn-confirm-logout" 
-                                style={{ background: '#f97316', width: '100%' }} 
+                            <button
+                                className="btn-confirm-logout"
+                                style={{ background: '#f97316', width: '100%' }}
                                 onClick={() => setShowSuccess(false)}
                             >
                                 ตกลง

@@ -4,10 +4,12 @@ import { jwtDecode } from 'jwt-decode';
 import {
   ArrowLeft, Building2, MapPin, Users, Wrench,
   UserCheck, Phone, Mail, FileText, CheckCircle,
-  Briefcase, UserCircle, Paperclip, Loader2, ShieldAlert, AlertTriangle
+  Briefcase, UserCircle, Loader2, ShieldAlert, AlertTriangle
 } from 'lucide-react';
 import './students/Projects.css';
 import { projectService } from '../api/services/projectService';
+// 🌟 1. Import applicationService เข้ามาเพื่อเช็กโควตา
+import { applicationService } from '../api/services/applicationService';
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -16,12 +18,14 @@ export default function ProjectDetail() {
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isApproving, setIsApproving] = useState(false);
+  const [isApplying, setIsApplying] = useState(false);
+  const [isCheckingQuota, setIsCheckingQuota] = useState(false); // 🌟 State สำหรับปุ่มเช็กโควตา
 
-  // --- 🌟 State สำหรับ Popup (Modals) ---
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false); // ของนักศึกษา (สมัคร)
-  const [showApproveModal, setShowApproveModal] = useState(false); // ของอาจารย์ (อนุมัติ)
-  const [showRejectModal, setShowRejectModal] = useState(false); // ของอาจารย์ (ปฏิเสธ)
-  const [rejectReason, setRejectReason] = useState(''); // เหตุผลตอนปฏิเสธ
+  // --- State สำหรับ Popup (Modals) ---
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false); 
+  const [showApproveModal, setShowApproveModal] = useState(false); 
+  const [showRejectModal, setShowRejectModal] = useState(false); 
+  const [rejectReason, setRejectReason] = useState(''); 
 
   // --- สิทธิ์การใช้งาน ---
   const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
@@ -73,9 +77,8 @@ export default function ProjectDetail() {
       }
       
       await projectService.updateStatus(id as string, currentUserId);
-      setShowApproveModal(false); // ปิด Popup
+      setShowApproveModal(false); 
       
-      // ดึงข้อมูลใหม่มาอัปเดตหน้าจอ
       const updated = await projectService.getOne(id as string);
       setProject(updated.data);
     } catch (err) {
@@ -98,8 +101,8 @@ export default function ProjectDetail() {
       await projectService.reject(id as string); 
       
       alert('❌ ปฏิเสธโครงการเรียบร้อยแล้ว');
-      setShowRejectModal(false); // ปิด Popup
-      navigate(-1); // ถอยกลับไปหน้าก่อนหน้า เพราะปฏิเสธไปแล้ว
+      setShowRejectModal(false); 
+      navigate(-1); 
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการปฏิเสธโครงการ');
       console.error(err);
@@ -108,9 +111,60 @@ export default function ProjectDetail() {
     }
   };
 
-  const confirmApply = () => {
-    setIsConfirmOpen(false);
-    navigate('/student/applications');
+  // --- 🌟 2. ฟังก์ชันเช็กโควตาก่อนเปิด Modal สมัคร ---
+  const handleApplyClick = async () => {
+    try {
+      setIsCheckingQuota(true);
+      // ดึงข้อมูลการสมัครทั้งหมดของตัวเองมาก่อน
+      const res = await applicationService.getMyApplications();
+      
+      // ถ้าสมัครครบ 2 แล้ว บล็อกการเปิด Modal
+      if (res.data.length >= 2) {
+        alert("คุณไม่สามารถสมัครเพิ่มได้ เนื่องจากโควตาเต็มแล้ว (สูงสุด 2 โครงการ)");
+        return;
+      }
+
+      // เช็กด้วยว่าเคยสมัครโครงการนี้ไปแล้วหรือยัง (Optional แต่แนะนำ)
+      const alreadyApplied = res.data.some((app: any) => app.project?.projID === id || app.projID === id);
+      if (alreadyApplied) {
+        alert("คุณได้สมัครโครงการนี้ไปแล้ว");
+        return;
+      }
+
+      // ถ้าผ่านเงื่อนไขทั้งหมด ค่อยเปิด Modal
+      setIsConfirmOpen(true);
+    } catch (err) {
+      console.error("Error checking quota:", err);
+      alert("ไม่สามารถตรวจสอบโควตาการสมัครได้ในขณะนี้");
+    } finally {
+      setIsCheckingQuota(false);
+    }
+  };
+
+ // --- 🔵 ฟังก์ชันยืนยันการสมัครโครงการ (ยิง API) ---
+  const confirmApply = async () => {
+    try {
+      setIsApplying(true);
+      if (!currentUserId) {
+        alert("ไม่พบ ID นักศึกษา กรุณาล็อกอินใหม่");
+        return;
+      }
+
+      await projectService.applyProject({
+        projID: id as string,
+        studentID: currentUserId
+      });
+
+      alert('✅ ส่งใบสมัครเข้าร่วมโครงการเรียบร้อยแล้ว!');
+      setIsConfirmOpen(false);
+      navigate('/student/applications'); 
+
+    } catch (err: any) {
+      alert(err.response?.data?.message || '❌ เกิดข้อผิดพลาดในการสมัครโครงการ');
+      console.error(err);
+    } finally {
+      setIsApplying(false);
+    }
   };
 
   if (loading) return <div className="loading-screen"><Loader2 className="animate-spin" /> กำลังโหลด...</div>;
@@ -119,25 +173,35 @@ export default function ProjectDetail() {
   return (
     <div className="project-detail-container">
 
-      {/* 🌟 ==========================================
-          MODAL SECTION (รวม Popup ทุกอันไว้ตรงนี้)
-      ========================================== */}
-
       {/* 1. Modal ยืนยันการสมัคร (STUDENT) */}
       {isConfirmOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
             <h3>ยืนยันการสมัครโครงการ</h3>
-            <p>ต้องการส่งใบสมัครเข้าโครงการ <strong>{project.projNameTH}</strong> ใช่หรือไม่?</p>
+            <p>ต้องการส่งใบสมัครเข้าโครงการ <strong>{project.projNameTH || project.projName}</strong> ใช่หรือไม่?</p>
             <div className="modal-actions">
-              <button className="btn-outline-cancel" onClick={() => setIsConfirmOpen(false)}>ยกเลิก</button>
-              <button className="btn-confirm-apply" onClick={confirmApply}>ยืนยันการสมัคร</button>
+              <button 
+                className="btn-outline-cancel" 
+                onClick={() => setIsConfirmOpen(false)}
+                disabled={isApplying}
+              >
+                ยกเลิก
+              </button>
+              <button 
+                className="btn-confirm-apply" 
+                onClick={confirmApply}
+                disabled={isApplying}
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
+                {isApplying ? <Loader2 className="animate-spin" size={18} /> : null}
+                {isApplying ? 'กำลังดำเนินการ...' : 'ยืนยันการสมัคร'}
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* 2. 🟢 Modal ยืนยันการอนุมัติ (ADVISOR) */}
+      {/* 2. Modal ยืนยันการอนุมัติ (ADVISOR) */}
       {showApproveModal && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ textAlign: 'center' }}>
@@ -169,21 +233,17 @@ export default function ProjectDetail() {
         </div>
       )}
 
-     {/* 3. 🔴 Modal ยืนยันการปฏิเสธ (ADVISOR) */}
+     {/* 3. Modal ยืนยันการปฏิเสธ (ADVISOR) */}
       {showRejectModal && (
         <div className="modal-overlay">
           <div className="modal-content modal-center">
-            
             <div className="modal-icon-danger">
               <AlertTriangle size={50} />
             </div>
-            
             <h3 className="modal-title-danger">ยืนยันการปฏิเสธโครงการ</h3>
-            
             <p className="modal-subtitle">
               คุณแน่ใจหรือไม่ว่าต้องการปฏิเสธโครงการ <strong>{project.projName}</strong>?
             </p>
-            
             <div className="modal-actions-center">
               <button 
                 className="btn-outline-cancel" 
@@ -192,7 +252,6 @@ export default function ProjectDetail() {
               >
                 ยกเลิก
               </button>
-              
               <button 
                 className="btn-confirm-danger"
                 onClick={confirmReject} 
@@ -202,15 +261,11 @@ export default function ProjectDetail() {
                 {isApproving ? 'กำลังดำเนินการ...' : 'ยืนยันการปฏิเสธ'}
               </button>
             </div>
-
           </div>
         </div>
       )}
 
-      {/* 🌟 ==========================================
-          MAIN CONTENT SECTION
-      ========================================== */}
-
+      {/* MAIN CONTENT SECTION */}
       <button className="btn-back" onClick={() => navigate(-1)}>
         <ArrowLeft size={18} /> กลับ
       </button>
@@ -253,7 +308,6 @@ export default function ProjectDetail() {
                 <p className="info-value" style={{ color: '#f97316' }}>{project.projStat}</p>
               </div>
             </div>
-
             <div>
               <strong className="info-label"><MapPin size={16}/> สถานที่ปฏิบัติงาน:</strong>
               <p className="info-value">{project.company?.coAddr}</p>
@@ -312,9 +366,16 @@ export default function ProjectDetail() {
         <div className="action-buttons">
           <button className="btn-close" onClick={() => navigate(-1)}>ปิดหน้าต่าง</button>
 
+          {/* 🌟 3. เปลี่ยนจากเปิด Modal ตรงๆ เป็นการเรียก handleApplyClick */}
           {currentRole === 'STUDENT' && (
-            <button className="btn-apply-main" onClick={() => setIsConfirmOpen(true)}>
-              <Briefcase size={18} /> สมัครโครงการนี้
+            <button 
+              className="btn-apply-main" 
+              onClick={handleApplyClick}
+              disabled={isCheckingQuota} // ปิดปุ่มไว้ชั่วคราวตอนเช็ก API
+              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              {isCheckingQuota ? <Loader2 className="animate-spin" size={18} /> : <Briefcase size={18} />}
+              {isCheckingQuota ? 'กำลังตรวจสอบสิทธิ์...' : 'สมัครโครงการนี้'}
             </button>
           )}
 
@@ -331,7 +392,7 @@ export default function ProjectDetail() {
               <button 
                 className="btn-reject" 
                 onClick={() => {
-                  setRejectReason(''); // เคลียร์ข้อความเก่าทุกครั้งที่เปิดใหม่
+                  setRejectReason(''); 
                   setShowRejectModal(true);
                 }} 
                 style={{ 

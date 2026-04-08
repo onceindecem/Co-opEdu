@@ -8,104 +8,124 @@ import {
   CreatedAt,
   UpdatedAt,
   BelongsTo,
+  HasMany,
 } from 'sequelize-typescript';
 import { Company } from '../../company/entities/company.entity';
 import { HR } from '../../hr/entities/hr.entity';
 import { ProjectManager } from '../../project-manager/entities/project-manager.entity';
 import { Advisor } from '../../advisor/entities/advisor.entity';
+import { Application } from 'src/applications/entities/application.entity';
 
 @Table({
   tableName: 'Projects',
   timestamps: true, // ให้ Sequelize จัดการ createAt / updateAt
 })
 export class Project extends Model {
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false, // false = ปกติ, true = ขออนุญาตลบ
+  })
+  isPendingDelete!: boolean;
+
+  @Column({
+    type: DataType.TEXT,
+    allowNull: true,
+  })
+  deleteReason!: string; // เก็บเหตุผลที่ HR พิมพ์มา
+  
   @PrimaryKey
   @Column({ type: DataType.UUID })
-  projID: string;
+  projID!: string;
 
   @ForeignKey(() => Company)
   @Column({ type: DataType.UUID, allowNull: false })
-  coID: string;
+  coID!: string;
 
   @ForeignKey(() => HR)
   @Column({ type: DataType.UUID, allowNull: false })
-  userID: string; 
+  userID!: string; 
 
   @ForeignKey(() => ProjectManager)
   @Column({ type: DataType.UUID, allowNull: false })
-  pmID: string;
+  pmID!: string;
 
   @ForeignKey(() => Advisor)
   @Column({ type: DataType.UUID, allowNull: true })
-  advID: string;
+  advID!: string;
 
   @Column({
     type: DataType.ENUM('PM', 'COORD'),
     allowNull: false,
   })
-  contact: string;
+  contact!: string;
 
   @Column({ type: DataType.STRING(255), allowNull: true })
-  contDetail: string;
+  contDetail!: string;
 
   @Column({ type: DataType.STRING(255), allowNull: false })
-  projName: string;
+  projName!: string;
 
   @Column({ type: DataType.TEXT, allowNull: false })
-  obj: string;
+  obj!: string;
 
   @Column({ type: DataType.INTEGER, allowNull: false })
-  quota: number;
+  quota!: number;
 
   @Column({ type: DataType.TEXT, allowNull: false })
-  jd: string;
+  jd!: string;
 
   @Column({ type: DataType.TEXT, allowNull: false })
-  skills: string;
+  skills!: string;
 
   @Column({ type: DataType.TEXT, allowNull: false })
-  mentor: string;
+  mentor!: string;
 
   @Column({ type: DataType.TEXT, allowNull: false })
-  workAddr: string;
+  workAddr!: string;
 
   @Column({ type: DataType.STRING(255), allowNull: true })
-  file: string;
+  file!: string;
 
   @Column({
     type: DataType.ENUM('1', '2'),
     allowNull: false,
   })
-  round: string;
+  round!: string;
 
   @Column({
-    type: DataType.ENUM('PENDING', 'APPROVED', 'DENIED'),
+    type: DataType.ENUM('PENDING', 'APPROVED', 'DENIED','PENDING_DELETE'),
     allowNull: false,
     defaultValue: 'PENDING',
   })
-  projStat: string;
+  projStat!: string;
 
   @CreatedAt
   @Column({ field: 'createAt' })
-  createAt: Date;
+  createAt!: Date;
 
   @UpdatedAt
   @Column({ field: 'updateAt' })
-  updateAt: Date;
+  updateAt!: Date;
+
+  
 
   /* ==============================================
      ส่วนของการทำ Associations (ความสัมพันธ์ตาราง)
   ============================================== */
 
   @BelongsTo(() => Company)
-  company: Company;
+  company!: Company;
 
   @BelongsTo(() => HR)
-  hr: HR;
+  hr!: HR;
 
   @BelongsTo(() => ProjectManager)
-  projectManager: ProjectManager;
+  projectManager!: ProjectManager;
 
   @BelongsTo(() => Advisor)
-  advisor: Advisor;
+  advisor!: Advisor;
+
+  @HasMany(() => Application)
+  declare applications: Application[];
 }

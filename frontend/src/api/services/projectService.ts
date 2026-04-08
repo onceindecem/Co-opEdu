@@ -4,6 +4,9 @@ export const projectService = {
   // ดึงข้อมูลทั้งหมด (สำหรับ Student / Admin)
   getAll: () => api.get('/projects'),
 
+  getByCompanyId: (coId: string) => api.get(`/projects/company/${coId}`),
+  
+
   // ดึงข้อมูลโปรเจกต์เดียว (ใช้ร่วมกันทั้ง getOne และ getById)
   getOne: (id: string) => api.get(`/projects/${id}`),
   getById: (id: string) => api.get(`/projects/${id}`),
@@ -60,4 +63,28 @@ updateStatus: (id: string, advisorId: string) => {
   reject: (id: string) => {
     return api.patch(`/projects/${id}/reject`); 
   },
+  applyProject: async (data: { projID: string; studentID: string }) => {
+    // หมายเหตุ: ตรง '/applications' ให้เปลี่ยนเป็น Route API ฝั่ง Backend 
+    // ของคุณที่ใช้สำหรับรับข้อมูลการสมัครนะครับ (เช่น '/projects/apply' หรือ '/applications')
+    return await api.post('/applications', data);
+  },
+
+  // 1. ดึงข้อมูลโครงการที่ขอส่งลบ
+  getPendingDeleteRequests: () => {
+    return api.get('/projects/pending-delete'); 
+  },
+
+  // 2. อนุมัติการลบ
+  approveDelete: (projID: string) => {
+    return api.patch(`/projects/${projID}/approve-delete`); 
+  },
+
+  // 3. ปฏิเสธการลบ
+  rejectDelete: (projID: string) => {
+    return api.patch(`/projects/${projID}/reject-delete`); 
+  },
+
+  requestDelete: (id: string, reason: string) => {
+    return api.patch(`/projects/${id}/request-delete`, { reason });
+  }
 };

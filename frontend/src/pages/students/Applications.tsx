@@ -1,30 +1,52 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Applications.css';
-import { Trash2, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
+import { Trash2, Clock, CheckCircle, XCircle, AlertTriangle, Loader2 } from 'lucide-react';
+// 🌟 Import applicationService เข้ามา
+import { applicationService } from '../../api/services/applicationService';
 
 export default function StudentApplications() {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true); // เพิ่ม state loading
   
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null); // เปลี่ยนเป็น string เพราะ UUID ใน DB
+
+  // 🌟 1. ฟังก์ชันดึงข้อมูลจาก API (ใช้ JWT ในตัว Service)
+  const fetchApplications = async () => {
+    try {
+      setLoading(true);
+      const res = await applicationService.getMyApplications();
+      console.log("📦 ข้อมูลที่ได้จาก API:", res.data);
+      setApplications(res.data);
+    } catch (err) {
+      console.error("Error loading applications:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const savedApps = JSON.parse(localStorage.getItem('myApplications') || '[]');
-    setApplications(savedApps);
+    fetchApplications();
   }, []);
 
-  const handleDeleteClick = (id: number) => {
+  const handleDeleteClick = (id: string) => {
     setDeleteTargetId(id);
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = () => {
+  // 🌟 2. ฟังก์ชันยืนยันการลบ (ยิง API ไปที่ Backend)
+  const confirmDelete = async () => {
     if (deleteTargetId !== null) {
-      const updatedApps = applications.filter(app => app.id !== deleteTargetId);
-      setApplications(updatedApps);
-      localStorage.setItem('myApplications', JSON.stringify(updatedApps));
+      try {
+        await applicationService.deleteApplication(deleteTargetId); // เรียก API ลบ
+        // หลังลบสำเร็จ ให้ดึงข้อมูลใหม่ หรือ filter ออกจาก state
+        setApplications(prev => prev.filter(app => (app.appID || app.id) !== deleteTargetId));
+      } catch (err) {
+        alert("ไม่สามารถยกเลิกการสมัครได้ในขณะนี้");
+        console.error("Delete error:", err);
+      }
     }
     setShowDeleteModal(false);
     setDeleteTargetId(null);
@@ -62,56 +84,73 @@ export default function StudentApplications() {
         </div>
       )}
 
-      <div className="apps-list">
-        {applications.map((app) => (
-          <div key={app.id} className="app-item-card">
+      {loading ? (
+        <div className="loading-state">
+          <Loader2 className="animate-spin" /> กำลังโหลดข้อมูล...
+        </div>
+      ) : (
+        <div className="apps-list">
+         {applications.map((app) => {
+            // 🌟 1. ใช้ appID ให้ตรงกับข้อมูลที่ส่งมา
+            const appId = app.appID; 
+
+            // 🌟 2. ดึงชื่อ (ถ้า Step 1 ทำถูกต้อง ข้อมูล Project จะโผล่มาตรงนี้ครับ)
+            const projectTitle = app.project?.projName || "ไม่ระบุชื่อโครงการ";
+            const companyName = app.project?.company?.coNameTH || "ไม่ระบุชื่อบริษัท";
             
-            <div className="card-top-row">
-              <h3>{app.title}</h3>
-              {app.status !== "APPROVED" && (
-                <button
-                  className="btn-icon-delete" 
-                  onClick={() => handleDeleteClick(app.id)}
-                  title="ยกเลิกการสมัคร"
-                >
-                  <Trash2 size={18} />
-                </button>
-              )}
-            </div>
+            // 🌟 3. เช็กวันที่ (ถ้าใน DB คุณใช้ชื่ออื่น เช่น appDate ให้แก้ตรงนี้นะครับ)
+           const applyDate = app.createAt ? new Date(app.createAt).toLocaleDateString('th-TH') : "ไม่ระบุวันที่";
 
-            <p className="company-text">{app.company}</p>
+            return (
+              <div key={appId} className="app-item-card">
+                <div className="card-top-row">
+                  <h3>{projectTitle}</h3>
+                  {/* ใช้ app.appStat แทน app.status */}
+                  {app.appStat !== "APPROVED" && (
+                    <button
+                      className="btn-icon-delete" 
+                      onClick={() => handleDeleteClick(appId)}
+                      title="ยกเลิกการสมัคร"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+                </div>
 
-            <div className="card-bottom-row">
-              <span className="app-date">สมัครเมื่อ: {app.date}</span>
+                <p className="company-text">{companyName}</p>
 
-              <div className="app-status-zone">
-                {app.status === "PENDING" && (
-                  <span className="status-tag pending"><Clock size={16} /> รอยืนยัน</span>
-                )}
-                {app.status === "APPROVED" && (
-                  <span className="status-tag approved"><CheckCircle size={16} /> ผ่านการคัดเลือก</span>
-                )}
-                {app.status === "REJECTED" && (
-                  <span className="status-tag rejected"><XCircle size={16} /> ไม่ผ่าน</span>
-                )}
+                <div className="card-bottom-row">
+                  <span className="app-date">สมัครเมื่อ: {applyDate}</span>
+
+                  <div className="app-status-zone">
+                    {/* 🌟 4. เปลี่ยนมาเช็กจาก appStat แทน status */}
+                    {app.appStat === "PENDING" && (
+                      <span className="status-tag pending"><Clock size={16} /> รอยืนยัน</span>
+                    )}
+                    {(app.appStat === "APPROVED" || app.appStat === "ACCEPTED") && (
+                      <span className="status-tag approved"><CheckCircle size={16} /> ผ่านการคัดเลือก</span>
+                    )}
+                    {(app.appStat === "REJECTED" || app.appStat === "DENIED") && (
+                      <span className="status-tag rejected"><XCircle size={16} /> ไม่ผ่าน</span>
+                    )}
+                  </div>
+                </div>
               </div>
+            );
+          })}
+          {applications.length === 0 && (
+            <div className="empty-state">
+              <p>ยังไม่มีรายการสมัครโครงการ</p>
+              <button
+                onClick={() => navigate('/student/projects')}
+                className="btn-go-find"
+              >
+                ไปหาโครงการเลย
+              </button>
             </div>
-            
-          </div>
-        ))}
-
-        {applications.length === 0 && (
-          <div className="empty-state">
-            <p>ยังไม่มีรายการสมัครโครงการ</p>
-            <button
-              onClick={() => navigate('/student/projects')}
-              className="btn-go-find"
-            >
-              ไปหาโครงการเลย
-            </button>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
