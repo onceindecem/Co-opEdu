@@ -9,6 +9,7 @@ import {
   MapPin,
   Mail,
 } from "lucide-react";
+import zxcvbn from "zxcvbn";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -24,7 +25,8 @@ const registerSchema = z
     email: z.email({ message: "Invalid email format" }),
     password: z
       .string()
-      .min(6, { message: "Password must be at least 6 characters" }),
+      .min(15, { message: "Password must be at least 15 characters" })
+      .max(128, { message: "password is too long" }),
     confirmPassword: z
       .string()
       .min(1, { message: "Please confirm your password" }),
@@ -47,19 +49,73 @@ const registerSchema = z
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
+async function checkPwnedPassword(password: string): Promise<boolean> {
+  try {
+    // convert password to SHA-1
+    const msgBuffer = new TextEncoder().encode(password);
+    const hashBuffer = await crypto.subtle.digest("SHA-1", msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("")
+      .toUpperCase();
+
+    // first 5 letters
+    const prefix = hashHex.substring(0, 5);
+    const suffix = hashHex.substring(5);
+
+    // send api (only prefix)
+    const response = await fetch(
+      `https://api.pwnedpasswords.com/range/${prefix}`,
+    );
+    const text = await response.text();
+
+    // check suffix
+    return text.includes(suffix);
+  } catch (error) {
+    console.error("Pwned check error", error);
+    return false; 
+  }
+}
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     mode: "onTouched",
   });
 
+  const passwordValue = watch("password") || "";
+  const passwordStrength = zxcvbn(passwordValue).score;
+  const strengthColors = [
+    "#ff4d4d",
+    "#ff9e42",
+    "#f3d331",
+    "#92d050",
+    "#00b050",
+  ];
+  const strengthLabels = [
+    "very weak",
+    "weak",
+    "medium",
+    "strong",
+    "very strong",
+  ];
+
   const onSubmit = async (data: RegisterFormValues) => {
     try {
+      // Check Password against Breach
+      const isPwned = await checkPwnedPassword(data.password);
+      if (isPwned) {
+        alert("This password has been breached. Please change your password for security reasons.");
+        return; 
+      }
+
       await authService.registerHR({
         email: data.email,
         password: data.password,
@@ -74,11 +130,11 @@ export default function RegisterPage() {
         coAddr: data.companyAddress,
       });
 
-      alert("สมัครสมาชิกบริษัทสำเร็จ! 🎉");
+      alert("Registration Successful!");
       navigate("/login");
     } catch (error: any) {
       alert(
-        "เกิดข้อผิดพลาด: " + (error.response?.data?.message || "โปรดลองใหม่"),
+        "An error occur " + (error.response?.data?.message || "Please try again"),
       );
     }
   };
@@ -182,6 +238,34 @@ export default function RegisterPage() {
             <div className="input-group">
               <label>รหัสผ่าน (Password)</label>
               <input type="password" {...register("password")} />
+              {passwordValue.length > 0 && (
+                <div style={{ marginTop: "8px" }}>
+                  <div style={{ display: "flex", gap: "4px", height: "6px" }}>
+                    {[...Array(4)].map((_, index) => (
+                      <div
+                        key={index}
+                        style={{
+                          flex: 1,
+                          backgroundColor:
+                            index < passwordStrength
+                              ? strengthColors[passwordStrength]
+                              : "#e2e8f0",
+                          borderRadius: "4px",
+                          transition: "background-color 0.3s ease",
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <span
+                    style={{
+                      fontSize: "0.75rem",
+                      color: strengthColors[passwordStrength],
+                    }}
+                  >
+                    Strength: {strengthLabels[passwordStrength]}
+                  </span>
+                </div>
+              )}
               {errors.password && (
                 <span
                   style={{ color: "red", fontSize: "12px", marginTop: "4px" }}

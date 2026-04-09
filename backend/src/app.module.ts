@@ -14,6 +14,7 @@ import { AdvisorModule } from './advisor/advisor.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { ReportsModule } from './report/report.module';
 import { ActivityLogsModule } from './activity-log/activity-log.module';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -32,6 +33,10 @@ import { ActivityLogsModule } from './activity-log/activity-log.module';
         },
       },
     }),
+    ThrottlerModule.forRoot([{
+      ttl: 60000, 
+      limit: 5,   
+    }]),
     UsersModule,
     AuthModule,
     ProjectsModule,

@@ -32,7 +32,7 @@ export class User extends Model {
   declare role: string;
 
   @Column({
-    type: DataType.ENUM('LOCAL', 'GOOGLE'),
+    type: DataType.ENUM('LOCAL', 'GOOGLE', 'LOCAL_AND_GOOGLE'),
     allowNull: false,
   })
   declare provider: string;

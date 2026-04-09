@@ -3,8 +3,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { authService } from '../api/services/authService';
+import { authService } from "../api/services/authService";
 import "./Login.css";
+import { useAuth } from "../context/AuthContext";
 
 const loginSchema = z.object({
   email: z
@@ -17,17 +18,15 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [apiError, setApiError] = useState(""); 
+  const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [searchParams] = useSearchParams();
+  const { checkAuth } = useAuth();
 
   useEffect(() => {
-    const token = searchParams.get("token");
     const role = searchParams.get("role");
 
-    if (token) {
-      authService.setToken(token);
-
+    if (role) {
       if (role === "STUDENT") {
         navigate("/student", { replace: true });
       } else if (role === "ADVISOR") {
@@ -51,34 +50,37 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-     const response = await authService.login({ 
-        email: data.email, 
-        password: data.password 
+      await authService.login({
+        email: data.email,
+        password: data.password,
       });
 
-      const token = response.data.access_token; 
-      const role = response.data.role; 
-
-      if (token) {
-        authService.setToken(token);
-      }
-
-      if (role === "STUDENT") {
-        navigate("/student");
-      } else if (role === "ADVISOR") {
-        navigate("/advisor");
-      } else if (role === "HR") {
-        navigate("/company");
-      } else if (role === "ADMIN") {
-        navigate("/admin");
-      } else {
-        navigate("/");
+      const role = await checkAuth();
+      if (role) {
+        if (role === "STUDENT") {
+          navigate("/student");
+        } else if (role === "ADVISOR") {
+          navigate("/advisor");
+        } else if (role === "HR") {
+          navigate("/company");
+        } else if (role === "ADMIN") {
+          navigate("/admin");
+        } else {
+          navigate("/");
+        }
       }
     } catch (error: any) {
-      setApiError(
-        error.response?.data?.message ||
-          "email or password is incorrect, please try again.",
-      );
+      console.error("🚨 REAL ERROR:", error);
+      if (error.response?.status === 429) {
+        setApiError(
+          "You have attempted to log in too many times. Please wait and try again later.",
+        );
+      } else {
+        setApiError(
+          error.response?.data?.message ||
+            "email or password is incorrect, please try again.",
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -159,7 +161,9 @@ export default function LoginPage() {
         <div style={{ display: "flex", justifyContent: "center" }}>
           <button
             type="button"
-            onClick={() => { authService.loginWithGoogle(); }}
+            onClick={() => {
+              authService.loginWithGoogle();
+            }}
             style={{
               width: "100%",
               padding: "10px",

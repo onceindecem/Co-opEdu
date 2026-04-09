@@ -42,8 +42,8 @@ export const projectService = {
   getMyAdvisorProjects: () => api.get('/projects/my-projects'), 
 
   // อนุมัติและรับเป็นที่ปรึกษา
- approveProject: (id: string, advisorId: string) => 
-  api.patch(`/projects/${id}/approve`, { advisorId }),
+ approveProject: (id: string) => 
+  api.patch(`/projects/${id}/approve`),
 
   // ปฏิเสธโครงการพร้อมระบุเหตุผล
   rejectProject: (id: string, reason: string) => 

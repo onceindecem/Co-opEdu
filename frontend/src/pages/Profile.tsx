@@ -207,63 +207,65 @@ export default function UserProfile() {
   const navigate = useNavigate();
   const [dbData, setDbData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  let currentRole = '';
-  let isTokenValid = true;
-  const token = localStorage.getItem('accessToken');
-
-  if (token) {
-    try {
-      const decodedToken: any = jwtDecode(token);
-      currentRole = decodedToken.role; 
-    } catch (error) {
-      isTokenValid = false;
-    }
-  } else {
-    // if no token, redirect to login page
-    isTokenValid = false;
-  }
-
-  if (!isTokenValid) {
-    return <Navigate to="/login" replace />;
-  }
+  const [currentRole, setCurrentRole] = useState<string>(''); // 💡 เปลี่ยนมาเก็บ role ใน state แทน
 
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
+        // 💡 เรียก API โปรไฟล์ (Axios จะแนบ Cookie ให้เองอัตโนมัติ)
         const response = await authService.getProfile();
+        
+        // เซ็ตข้อมูลที่ได้จาก Backend
         setDbData(response.data);
+        
+        // 💡 ดึง role จากข้อมูลที่ Backend ส่งกลับมา (แทนการ Decode เอง)
+        // สมมติโครงสร้าง response.data.accountInfo.role หรือตามที่ Backend คุณส่งมา
+        setCurrentRole(response.data.accountInfo.role); 
+
       } catch (error: any) {
+        // 💡 ถ้า API ตอบ 401 (ไม่มี Cookie/หมดอายุ) ให้เด้งไปหน้า Login
         if (error.response?.status === 401) {
-          authService.logout();
-          navigate('/login');
+          navigate('/login', { replace: true });
         }
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (token) fetchProfileData();
-  }, [navigate, token]);
+    fetchProfileData();
+  }, [navigate]);
 
   if (isLoading) {
-    return <div style={{ textAlign: 'center', padding: '50px' }}>loading... ⏳</div>;
+    return <div style={{ textAlign: 'center', padding: '50px' }}>กำลังโหลดข้อมูล... ⏳</div>;
   }
 
+  // ถ้าโหลดเสร็จแล้วแต่ไม่มีข้อมูล (เผื่อกรณี Error อื่นๆ)
   if (!dbData) {
-    return <div style={{ textAlign: 'center', padding: '50px', color: 'red' }}>Failed to fetch data. Please try again.</div>;
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <p style={{ color: 'red' }}>ไม่สามารถโหลดข้อมูลโปรไฟล์ได้ กรุณาลองใหม่อีกครั้ง</p>
+        <button onClick={() => window.location.reload()}>ลองใหม่</button>
+      </div>
+    );
   }
 
   return (
     <div className="profile-container">
       <div className="profile-card">
-        {currentRole === 'STUDENT' && <StudentView accountInfo={dbData.accountInfo} profileData={dbData.profile}/>}
-        {currentRole === 'HR' && <CompanyView accountInfo={dbData.accountInfo} profileData={dbData.profile}/>}
+        {/* 💡 ใช้ currentRole ที่ได้จาก API ในการ Render View */}
+        {currentRole === 'STUDENT' && (
+          <StudentView accountInfo={dbData.accountInfo} profileData={dbData.profile}/>
+        )}
         
+        {currentRole === 'HR' && (
+          <CompanyView accountInfo={dbData.accountInfo} profileData={dbData.profile}/>
+        )}
+        
+        {/* กรณีเป็น Role อื่นๆ ที่ไม่ได้นิยามหน้า View ไว้ */}
         {currentRole !== 'STUDENT' && currentRole !== 'HR' && (
           <div style={{ textAlign: 'center', padding: '40px' }}>
             <h3 style={{ color: '#ef4444' }}>ไม่มีสิทธิ์เข้าถึงหน้านี้</h3>
-            <p style={{ color: '#64748b' }}>โปรดติดต่อผู้ดูแลระบบ</p>
+            <p style={{ color: '#64748b' }}>บทบาทของคุณคือ: {currentRole}</p>
           </div>
         )}
       </div>
