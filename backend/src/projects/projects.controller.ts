@@ -16,13 +16,16 @@ export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) { }
 
   // 1. สร้างโครงการ (ปรับให้รับ FormData/Files ได้เหมือนกัน)
-  @Post()
+ @Post()
+  @UseGuards(JwtAuthGuard) // 🌟 1. ป้องกันไม่ให้คนนอกสร้างโครงการ
   @UseInterceptors(FilesInterceptor('files'))
   create(
+    @Req() req: any, // 🌟 2. ดึง Token เพื่อเอา userID
     @Body() createDto: any,
     @UploadedFiles() files: Array<Express.Multer.File>
   ) {
-    return this.projectsService.create(createDto, files);
+    const userId = req.user?.sub || req.user?.id || req.user?.userID;
+    return this.projectsService.create(userId, createDto, files); // 🌟 3. ส่ง userId ไปให้ Service
   }
 
 
@@ -119,18 +122,22 @@ export class ProjectsController {
     return this.projectsService.findMyProjects();
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Patch(':id/approve')
+ @Patch(':id/approve')
+  @UseGuards(JwtAuthGuard) // 🌟 บังคับล็อกอิน
   approveProject(
     @Param('id') id: string,
-    @Req() req
+    @Req() req: any // 🌟 ดึงข้อมูลจาก Token
   ) {
-    return this.projectsService.approveProject(id, req.user.sub);
+    const advisorId = req.user?.sub || req.user?.id || req.user?.userID;
+    console.log('✅ ก๊อกๆ! อาจารย์กดอนุมัติโปรเจกต์:', id, 'โดย ID:', advisorId);
+    
+    return this.projectsService.approveProject(id, advisorId);
   }
-
-  @Patch(':id/reject')
-  async rejectProject(@Param('id') id: string) {
-    return this.projectsService.rejectProject(id);
+ @Patch(':id/reject')
+  @UseGuards(JwtAuthGuard) // 🌟 บังคับล็อกอิน
+  async rejectProject(@Param('id') id: string, @Req() req: any) {
+    const advisorId = req.user?.sub || req.user?.id || req.user?.userID;
+    return this.projectsService.rejectProject(id, advisorId);
   }
 
   @Get(':id')
@@ -139,14 +146,17 @@ export class ProjectsController {
   }
 
   // 2. แก้ไขโครงการ (เหลือแค่อันนี้อันเดียวพอ)
-  @Patch(':id')
+ @Patch(':id')
+  @UseGuards(JwtAuthGuard) // 🌟 1. ป้องกัน
   @UseInterceptors(FilesInterceptor('files'))
   update(
     @Param('id') id: string,
+    @Req() req: any, // 🌟 2. ดึง Token
     @Body() updateDto: any,
     @UploadedFiles() files: Array<Express.Multer.File>
   ) {
-    return this.projectsService.update(id, updateDto, files);
+    const userId = req.user?.sub || req.user?.id || req.user?.userID;
+    return this.projectsService.update(id, userId, updateDto, files); // 🌟 3. ส่ง userId ไปให้ Service
   }
 
 

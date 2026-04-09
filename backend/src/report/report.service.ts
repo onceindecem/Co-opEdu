@@ -7,6 +7,7 @@ import { Project } from 'src/projects/entities/project.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Company } from 'src/company/entities/company.entity';
 import { Student } from 'src/student/entities/student.entity';
+import { ActivityLogsService } from 'src/activity-log/activity-log.service';
 
 @Injectable()
 export class ReportsService {
@@ -15,20 +16,29 @@ export class ReportsService {
     private reportModel: typeof Report,
     @InjectModel(Application)
     private applicationModel: typeof Application,
+    private activityLogsService: ActivityLogsService,
   ) {}
 
-async create(createReportDto: CreateReportDto) {
-    // 🌟 3. คราวนี้จะใช้ this.applicationModel ได้แล้วครับ
+async create(createReportDto: CreateReportDto, userId: string) { // 🌟 รับ userId
     const app = await this.applicationModel.findByPk(createReportDto.appID);
     
-    // สมมติว่าในตาราง Application ของคุณเก็บสถานะไว้ที่คอลัมน์ชื่อ appStatus
     if (app && app.appStat === 'NOT_PASSED') { 
       throw new BadRequestException('ไม่สามารถเพิ่มบันทึกในโครงการที่ไม่ผ่านการคัดเลือกได้');
     }
 
-    return await this.reportModel.create({ ...createReportDto });
-  }
+    const report = await this.reportModel.create({ ...createReportDto });
 
+    // 🌟 บันทึก Log
+    if (userId) {
+      await this.activityLogsService.createLog(
+        userId,
+        'CREATE_PROGRESS_REPORT',
+        `นักศึกษาส่งรายงานความคืบหน้า`
+      );
+    }
+
+    return report;
+  }
   // 2. ดึง Report ทั้งหมดของ Application ID นั้นๆ (เอาไว้โชว์ใน Timeline ของนักศึกษา)
   async findAllByAppId(appId: string) {
     return await this.reportModel.findAll({
@@ -38,19 +48,40 @@ async create(createReportDto: CreateReportDto) {
   }
 
   // 3. อัปเดต Report
-  async update(repID: string, updateData: Partial<CreateReportDto>) {
+  async update(repID: string, updateData: Partial<CreateReportDto>, userId: string) { // 🌟 รับ userId
     const report = await this.reportModel.findByPk(repID);
     if (!report) throw new NotFoundException('ไม่พบข้อมูลบันทึกความคืบหน้านี้');
     
-    return await report.update(updateData);
+    const updatedReport = await report.update(updateData);
+
+    // 🌟 บันทึก Log
+    if (userId) {
+      await this.activityLogsService.createLog(
+        userId,
+        'UPDATE_PROGRESS_REPORT',
+        `นักศึกษาแก้ไขรายงานความคืบหน้า`
+      );
+    }
+
+    return updatedReport;
   }
 
   // 4. ลบ Report
-  async remove(repID: string) {
+ async remove(repID: string, userId: string) { // 🌟 รับ userId
     const report = await this.reportModel.findByPk(repID);
     if (!report) throw new NotFoundException('ไม่พบข้อมูลบันทึกความคืบหน้านี้');
     
     await report.destroy();
+
+    // 🌟 บันทึก Log
+    if (userId) {
+      await this.activityLogsService.createLog(
+        userId,
+        'DELETE_PROGRESS_REPORT',
+        `นักศึกษาลบรายงานความคืบหน้า`
+      );
+    }
+
     return { message: 'ลบข้อมูลสำเร็จ' };
   }
 

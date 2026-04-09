@@ -11,6 +11,7 @@ import { User } from 'src/users/entities/user.entity';
 import { Student } from 'src/student/entities/student.entity';
 import { Advisor } from 'src/advisor/entities/advisor.entity';
 import { GoogleStrategy } from './strategies/google.strategy';
+import { ActivityLogsModule } from 'src/activity-log/activity-log.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
         signOptions: { expiresIn: '1d' },
       }),
     }),
+    ActivityLogsModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, GoogleStrategy],

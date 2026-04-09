@@ -8,22 +8,33 @@ import { CreateApplicationDto } from './dto/create-application.dto';
 import { UpdateApplicationDto } from './dto/update-application.dto';
 import { User } from 'src/users/entities/user.entity';
 import { Student } from 'src/student/entities/student.entity';
+import { ActivityLogsService } from 'src/activity-log/activity-log.service';
 
 @Injectable()
 export class ApplicationsService {
   constructor(
     @InjectModel(Application) 
     private applicationModel: typeof Application,
+    private activityLogsService: ActivityLogsService,
   ) {}
 
   async create(createApplicationDto: any) {
     try {
-      // สร้างข้อมูลการสมัครลง Database
-      return await this.applicationModel.create({
+      const application = await this.applicationModel.create({
         ...createApplicationDto,
-        // ถ้าใน DTO ไม่มี status ให้ใส่ default เป็น 'PENDING'
         status: createApplicationDto.status || 'PENDING', 
       });
+
+      // 🌟 3. บันทึก Log การสมัคร
+      if (createApplicationDto.userID) {
+        await this.activityLogsService.createLog(
+          createApplicationDto.userID,
+          'APPLY_PROJECT',
+          `นักศึกษาสมัครเข้าร่วมโครงการรหัส: ${createApplicationDto.projID || 'ไม่ระบุ'}`
+        );
+      }
+
+      return application;
     } catch (error) {
       console.error('🔥 Create Application Error:', error);
       throw error;
@@ -80,17 +91,24 @@ async findOne(id: string) { // 🌟 แก้เป็น string
     // ...
   }
 
-  async remove(id: string) {
+ async remove(id: string, userId: string) { // 🌟 รับ userId มาจาก Controller
     try {
-      // 1. ค้นหาใบสมัครที่ต้องการลบ
       const application = await this.applicationModel.findByPk(id);
       
       if (!application) {
         throw new NotFoundException(`ไม่พบข้อมูลการสมัครรหัส ${id}`);
       }
 
-      // 2. สั่งลบออกจาก Database
       await application.destroy();
+
+      // 🌟 บันทึก Log การยกเลิก
+      if (userId) {
+        await this.activityLogsService.createLog(
+          userId,
+          'CANCEL_APPLICATION',
+          `นักศึกษายกเลิกการสมัครโครงการรหัส: ${application.projID}`
+        );
+      }
 
       return { message: 'ยกเลิกการสมัครเรียบร้อยแล้ว' };
     } catch (error) {
@@ -99,20 +117,40 @@ async findOne(id: string) { // 🌟 แก้เป็น string
     }
   }
   // ฟังก์ชันอัปเดต appStat
-  async updateAppStatus(id: string, status: string) {
+ async updateAppStatus(id: string, status: string, advisorId: string) { // 🌟 รับ advisorId
     const application = await this.applicationModel.findByPk(id);
     if (!application) throw new NotFoundException('ไม่พบใบสมัครนี้');
 
     await application.update({ appStat: status });
+
+    // 🌟 บันทึก Log ฝั่ง Advisor
+    if (advisorId) {
+      await this.activityLogsService.createLog(
+        advisorId,
+        'UPDATE_APP_STATUS',
+        `อาจารย์อัปเดตสถานะใบสมัครเป็น: ${status}` // 🌟 เปลี่ยนข้อความให้ถูกต้อง
+      );
+    }
+
     return { message: 'อัปเดตสถานะสำเร็จ', data: application };
   }
 
   // ฟังก์ชันอัปเดต hiredStat
-  async updateHiredStatus(id: string, hiredStat: string) {
+  async updateHiredStatus(id: string, hiredStat: string, advisorId: string) { // 🌟 รับ advisorId
     const application = await this.applicationModel.findByPk(id);
     if (!application) throw new NotFoundException('ไม่พบใบสมัครนี้');
 
     await application.update({ hiredStat });
+
+    // 🌟 บันทึก Log ฝั่ง Advisor
+    if (advisorId) {
+      await this.activityLogsService.createLog(
+        advisorId,
+        'UPDATE_HIRED_STATUS',
+        `อาจารย์อัปเดตผลการจ้างงานเป็น: ${hiredStat}` // 🌟 เปลี่ยนข้อความให้ถูกต้อง
+      );
+    }
+
     return { message: 'อัปเดตผลการจ้างงานสำเร็จ', data: application };
   }
   // ใน applications.service.ts

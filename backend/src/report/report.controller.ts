@@ -18,9 +18,8 @@ export class ReportsController {
 
   @Post()
   create(@Body() createReportDto: CreateReportDto, @Request() req: any) {
-    // 💡 คุณสามารถดึง userID จาก Token มาตรวจสอบได้ที่ req.user.id
-    console.log('User ID from Token:', req.user.id);
-    return this.reportsService.create(createReportDto);
+    const userId = req.user?.id || req.user?.sub || req.user?.userId;
+    return this.reportsService.create(createReportDto, userId); // 🌟 ส่ง userId ไป
   }
 
 @Get()
@@ -45,14 +44,20 @@ findAll(@Request() req: any) {
   }
 
   // PATCH /reports/:repID - แก้ไขข้อมูล
-  @Patch(':repID')
-  update(@Param('repID') repID: string, @Body() updateReportDto: Partial<CreateReportDto>) {
-    return this.reportsService.update(repID, updateReportDto);
+ @Patch(':repID')
+  update(
+    @Param('repID') repID: string, 
+    @Body() updateReportDto: Partial<CreateReportDto>, 
+    @Request() req: any // 🌟 ดึง Token
+  ) {
+    const userId = req.user?.id || req.user?.sub || req.user?.userId;
+    return this.reportsService.update(repID, updateReportDto, userId); // 🌟 ส่ง userId ไป
   }
 
   // DELETE /reports/:repID - ลบข้อมูล
-  @Delete(':repID')
-  remove(@Param('repID') repID: string) {
-    return this.reportsService.remove(repID);
+@Delete(':repID')
+  remove(@Param('repID') repID: string, @Request() req: any) { // 🌟 ดึง Token
+    const userId = req.user?.id || req.user?.sub || req.user?.userId;
+    return this.reportsService.remove(repID, userId); // 🌟 ส่ง userId ไป
   }
 }

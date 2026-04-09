@@ -35,11 +35,11 @@ export class ApplicationsController {
     return this.applicationsService.findByProjectId(projectId);
   }
 
-  @UseGuards(JwtAuthGuard,RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Post()
-  @Roles('STUDENT') // 🌟 ถ้าอยากจำกัดให้เฉพาะ STUDENT เท่านั้นที่เข้าถึงได้
+  @Roles('STUDENT') 
   create(@Body() createApplicationDto: CreateApplicationDto, @Request() req) {
-    const currentUserId = req.user.sub; 
+    const currentUserId = req.user?.sub || req.user?.userID; 
     const applicationData = {
       ...createApplicationDto,
       userID: currentUserId,
@@ -57,20 +57,29 @@ export class ApplicationsController {
   findOne(@Param('id') id: string) {
     return this.applicationsService.findOne(id);
   }
+ @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('STUDENT')
   @Delete(':id')
-remove(@Param('id') id: string) {
-  return this.applicationsService.remove(id);
+  remove(@Param('id') id: string, @Request() req) {
+    const currentUserId = req.user?.sub || req.user?.userID; 
+    return this.applicationsService.remove(id, currentUserId); // 🌟 ส่ง ID ไปให้ Service
   }
 
   // อัปเดตสถานะการสมัคร (appStat)
+@UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADVISOR') // 🌟 เปลี่ยนจาก HR เป็น ADVISOR
   @Patch(':id/status')
-  async updateAppStatus(@Param('id') id: string, @Body('status') status: string) {
-    return await this.applicationsService.updateAppStatus(id, status);
+  async updateAppStatus(@Param('id') id: string, @Body('status') status: string, @Request() req) {
+    const advisorId = req.user?.sub || req.user?.userID; 
+    return await this.applicationsService.updateAppStatus(id, status, advisorId);
   }
 
   // อัปเดตผลการจ้างงาน (hiredStat)
+@UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADVISOR') // 🌟 เปลี่ยนจาก HR เป็น ADVISOR
   @Patch(':id/hired-status')
-  async updateHiredStatus(@Param('id') id: string, @Body('hiredStat') hiredStat: string) {
-    return await this.applicationsService.updateHiredStatus(id, hiredStat);
+  async updateHiredStatus(@Param('id') id: string, @Body('hiredStat') hiredStat: string, @Request() req) {
+    const advisorId = req.user?.sub || req.user?.userID; 
+    return await this.applicationsService.updateHiredStatus(id, hiredStat, advisorId);
   }
 }

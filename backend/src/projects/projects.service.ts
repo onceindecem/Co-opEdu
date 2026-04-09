@@ -22,48 +22,61 @@ export class ProjectsService {
   ) {}
 
   // --- 1. สร้างโครงการใหม่ ---
-async create(dto: any, files?: Array<Express.Multer.File>) {
-  try {
-    return await this.sequelize.transaction(async (t) => {
-      // ... โค้ดส่วน Parse JSON ของคุณเหมือนเดิม ...
-      const pmData = typeof dto.pmData === 'string' ? JSON.parse(dto.pmData) : dto.pmData;
-      const mentors = typeof dto.mentor === 'string' ? JSON.parse(dto.mentor) : dto.mentor;
-      const contDetail = dto.contDetail && typeof dto.contDetail === 'string' ? JSON.parse(dto.contDetail) : dto.contDetail;
+async create(userId: string, dto: any, files?: Array<Express.Multer.File>) { // 🌟 รับ userId เพิ่ม
+    try {
+      return await this.sequelize.transaction(async (t) => {
+        // ... โค้ดส่วน Parse JSON เหมือนเดิม ...
+        const pmData = typeof dto.pmData === 'string' ? JSON.parse(dto.pmData) : dto.pmData;
+        const mentors = typeof dto.mentor === 'string' ? JSON.parse(dto.mentor) : dto.mentor;
+        const contDetail = dto.contDetail && typeof dto.contDetail === 'string' ? JSON.parse(dto.contDetail) : dto.contDetail;
 
-      // 1. สร้าง Project Manager
-      const pm = await this.pmModel.create({
-        pmID: randomUUID(),
-        pmName: pmData.pmName,
-        pmPos: pmData.pmPos,
-        pmDept: pmData.pmDept,
-        pmTel: pmData.pmTel,
-        pmEmail: pmData.pmEmail,
-        coID: dto.coID, // 👈 ต้องมั่นใจว่า dto มี coID ส่งมา
-      }, { transaction: t });
+        // 1. สร้าง Project Manager
+        const pm = await this.pmModel.create({
+          pmID: randomUUID(),
+          pmName: pmData.pmName,
+          pmPos: pmData.pmPos,
+          pmDept: pmData.pmDept,
+          pmTel: pmData.pmTel,
+          pmEmail: pmData.pmEmail,
+          coID: dto.coID,
+        }, { transaction: t });
 
-       const project = await this.projectModel.create({
-        projID: randomUUID(),
-        projName: dto.projName,
-        obj: dto.obj,
-        quota: Number(dto.quota),
-        jd: dto.jd,
-        skills: dto.skills,
-        workAddr: dto.workAddr,
-        contact: dto.contact,
-        contDetail: JSON.stringify(contDetail),
-        mentor: JSON.stringify(mentors),
-        pmID: pm.pmID,
-        projStat: 'PENDING',
-        
-        // ✨ เพิ่ม 3 ฟิลด์ที่ขาดไปตรงนี้ครับ ✨
-       coID: dto.coID,     // 👈 เพิ่ม: รับจากหน้าบ้าน หรือ Token
-  userID: dto.userID, // 👈 เพิ่ม: ID ของคนสร้าง (HR)
-  round: dto.round,   // 👈 เพิ่ม: รอบปีการศึกษา
-        
-      }, { transaction: t });
+        // 2. สร้าง Project
+        const project = await this.projectModel.create({
+          projID: randomUUID(),
+          projName: dto.projName,
+          obj: dto.obj,
+          quota: Number(dto.quota),
+          jd: dto.jd,
+          skills: dto.skills,
+          workAddr: dto.workAddr,
+          contact: dto.contact,
+          contDetail: JSON.stringify(contDetail),
+          mentor: JSON.stringify(mentors),
+          pmID: pm.pmID,
+          projStat: 'PENDING',
+          
+          coID: dto.coID,
+          userID: userId || dto.userID, // 🌟 ใช้ userId จาก Token เป็นหลักเพื่อความปลอดภัย
+          round: dto.round,
+        }, { transaction: t });
 
-      return project;
-    });
+        // 🌟🌟 3. บันทึก Log การสร้างโครงการ (ดักจับ Error ไว้ด้วย) 🌟🌟
+        try {
+          const logUserId = userId || dto.userID;
+          if (logUserId) {
+            await this.activityLogsService.createLog(
+              logUserId,
+              'CREATE_PROJECT',
+              `เพิ่มโครงการใหม่: ${project.projName}`
+            );
+          }
+        } catch (logErr) {
+          console.error('Save log failed:', logErr);
+        }
+
+        return project;
+      });
     } catch (error) {
       console.error('🔥 Create Project Error:', error);
       throw error;
@@ -71,15 +84,15 @@ async create(dto: any, files?: Array<Express.Multer.File>) {
   }
 
   // --- 2. อัปเดตโครงการ (โหมด Edit) ---
-  async update(id: string, dto: any, files?: Array<Express.Multer.File>) {
+ async update(id: string, userId: string, dto: any, files?: Array<Express.Multer.File>) { // 🌟 รับ userId เพิ่ม
     try {
       return await this.sequelize.transaction(async (t) => {
-        // แปลงข้อมูลจาก String เป็น Object
+        // ... โค้ดส่วน Parse JSON เหมือนเดิม ...
         const pmData = typeof dto.pmData === 'string' ? JSON.parse(dto.pmData) : dto.pmData;
         const mentors = typeof dto.mentor === 'string' ? JSON.parse(dto.mentor) : dto.mentor;
         const contDetail = dto.contDetail && typeof dto.contDetail === 'string' ? JSON.parse(dto.contDetail) : dto.contDetail;
 
-        // 1. อัปเดต Project Manager (ใช้ pmID จาก pmData ที่หน้าบ้านส่งมา)
+        // 1. อัปเดต Project Manager
         if (pmData && pmData.pmID) {
           await this.pmModel.update({
             pmName: pmData.pmName,
@@ -97,13 +110,7 @@ async create(dto: any, files?: Array<Express.Multer.File>) {
         const project = await this.projectModel.findByPk(id);
         if (!project) throw new NotFoundException('ไม่พบโครงการที่ต้องการแก้ไข');
 
-        // 3. จัดการไฟล์ใหม่ (ถ้ามีการอัปโหลดเพิ่ม)
-        let updatedFiles: string[] = [];
-        if (files && files.length > 0) {
-          updatedFiles = files.map(f => f.filename);
-        }
-
-        // 4. อัปเดตข้อมูลโครงการ
+        // 3. อัปเดตข้อมูลโครงการ
         await project.update({
           projName: dto.projName,
           obj: dto.obj,
@@ -114,9 +121,23 @@ async create(dto: any, files?: Array<Express.Multer.File>) {
           contact: dto.contact,
           contDetail: JSON.stringify(contDetail),
           mentor: JSON.stringify(mentors),
-          projStat: 'PENDING', // แก้ไขแล้วให้กลับไปรอตรวจใหม่
+          projStat: 'PENDING',
           advID: null,
         }, { transaction: t });
+
+        // 🌟🌟 4. บันทึก Log การแก้ไขโครงการ 🌟🌟
+        try {
+          const logUserId = userId || dto.userID;
+          if (logUserId) {
+            await this.activityLogsService.createLog(
+              logUserId,
+              'UPDATE_PROJECT',
+              `แก้ไขข้อมูลโครงการ: ${project.projName}`
+            );
+          }
+        } catch (logErr) {
+          console.error('Save log failed:', logErr);
+        }
 
         return { message: 'อัปเดตโครงการและข้อมูลผู้จัดการเรียบร้อยแล้ว', project };
       });
@@ -192,39 +213,47 @@ async create(dto: any, files?: Array<Express.Multer.File>) {
 async approveProject(id: string, userIdFromToken: string) {
     console.log("🛠️ ตรวจสอบค่าที่ส่งมา -> ProjectID:", id, "UserID (จาก Token):", userIdFromToken);
 
-    // 1. ค้นหา Project
     const project = await this.projectModel.findByPk(id);
     if (!project) throw new NotFoundException(`ไม่พบโปรเจกต์รหัส ${id}`);
     
-    // 2. ค้นหาอาจารย์จาก userId ที่รับมา
     const advisor = await this.advisorModel.findOne({ 
       where: { userID: userIdFromToken } 
     });
 
     if (!advisor) {
-      throw new BadRequestException('ไม่พบข้อมูลโปรไฟล์อาจารย์ที่ผูกกับรหัสผู้ใช้นี้ (มีแต่บัญชี User แต่ยังไม่ได้สร้างประวัติอาจารย์)');
+      throw new BadRequestException('ไม่พบข้อมูลโปรไฟล์อาจารย์ที่ผูกกับรหัสผู้ใช้นี้');
     }
 
-    console.log("✅ ค้นหาอาจารย์เจอแล้ว! advID คือ:", advisor.userID);
-
-    // 3. อัปเดตข้อมูล โดยใช้ advID ที่ถูกต้อง
+    // อัปเดตสถานะโครงการ
     await project.update({ 
       projStat: 'APPROVED', 
-      advID: advisor.userID // 👈 ใช้ advID ที่หาเจอไปบันทึก
+      advID: advisor.userID 
     });
     
-    // ดึงข้อมูลใหม่พร้อม Join ตาราง Advisor กลับไปโชว์
-    const updatedProject = await this.findOne(id); 
+    // 🌟 บันทึก Log การอนุมัติ
+    await this.activityLogsService.createLog(
+      userIdFromToken,
+      'APPROVE_PROJECT',
+      `อาจารย์อนุมัติโครงการ: ${project.projName || 'ไม่ระบุชื่อ'}`
+    );
 
+    const updatedProject = await this.findOne(id); 
     return { message: 'อนุมัติเรียบร้อยแล้ว', data: updatedProject };
-}
- async rejectProject(id: string) {
+  }
+async rejectProject(id: string, userIdFromToken: string) { // 🌟 รับ userId เพิ่ม
     const project = await this.projectModel.findByPk(id);
     if (!project) throw new NotFoundException(`ไม่พบโครงการรหัส ${id}`);
 
     await project.update({
-      projStat: 'DENIED' // 👈 ลองใช้คำนี้แทน
+      projStat: 'DENIED' 
     });
+
+    // 🌟 บันทึก Log การปฏิเสธ
+    await this.activityLogsService.createLog(
+      userIdFromToken,
+      'REJECT_PROJECT',
+      `อาจารย์ปฏิเสธโครงการ: ${project.projName || 'ไม่ระบุชื่อ'}`
+    );
 
     return { message: 'ปฏิเสธเรียบร้อยแล้ว', project };
   }

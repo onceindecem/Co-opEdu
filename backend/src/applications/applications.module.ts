@@ -4,10 +4,11 @@ import { ApplicationsService } from './applications.service';
 import { ApplicationsController } from './applications.controller';
 import { Application } from './entities/application.entity'; // ⚠️ เช็ก Path ให้ตรงกับไฟล์ Entity ของคุณนะครับ
 import { AuthModule } from '../auth/auth.module';
+import { ActivityLogsModule } from '../activity-log/activity-log.module'; 
 
 @Module({
   imports: [
-    SequelizeModule.forFeature([Application,]),AuthModule // 🌟 เพิ่มบรรทัดนี้เพื่อให้ NestJS รู้จักตารางนี้
+    SequelizeModule.forFeature([Application,]),AuthModule,ActivityLogsModule // 🌟 เพิ่มบรรทัดนี้เพื่อให้ NestJS รู้จักตารางนี้
   ],
   controllers: [ApplicationsController],
   providers: [ApplicationsService],

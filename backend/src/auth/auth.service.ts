@@ -12,6 +12,7 @@ import { Company } from '../company/entities/company.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { Student } from '../student/entities/student.entity';
 import { Advisor } from '../advisor/entities/advisor.entity';
+import { ActivityLogsService } from 'src/activity-log/activity-log.service';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -26,7 +27,8 @@ export class AuthService {
     private sequelize: Sequelize,
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) { }
+    private activityLogsService: ActivityLogsService,
+  ) {}
 
   async registerUser(dto: RegisterUserDto) {
     // check if email already exists
@@ -180,7 +182,11 @@ export class AuthService {
     };
     const token = await this.jwtService.signAsync(payload);
 
-    console.log(token);
+    await this.activityLogsService.createLog(
+      user.userID,
+      'LOGIN_SUCCESS',
+      `เข้าสู่ระบบสำเร็จ (Email)`
+    );
 
     return {
       message: 'Login successful',
@@ -259,6 +265,14 @@ export class AuthService {
 
     // generate JWT token for the user
     const payload = { sub: user.userID, email: user.email, role: user.role };
+    const token = await this.jwtService.signAsync(payload);
+
+    await this.activityLogsService.createLog(
+      user.userID,
+      'LOGIN_SUCCESS',
+      `เข้าสู่ระบบสำเร็จ (Google SSO)`
+    );
+
     return {
       access_token: await this.jwtService.signAsync(payload),
       message: 'Login with Google successful',

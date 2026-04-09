@@ -5,9 +5,10 @@ import { ReportsController } from './report.controller';
 import { Report } from './entities/report.entity'; // path ไฟล์ model
 import { AuthModule } from 'src/auth/auth.module';
 import { Application } from 'src/applications/entities/application.entity';
+import { ActivityLogsModule } from 'src/activity-log/activity-log.module';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Report, Application]), AuthModule],
+  imports: [SequelizeModule.forFeature([Report, Application]), AuthModule, ActivityLogsModule],
   controllers: [ReportsController],
   providers: [ReportsService],
   exports: [ReportsService],
