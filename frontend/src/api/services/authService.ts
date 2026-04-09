@@ -1,6 +1,7 @@
 import api from '../axiosInstance';
+// import 'dotenv/config'
 
-const baseURL = api.defaults.baseURL;
+const baseURL = "http://localhost:3000";
 
 export const authService = {
   registerHR: (data: any) => api.post('/auth/register-hr', data),
