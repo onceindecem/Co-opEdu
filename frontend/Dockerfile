@@ -13,4 +13,4 @@ COPY . .
 RUN set -a && . ./.env.production && set +a && npm run build
 
 EXPOSE 5173
-CMD ["npm", "start"]
+CMD ["npm", "run", "start"]
