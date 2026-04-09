@@ -1,0 +1,6 @@
+projectKey=CoopEducation
+serverUrl=http://localhost:9000
+serverVersion=26.3.0.120487
+dashboardUrl=http://localhost:9000/dashboard?id=CoopEducation
+ceTaskId=6403ab63-2da0-4d99-b082-b1b247fd9250
+ceTaskUrl=http://localhost:9000/api/ce/task?id=6403ab63-2da0-4d99-b082-b1b247fd9250

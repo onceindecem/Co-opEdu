@@ -6,10 +6,11 @@ import { Project } from './entities/project.entity';
 import { ProjectManager } from 'src/project-manager/entities/project-manager.entity';
 import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path'; 
+import { extname } from 'path';
 import { Advisor } from '../advisor/entities/advisor.entity';
 import { AuthModule } from '../auth/auth.module';
 import { ActivityLogsModule } from '../activity-log/activity-log.module';
+import { randomUUID } from 'crypto';
 
 @Module({
   imports: [
@@ -19,15 +20,18 @@ import { ActivityLogsModule } from '../activity-log/activity-log.module';
 
     MulterModule.register({
       storage: diskStorage({
-        destination: './uploads', 
+        destination: './uploads',
         filename: (req, file, cb) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix = randomUUID();
           cb(null, `${file.fieldname}-${uniqueSuffix}${extname(file.originalname)}`);
         },
       }),
+      limits: {
+        fileSize: 10 * 1024 * 1024, // limit 10MB
+      },
     }),
   ],
   controllers: [ProjectsController],
   providers: [ProjectsService],
 })
-export class ProjectsModule {}
+export class ProjectsModule { }

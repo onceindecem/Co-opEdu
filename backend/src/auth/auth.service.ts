@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Student } from '../student/entities/student.entity';
 import { Advisor } from '../advisor/entities/advisor.entity';
 import { ActivityLogsService } from 'src/activity-log/activity-log.service';
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +28,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private activityLogsService: ActivityLogsService,
-  ) {}
+  ) { }
 
   async registerUser(dto: RegisterUserDto) {
     // check if email already exists
@@ -43,7 +43,7 @@ export class AuthService {
     const isPwned = await this.isPasswordPwned(dto.password);
     if (isPwned) {
       throw new HttpException(
-        'This password has been breached. Please change your password for security reasons.', 
+        'This password has been breached. Please change your password for security reasons.',
         HttpStatus.BAD_REQUEST
       );
     }
@@ -78,7 +78,7 @@ export class AuthService {
     const isPwned = await this.isPasswordPwned(dto.password);
     if (isPwned) {
       throw new HttpException(
-        'This password has been breached. Please change your password for security reasons.', 
+        'This password has been breached. Please change your password for security reasons.',
         HttpStatus.BAD_REQUEST
       );
     }
@@ -230,9 +230,9 @@ export class AuthService {
         user = await this.userModel.create({
           userID: newUserID,
           email: email,
-          passwordHash: 'GOOGLE_SSO_NO_PASSWORD',
+          passwordHash: null,
           role: role,
-          provider: 'GOOGLE', 
+          provider: 'GOOGLE',
         }, { transaction: t });
 
         if (isStudent) {
@@ -278,7 +278,7 @@ export class AuthService {
     try {
       // convert to SHA-1
       const hash = crypto.createHash('sha1').update(password).digest('hex').toUpperCase();
-      
+
       // get first 5 letter
       const prefix = hash.substring(0, 5);
       const suffix = hash.substring(5);
@@ -290,12 +290,12 @@ export class AuthService {
       }
 
       const text = await response.text();
-      
+
       // check suffix
       return text.includes(suffix);
     } catch (error) {
       console.error('Pwned password check failed:', error);
-      return false; 
+      return false;
     }
   }
 }
