@@ -92,7 +92,8 @@ The system uses JWT claims plus backend permission checks. Role checks are not t
 | :--- | :---: | :---: | :---: | :---: |
 | **Add/Edit Projects** | Yes | No | No | No |
 | **Request Project Deletion** | Yes | No | No | No |
-| **Apply/Reject Projects** | No | Yes | No | No |
+| **Apply Projects** | No | Yes | No | No |
+| **Cancle Projects Application** | No | Yes | No | No |
 | **Submit Progress** | No | Yes | No | No |
 | **Approve/Reject Projects** | No | No | Yes | No |
 | **Approve/Reject Students** | No | No | Yes | No |
@@ -105,10 +106,29 @@ The system uses JWT claims plus backend permission checks. Role checks are not t
 
 ### Database Access Control
 - **Same table, different permission:**
-    - `students` reads only their own applications with `WHERE student_id = ?`
-    - `advisor` and `admin` can view team/system summaries using all-access queries
+    - TABLE `USERS` every role can access their own data with `WHERE userID = ?` except `ADMIN` who can access to all users
+    - TABLE `REPORT` for `STUDENT` can access their own report only and `ADVISOR` can read all report of students in advise
+    - TABLE `PROJECT` for `STUDENT` can read only project that already be approved , `ADVISOR` can read and update project in advise or project that waiting for approval, `HR` can access their own project only
+    - TABLE `APPLICATION` `STUDENT` can read and delete only their own applications, `ADVISOR` can read and update only application of student in advice project 
 - **Different table by role:**
-    - only `admin` can access system logs from the `activity_logs` table
-    - `company` and `hr` access specific records from `company` and `hr` tables
+    - only `ADMIN` can access system logs from the `ACTIVITY_LOGS` table
+    - `STUDENT` access their personal data from `STUDENTS` table
+    - `ADVISOR` access their personal data from `ADVISOR` table
+    - `HR` access their personal data from `HR` table
+    - `HR` access specific records from `COMPANY` tables
+ 
+## Security Measures (OWASP Mapping)
 
+| Area | Implementation | OWASP Mapping |
+| --- | --- | --- |
+| Password hashing | Passwords are hashed with `bcrypt` only | OWASP Password Storage Cheat Sheet |
+| Salt | Salt is automatic through bcrypt | OWASP Password Storage Cheat Sheet |
+| No plaintext password | Passwords are never stored or returned in plaintext | OWASP Password Storage Cheat Sheet |
+| Password policy | New passwords require minimum length, common-password blocking, and bcrypt byte-limit protection | OWASP Authentication Cheat Sheet |
+| JWT verification | Backend verifies JWT signature, token type, and expiration on protected requests | OWASP Authentication Cheat Sheet |
+| Backend role enforcement | Role and permission checks are enforced in backend middleware | OWASP Authorization guidance |
+| HTTPS enforcement | Production rejects non-HTTPS requests and frontend disallows insecure backend URLs outside localhost | OWASP Transport Layer Protection |
+| Secret management | JWT secret and OAuth client secret are loaded from environment variables, not hardcoded in source code | OWASP Secrets Management |
+| SQL Injection prevention | GORM parameterized queries are used instead of string-built SQL | OWASP SQL Injection Prevention Cheat Sheet |
+| XSS prevention | React escapes rendered values by default and the app does not render user-provided HTML | OWASP XSS Prevention Cheat Sheet |
 ---
