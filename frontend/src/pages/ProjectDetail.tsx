@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
 import {
   ArrowLeft, Building2, MapPin, Users, Wrench,
   UserCheck, Phone, Mail, FileText, CheckCircle,
@@ -24,7 +23,6 @@ export default function ProjectDetail() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false); 
   const [showApproveModal, setShowApproveModal] = useState(false); 
   const [showRejectModal, setShowRejectModal] = useState(false); 
-  const [rejectReason, setRejectReason] = useState(''); 
 
   const { user, loading: authLoading } = useAuth();
   const currentRole = (user?.role || user?.userRole || user?.type)?.toUpperCase() || 'STUDENT';
@@ -368,7 +366,6 @@ export default function ProjectDetail() {
               <button 
                 className="btn-reject" 
                 onClick={() => {
-                  setRejectReason(''); 
                   setShowRejectModal(true);
                 }} 
                 style={{ 

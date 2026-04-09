@@ -44,7 +44,7 @@ const StudentView = ({ accountInfo, profileData }: { accountInfo: any, profileDa
   );
 };
 
-const CompanyView = ({ accountInfo, profileData }: { accountInfo: any, profileData: any }) => {
+const CompanyView = ({ profileData }: { accountInfo: any, profileData: any }) => {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
