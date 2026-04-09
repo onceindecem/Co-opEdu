@@ -1,14 +1,5 @@
 import api from '../axiosInstance';
 
-// 🌟 ถ้าใน axiosInstance ดึง Token ไว้แล้ว ลบก้อนนี้ออกได้เลยนะครับ
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token'); 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
 export const reportService = {
 
   // ------------------------------------

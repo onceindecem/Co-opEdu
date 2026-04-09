@@ -1,50 +1,32 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { Shield, Users, Activity, LogOut, UserCircle, ClipboardCheck } from 'lucide-react';
-import './Admin.css';
-import { useEffect, useState } from 'react';
-import { jwtDecode } from 'jwt-decode';
-import { authService } from '../../api/services/authService';
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import {
+  Shield,
+  Users,
+  Activity,
+  LogOut,
+  UserCircle,
+  ClipboardCheck,
+} from "lucide-react";
+import "./Admin.css";
+import { useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
+import { authService } from "../../api/services/authService";
+import { useAuth } from "../../context/AuthContext";
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [userInfo, setUserInfo] = useState({
-      name: "Loading...",
-    });
-  
-    useEffect(() => {
-      const fetchUserData = async () => {
-        try {
-          const token = localStorage.getItem("accessToken");
-          if (!token) {
-            navigate("/login");
-            return;
-          }
-  
-          // check role from token first
-          const decoded: any = jwtDecode(token);
-          if (decoded.role !== "ADMIN") {
-            navigate("/login");
-            return;
-          }
-  
-          // get profile data from backend to display name in layout
-          const response = await authService.getProfile();
-          const dbData = response.data;
-  
-          const fullName =
-            `${dbData.accountInfo.email}` || "Admin";
-  
-          setUserInfo({
-            name: fullName
-          });
-        } catch (error) {
-          console.error("Failed to fetch layout profile:", error);
-          navigate("/login");
-        }
-      };
-  
-      fetchUserData();
-    }, [navigate]);
+    name: "Loading...",
+  });
+
+  useEffect(() => {
+    if (user) {
+      setUserInfo({
+        name: user.email || "Admin",
+      });
+    }
+  }, [user]);
 
   // 🌟 State สำหรับควบคุม Popup Logout
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -52,14 +34,19 @@ export default function AdminLayout() {
   // 🌟 ฟังก์ชันจัดการ Logout
   const handleLogoutClick = () => setShowLogoutModal(true);
   const cancelLogout = () => setShowLogoutModal(false);
-  const confirmLogout = () => {
-    setShowLogoutModal(false);
-    navigate('/login');
+  const confirmLogout = async () => {
+    try {
+      await authService.logout(); // 👈 ยิงไปหา Backend เพื่อให้ clearCookie ทำงาน!
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setShowLogoutModal(false);
+      navigate('/login', { replace: true }); 
+    }
   };
 
   return (
     <div className="admin-container">
-
       {/* 🌟 Popup ยืนยันการออกจากระบบ */}
       {showLogoutModal && (
         <div className="logout-modal-overlay">
@@ -95,20 +82,26 @@ export default function AdminLayout() {
         <nav className="admin-nav">
           <NavLink
             to="/admin/users"
-            className={({ isActive }) => isActive ? "admin-nav-item active" : "admin-nav-item"}
+            className={({ isActive }) =>
+              isActive ? "admin-nav-item active" : "admin-nav-item"
+            }
           >
             <Users size={20} /> <span>จัดการผู้ใช้งาน</span>
           </NavLink>
           <NavLink
             to="/admin/logs"
-            className={({ isActive }) => isActive ? "admin-nav-item active" : "admin-nav-item"}
+            className={({ isActive }) =>
+              isActive ? "admin-nav-item active" : "admin-nav-item"
+            }
           >
             <Activity size={20} /> <span>บันทึกระบบ (Audit Logs)</span>
           </NavLink>
 
           <NavLink
             to="/admin/approve-delete"
-            className={({ isActive }) => isActive ? "admin-nav-item active" : "admin-nav-item"}
+            className={({ isActive }) =>
+              isActive ? "admin-nav-item active" : "admin-nav-item"
+            }
           >
             <ClipboardCheck size={20} /> <span>อนุมัติการลบโครงการ</span>
           </NavLink>

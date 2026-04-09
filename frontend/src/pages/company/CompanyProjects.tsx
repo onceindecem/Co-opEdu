@@ -32,27 +32,7 @@ export default function CompanyProjects() {
     useEffect(() => {
         const fetchProjects = async () => {
             try {
-                // 1. ดึง Token ออกมาจาก Local Storage
-                const token = localStorage.getItem('accessToken');
-                if (!token) {
-                    console.error("ไม่พบ Token กรุณาล็อกอินใหม่");
-                    setLoading(false);
-                    return;
-                }
-
-                // 2. แกะ Token เพื่อเอา coID ของคนที่ล็อกอิน
-                const decoded: any = jwtDecode(token);
-                const currentCoId = decoded.coID;
-
-                if (!currentCoId) {
-                    console.error("ไม่พบ coID ใน Token");
-                    setLoading(false);
-                    return;
-                }
-
-                // 3. 🌟 เปลี่ยนจาก getAll() เป็นฟังก์ชันที่ดึงเฉพาะของบริษัทนี้
-                // (ต้องไปเพิ่มฟังก์ชัน getByCompanyId ในไฟล์ projectService.ts ด้วยนะ)
-                const response = await projectService.getByCompanyId(currentCoId);
+                const response = await projectService.getHRProjects();
 
                 // นำข้อมูลที่ได้มาใส่ใน State
                 const formattedProjects = response.data.map((proj: any) => ({

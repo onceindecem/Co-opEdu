@@ -41,6 +41,8 @@ export class UsersService {
       });
     }
 
+    console.log(profileData);
+
     return {
       message: 'profile retrieved successfully',
       accountInfo: userBase,

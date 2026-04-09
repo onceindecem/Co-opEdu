@@ -4,6 +4,7 @@ import { Briefcase, Building2, LogOut } from "lucide-react";
 import "./Company.css";
 import { jwtDecode } from "jwt-decode";
 import { authService } from "../../api/services/authService";
+import { useAuth } from "../../context/AuthContext";
 
 export default function CompanyLayout() {
   const location = useLocation();
@@ -19,50 +20,31 @@ export default function CompanyLayout() {
   const isActive = (path: string) =>
     location.pathname.includes(path) ? "active" : "";
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-          navigate("/login");
-          return;
-        }
-
-        // check role from token first
-        const decoded: any = jwtDecode(token);
-        if (decoded.role !== "HR") {
-          navigate("/login");
-          return;
-        }
-
-        // get profile data from backend to display name in layout
-        const response = await authService.getProfile();
-        const dbData = response.data;
-
-        const fullName =
-          `${dbData.profile.hrFirstName} ${dbData.profile.hrLastName}` || "Company";
-
+  const { profile } = useAuth();
+  
+    useEffect(() => {
+      if (profile) {
         setUserInfo({
-          name: fullName
+          name: `${profile.hrFirstName} ${profile.hrLastName}` || "Company",
         });
-      } catch (error) {
-        console.error("Failed to fetch layout profile:", error);
-        navigate("/login");
       }
-    };
-
-    fetchUserData();
-  }, [navigate]);
+    }, [profile]);
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
   };
 
-  const confirmLogout = () => {
-    setShowLogoutModal(false);
-    navigate("/login");
+  const confirmLogout = async () => {
+    try {
+      await authService.logout(); // 👈 ยิงไปหา Backend เพื่อให้ clearCookie ทำงาน!
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setShowLogoutModal(false);
+      navigate('/login', { replace: true }); 
+    }
   };
-
+  
   const cancelLogout = () => {
     setShowLogoutModal(false);
   };

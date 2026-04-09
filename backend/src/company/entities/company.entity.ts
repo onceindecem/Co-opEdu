@@ -44,5 +44,5 @@ export class Company extends Model {
   // @HasMany(() => Project)
   // projects: Project[];
   @HasMany(() => HR)
-  hrs: HR[];
+  hrs?: HR[];
 }

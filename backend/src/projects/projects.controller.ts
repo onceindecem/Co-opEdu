@@ -32,7 +32,7 @@ export class ProjectsController {
     return await this.projectsService.getPendingDeleteRequests();
   }
 
-@Patch(':id/approve-delete')
+  @Patch(':id/approve-delete')
   @UseGuards(JwtAuthGuard)
   async approveDelete(@Param('id') id: string, @Req() req: any) {
     // ดึง ID จาก Token (เช็กชื่อฟิลด์ให้ตรงกับที่ console.log ออกมา)
@@ -46,14 +46,14 @@ export class ProjectsController {
   }
 
   // 🌟 3. API ปฏิเสธการลบ
- @Patch(':id/reject-delete')
+  @Patch(':id/reject-delete')
   @UseGuards(JwtAuthGuard)
   async rejectDelete(@Param('id') id: string, @Req() req: any) {
     // 🌟 1. ปริ้นดูเลยว่า Token ส่งอะไรมาให้เราบ้าง!
-    console.log('🕵️‍♂️ ข้อมูล User ที่กดปฏิเสธ:', req.user); 
+    console.log('🕵️‍♂️ ข้อมูล User ที่กดปฏิเสธ:', req.user);
 
     // 🌟 2. ลองดึงจากหลายๆ ชื่อที่คนนิยมตั้ง (เดี๋ยวเราค่อยมาลบอันที่ผิดออกทีหลัง)
-    const adminId = req.user?.sub || req.user?.id || req.user?.userID; 
+    const adminId = req.user?.sub || req.user?.id || req.user?.userID;
 
     // 🌟 3. ถ้าหา ID ไม่เจอจริงๆ ให้เด้ง Error ไปเลย ไม่ยอมให้บันทึกมั่วๆ
     if (!adminId) {
@@ -63,25 +63,25 @@ export class ProjectsController {
     return await this.projectsService.rejectDeleteRequest(id, adminId);
   }
 
- // 🌟 4. API สำหรับ HR กดยื่นคำขอลบ
+  // 🌟 4. API สำหรับ HR กดยื่นคำขอลบ
   @Patch(':id/request-delete')
   @UseGuards(JwtAuthGuard)
   async requestDelete(
     @Param('id') id: string,
     @Body('reason') reason: string,
-    @Req() req: any 
+    @Req() req: any
   ) {
     // 🌟 1. ปริ้นดูเลยว่า Token ของ HR ส่งอะไรมา
-    console.log('🕵️‍♂️ ข้อมูล User (HR) ที่กดขอลบ:', req.user); 
+    console.log('🕵️‍♂️ ข้อมูล User (HR) ที่กดขอลบ:', req.user);
 
     // 🌟 2. ดึงจากค่าที่มีโอกาสเป็นไปได้ (ลบไอดี 0000 ทิ้งไปเลย!)
-    const userId = req.user?.sub || req.user?.id || req.user?.userID; 
+    const userId = req.user?.sub || req.user?.id || req.user?.userID;
 
     // 🌟 3. ถ้าไม่มี ID จริงๆ เด้ง Error ไปเลย
     if (!userId) {
       throw new UnauthorizedException('ไม่พบ ID ของผู้ใช้งาน กรุณาล็อกอินใหม่');
     }
-    
+
     // 🌟 4. ส่ง ID ตัวจริงเสียงจริงไปให้ Service
     return await this.projectsService.requestDeleteProject(id, userId, reason);
   }
@@ -119,17 +119,15 @@ export class ProjectsController {
     return this.projectsService.findMyProjects();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id/approve')
   approveProject(
     @Param('id') id: string,
-    @Body('advisorId') advisorId: string
+    @Req() req
   ) {
-    // 🌟 วางกับดัก! ดูว่าข้อมูลวิ่งมาถึง NestJS ไหม
-    console.log('✅ ก๊อกๆ! มีการเรียก API อนุมัติโปรเจกต์:', id);
-    console.log('✅ รหัสอาจารย์ที่ส่งมาคือ:', advisorId);
-
-    return this.projectsService.approveProject(id, advisorId);
+    return this.projectsService.approveProject(id, req.user.sub);
   }
+
   @Patch(':id/reject')
   async rejectProject(@Param('id') id: string) {
     return this.projectsService.rejectProject(id);

@@ -4,6 +4,7 @@ import { Search, Briefcase, FileText, User, LogOut } from 'lucide-react';
 import './StudentLayout.css';
 import { authService } from '../../api/services/authService';
 import { jwtDecode } from 'jwt-decode';
+import { useAuth } from '../../context/AuthContext';
 
 export default function StudentLayout() {
   const location = useLocation();
@@ -18,51 +19,30 @@ export default function StudentLayout() {
 
   const isActive = (path: string) => location.pathname.includes(path) ? 'active' : '';
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-          navigate('/login');
-          return;
-        }
-
-        // check role from token first
-        const decoded: any = jwtDecode(token);
-        if (decoded.role !== 'STUDENT') {
-          navigate('/login'); 
-          return;
-        }
-
-        // get profile data from backend to display name in layout
-        const response = await authService.getProfile();
-        const dbData = response.data;
-
-        const fullName =  `${dbData.profile.firstName} ${dbData.profile.lastName}` ||'Student';
-
-        const initials = `${dbData.profile.firstName?.[0]}${dbData.profile.lastName?.[0]}` || 'ST';
-
-        setUserInfo({
-          name: fullName,
-          avatar: initials
+  const { profile } = useAuth();
+    
+      useEffect(() => {
+        if (profile) {
+          setUserInfo({
+          name: `${profile.firstName} ${profile.lastName}` ||'Student',
+          avatar: `${profile.firstName?.[0]}${profile.lastName?.[0]}` || 'ST'
         });
-
-      } catch (error) {
-        console.error("Failed to fetch layout profile:", error);
-        navigate('/login');
-      }
-    };
-
-    fetchUserData();
-  }, [navigate]);
+        }
+      }, [profile]);
 
   const handleLogoutClick = () => {
     setShowLogoutModal(true);
   };
 
-  const confirmLogout = () => {
-    setShowLogoutModal(false);
-    navigate('/login');
+  const confirmLogout = async () => {
+    try {
+      await authService.logout(); // 👈 ยิงไปหา Backend เพื่อให้ clearCookie ทำงาน!
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      setShowLogoutModal(false);
+      navigate('/login', { replace: true }); 
+    }
   };
 
   const cancelLogout = () => {

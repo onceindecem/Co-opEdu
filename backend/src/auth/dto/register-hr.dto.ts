@@ -4,38 +4,39 @@ export class RegisterHRDto {
   // login info
   @IsEmail({}, { message: 'email format is invalid' })
   @IsNotEmpty({ message: 'email is required' })
-  email: string;
+  email!: string;
 
   @IsString()
-  @MinLength(6, { message: 'password must be at least 6 characters long' })
+  @MinLength(15, { message: 'password must be at least 15 characters long without MFA' })
+  @MaxLength(128, { message: 'password is too long' }) // รองรับ Passphrase
   @IsNotEmpty({ message: 'password is required' })
-  password: string; 
+  password!: string;
 
   // hr info
   @IsString()
   @IsNotEmpty({ message: 'first name is required' })
   @MaxLength(100, { message: 'first name is too long' })
-  hrFirstName: string;
+  hrFirstName!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'last name is required' })
   @MaxLength(100, { message: 'last name is too long' })
-  hrLastName: string;
+  hrLastName!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'position is required' })
-  hrPosition: string;
+  hrPosition!: string;
 
   @IsString()
   @IsNotEmpty()
   @MinLength(9, { message: 'telephone must be at least 9 characters long' })
   @MaxLength(10, { message: 'telephone must be at most 10 characters long' })
-  hrTel: string;
+  hrTel!: string;
 
   // company info
   @IsString()
   @IsNotEmpty({ message: 'company name (TH) is required' })
-  coNameTH: string;
+  coNameTH!: string;
 
   @IsString()
   @IsOptional()
@@ -43,15 +44,15 @@ export class RegisterHRDto {
 
   @IsEmail({}, { message: 'company email format is invalid' })
   @IsNotEmpty({ message: 'company email is required' })
-  coEmail: string;
+  coEmail!: string;
 
   @IsString()
   @IsNotEmpty({ message: 'company telephone is required' })
   @MinLength(9, { message: 'telephone must be at least 9 characters long' })
   @MaxLength(10, { message: 'telephone must be at most 10 characters long' })
-  coTel: string;
+  coTel!: string;
 
   @IsString()
   @IsNotEmpty()
-  coAddr: string;
+  coAddr!: string;
 }

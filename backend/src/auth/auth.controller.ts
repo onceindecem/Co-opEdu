@@ -6,6 +6,7 @@ import { JwtAuthGuard } from './jwt.guard';
 import { AuthGuard } from '@nestjs/passport';
 import { RegisterUserDto } from './dto/register-user.dto';
 import type { Response } from 'express';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 @Controller('auth')
 export class AuthController {
@@ -23,9 +24,31 @@ export class AuthController {
     return this.authService.registerHR(registerHRDto);
   }
 
+  @UseGuards(ThrottlerGuard)
   @Post('login')
-  login(@Body() loginData: any) {
-    return this.authService.login(loginData);
+  async login(@Body() loginData: any,
+    @Res({ passthrough: true }) res: Response) {
+      // call service to check user and create token
+    const result = await this.authService.login(loginData);
+
+    // put token in cookie
+    res.cookie('accessToken', result.access_token, {
+      httpOnly: true, // XSS protect
+      secure: process.env.NODE_ENV === 'production', // https only
+      sameSite: 'lax', // CSRF protect
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+    return {
+      message: 'Login successful',
+      role: result.role,
+      user: result.user
+    };
+  }
+
+  @Post('logout')
+  async logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('accessToken');
+    return { message: 'Logged out successfully' };
   }
 
   // login with Google
@@ -38,7 +61,14 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req, @Res() res: Response) {
     const result = await this.authService.googleLogin(req.user);
-    const frontendUrl = `http://localhost:5173/login?token=${result.access_token}&role=${result.role}`;
+    res.cookie('accessToken', result.access_token, {
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === 'production', 
+      sameSite: 'lax', 
+      maxAge: 24 * 60 * 60 * 1000, 
+    });
+
+    const frontendUrl = `http://localhost:5173/login?role=${result.role}`;
     return res.redirect(frontendUrl);
   }
 }

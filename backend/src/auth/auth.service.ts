@@ -12,6 +12,7 @@ import { Company } from '../company/entities/company.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { Student } from '../student/entities/student.entity';
 import { Advisor } from '../advisor/entities/advisor.entity';
+import * as crypto from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -25,16 +26,24 @@ export class AuthService {
     private sequelize: Sequelize,
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
-  async registerUser(dto: RegisterUserDto) { 
+  async registerUser(dto: RegisterUserDto) {
     // check if email already exists
-    const existingUser = await this.userModel.findOne({ 
-      where: { email: dto.email } 
+    const existingUser = await this.userModel.findOne({
+      where: { email: dto.email }
     });
 
     if (existingUser) {
       throw new HttpException('Email already exists', HttpStatus.BAD_REQUEST);
+    }
+
+    const isPwned = await this.isPasswordPwned(dto.password);
+    if (isPwned) {
+      throw new HttpException(
+        'This password has been breached. Please change your password for security reasons.', 
+        HttpStatus.BAD_REQUEST
+      );
     }
 
     // hash the password before saving to database
@@ -45,8 +54,8 @@ export class AuthService {
       userID: uuidv4(),
       email: dto.email,
       passwordHash: hashedPassword,
-      role: dto.role, 
-      provider: 'LOCAL', 
+      role: dto.role,
+      provider: 'LOCAL',
     });
 
     return {
@@ -62,6 +71,14 @@ export class AuthService {
     const existingUser = await this.userModel.findOne({ where: { email: dto.email } });
     if (existingUser) {
       throw new HttpException('Email already exists', HttpStatus.BAD_REQUEST);
+    }
+
+    const isPwned = await this.isPasswordPwned(dto.password);
+    if (isPwned) {
+      throw new HttpException(
+        'This password has been breached. Please change your password for security reasons.', 
+        HttpStatus.BAD_REQUEST
+      );
     }
 
     // hash password
@@ -100,8 +117,8 @@ export class AuthService {
       // create HR profile connected to User and Company
       await this.hrModel.create(
         {
-          userID: newUser.userID, 
-          coID: newCompanyID,   
+          userID: newUser.userID,
+          coID: newCompanyID,
           hrFirstName: dto.hrFirstName,
           hrLastName: dto.hrLastName,
           hrPosition: dto.hrPosition,
@@ -124,18 +141,24 @@ export class AuthService {
 
   async login(loginData: any) {
     const { email, password } = loginData;
+    console.log('--- LOGIN ATTEMPT ---');
+    console.log('1. Email received:', email);
+    console.log('2. Password received:', password);
+
     const user = await this.usersService.findByEmail(email);
+    console.log('3. User found in DB?:', user ? 'YES' : 'NO');
 
     if (!user) {
       throw new HttpException('email or password is incorrect', HttpStatus.UNAUTHORIZED);
     }
 
+    console.log('4. Password Hash in DB:', user.passwordHash);
     if (!user.passwordHash || !password) {
       throw new HttpException('email or password is incorrect', HttpStatus.UNAUTHORIZED);
     }
 
     const isPasswordMatching = await bcrypt.compare(password, user.passwordHash);
-
+    console.log('5. Is password matching?:', isPasswordMatching);
     if (!isPasswordMatching) {
       throw new HttpException('email or password is incorrect', HttpStatus.UNAUTHORIZED);
     }
@@ -143,19 +166,21 @@ export class AuthService {
     let companyId: string | null = null;
 
     if (user.role === 'HR') {
-      const hrProfile = await this.hrModel.findOne({ 
-        where: { userID: user.userID } 
+      const hrProfile = await this.hrModel.findOne({
+        where: { userID: user.userID }
       });
       companyId = hrProfile ? hrProfile.coID : null;
     }
 
-    const payload = { 
-      sub: user.userID,  
-      email: user.email, 
+    const payload = {
+      sub: user.userID,
+      email: user.email,
       role: user.role,
       coID: companyId
     };
     const token = await this.jwtService.signAsync(payload);
+
+    console.log(token);
 
     return {
       message: 'Login successful',
@@ -184,27 +209,33 @@ export class AuthService {
     // check if user already exists in our database
     let user = await this.userModel.findOne({ where: { email } });
 
-    // if not, create a new user with role STUDENT and provider GOOGLE, and also create a Student profile
-    if (!user) {
+    if (user) {
+      if (user.provider === 'LOCAL') {
+        await user.update({ provider: 'LOCAL_AND_GOOGLE' });
+      }
+      else if (user.provider === 'GOOGLE' || user.provider === 'LOCAL_AND_GOOGLE') {
+      }
+    }
+    else {
+      // if not, create a new user with role STUDENT and provider GOOGLE, and also create a Student profile
       const newUserID = uuidv4();
       const prefix = email.split('@')[0];
 
-      const isStudent = /^[0-9]+$/.test(prefix); 
+      const isStudent = /^[0-9]+$/.test(prefix);
       const role = isStudent ? 'STUDENT' : 'ADVISOR';
 
       const t = await this.sequelize.transaction();
       try {
-        // create User with a placeholder password 
+        // create new user
         user = await this.userModel.create({
           userID: newUserID,
           email: email,
           passwordHash: 'GOOGLE_SSO_NO_PASSWORD',
-          role: role, 
-          provider: 'GOOGLE',
+          role: role,
+          provider: 'GOOGLE', 
         }, { transaction: t });
 
         if (isStudent) {
-          // create Student profile linked to the new User
           await this.studentModel.create({
             userID: newUserID,
             studentID: prefix,
@@ -212,7 +243,6 @@ export class AuthService {
             lastName: lastName,
           }, { transaction: t });
         } else {
-          // create Advisor profile linked to the new User
           await this.advisorModel.create({
             userID: newUserID,
             firstName: firstName,
@@ -234,5 +264,30 @@ export class AuthService {
       message: 'Login with Google successful',
       role: user.role
     };
+  }
+
+  private async isPasswordPwned(password: string): Promise<boolean> {
+    try {
+      // convert to SHA-1
+      const hash = crypto.createHash('sha1').update(password).digest('hex').toUpperCase();
+      
+      // get first 5 letter
+      const prefix = hash.substring(0, 5);
+      const suffix = hash.substring(5);
+
+      // api fetch
+      const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
+      if (!response.ok) {
+        return false;
+      }
+
+      const text = await response.text();
+      
+      // check suffix
+      return text.includes(suffix);
+    } catch (error) {
+      console.error('Pwned password check failed:', error);
+      return false; 
+    }
   }
 }
