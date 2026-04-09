@@ -1,5 +1,4 @@
-// create-user.dto.ts
-import { IsEmail, IsNotEmpty, IsString, MinLength, IsEnum, IsOptional } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, MinLength, IsEnum, IsOptional, MaxLength } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -12,7 +11,8 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(6, { message: 'รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร' })
+  @MinLength(15, { message: 'password must be at least 15 characters' })
+  @MaxLength(128, { message: 'password must be at most 128 characters' })
   password!: string;
 
   @IsString()

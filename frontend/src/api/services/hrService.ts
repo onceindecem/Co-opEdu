@@ -1,4 +1,3 @@
-// src/api/services/hrService.ts
 import axiosInstance from '../axiosInstance'; 
 
 export const hrService = {

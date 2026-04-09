@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import "./Admin.css";
 import { useEffect, useState } from "react";
-import { jwtDecode } from "jwt-decode";
 import { authService } from "../../api/services/authService";
 import { useAuth } from "../../context/AuthContext";
 
@@ -28,15 +27,13 @@ export default function AdminLayout() {
     }
   }, [user]);
 
-  // 🌟 State สำหรับควบคุม Popup Logout
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // 🌟 ฟังก์ชันจัดการ Logout
   const handleLogoutClick = () => setShowLogoutModal(true);
   const cancelLogout = () => setShowLogoutModal(false);
   const confirmLogout = async () => {
     try {
-      await authService.logout(); // 👈 ยิงไปหา Backend เพื่อให้ clearCookie ทำงาน!
+      await authService.logout(); 
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
@@ -47,7 +44,6 @@ export default function AdminLayout() {
 
   return (
     <div className="admin-container">
-      {/* 🌟 Popup ยืนยันการออกจากระบบ */}
       {showLogoutModal && (
         <div className="logout-modal-overlay">
           <div className="logout-modal-content">
@@ -115,7 +111,6 @@ export default function AdminLayout() {
               <p className="dept">Administrator</p>
             </div>
           </div>
-          {/* 🌟 เปลี่ยนมาใช้ฟังก์ชัน handleLogoutClick */}
           <button className="btn-logout-sidebar" onClick={handleLogoutClick}>
             <LogOut size={18} /> <span>ออกจากระบบ</span>
           </button>

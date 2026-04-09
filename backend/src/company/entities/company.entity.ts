@@ -7,13 +7,11 @@ import {
   HasMany,
 } from 'sequelize-typescript';
 import { HR } from 'src/hr/entities/hr.entity';
-
-// TODO: รอปลดคอมเมนต์เมื่อนำไปเชื่อมกับตาราง Project
-// import { Project } from './project.model'; 
+import { Project } from 'src/projects/entities/project.entity'; 
 
 @Table({
   tableName: 'Company',
-  timestamps: false, // ปิดการสร้าง createAt/updateAt อัตโนมัติ เพราะใน SQL ไม่ได้ระบุไว้
+  timestamps: false,
 })
 export class Company extends Model {
   @PrimaryKey
@@ -35,14 +33,9 @@ export class Company extends Model {
   @Column({ type: DataType.TEXT, allowNull: false })
   declare coAddr: string;
 
-  /* ==============================================
-     ส่วนของการทำ Associations (ความสัมพันธ์ตาราง)
-     ปลดคอมเมนต์เมื่อคุณพร้อมเชื่อมกับตาราง Project
-  ============================================== */
-
-  // บริษัท 1 แห่ง สามารถมีได้หลายโปรเจกต์ (1-to-Many)
-  // @HasMany(() => Project)
-  // projects: Project[];
+  @HasMany(() => Project)
+  projects!: Project[];
+  
   @HasMany(() => HR)
   hrs?: HR[];
 }

@@ -1,24 +1,28 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import './Applications.css';
-import { Trash2, Clock, CheckCircle, XCircle, AlertTriangle, Loader2 } from 'lucide-react';
-// 🌟 Import applicationService เข้ามา
-import { applicationService } from '../../api/services/applicationService';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import "./Applications.css";
+import {
+  Trash2,
+  Clock,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
+import { applicationService } from "../../api/services/applicationService";
 
 export default function StudentApplications() {
   const navigate = useNavigate();
   const [applications, setApplications] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true); // เพิ่ม state loading
-  
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null); // เปลี่ยนเป็น string เพราะ UUID ใน DB
+  const [loading, setLoading] = useState(true);
 
-  // 🌟 1. ฟังก์ชันดึงข้อมูลจาก API (ใช้ JWT ในตัว Service)
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
   const fetchApplications = async () => {
     try {
       setLoading(true);
       const res = await applicationService.getMyApplications();
-      console.log("📦 ข้อมูลที่ได้จาก API:", res.data);
       setApplications(res.data);
     } catch (err) {
       console.error("Error loading applications:", err);
@@ -36,13 +40,13 @@ export default function StudentApplications() {
     setShowDeleteModal(true);
   };
 
-  // 🌟 2. ฟังก์ชันยืนยันการลบ (ยิง API ไปที่ Backend)
   const confirmDelete = async () => {
     if (deleteTargetId !== null) {
       try {
-        await applicationService.deleteApplication(deleteTargetId); // เรียก API ลบ
-        // หลังลบสำเร็จ ให้ดึงข้อมูลใหม่ หรือ filter ออกจาก state
-        setApplications(prev => prev.filter(app => (app.appID || app.id) !== deleteTargetId));
+        await applicationService.deleteApplication(deleteTargetId);
+        setApplications((prev) =>
+          prev.filter((app) => (app.appID || app.id) !== deleteTargetId),
+        );
       } catch (err) {
         alert("ไม่สามารถยกเลิกการสมัครได้ในขณะนี้");
         console.error("Delete error:", err);
@@ -71,7 +75,11 @@ export default function StudentApplications() {
               <AlertTriangle size={48} color="#ef4444" />
             </div>
             <h2>ยืนยันการยกเลิก</h2>
-            <p>คุณต้องการยกเลิกการสมัครโครงการนี้ใช่หรือไม่?<br/>หากยกเลิกแล้วจะไม่สามารถกู้คืนได้</p>
+            <p>
+              คุณต้องการยกเลิกการสมัครโครงการนี้ใช่หรือไม่?
+              <br />
+              หากยกเลิกแล้วจะไม่สามารถกู้คืนได้
+            </p>
             <div className="delete-modal-actions">
               <button onClick={cancelDelete} className="btn-cancel-modal">
                 ปิดหน้าต่าง
@@ -90,25 +98,24 @@ export default function StudentApplications() {
         </div>
       ) : (
         <div className="apps-list">
-         {applications.map((app) => {
-            // 🌟 1. ใช้ appID ให้ตรงกับข้อมูลที่ส่งมา
-            const appId = app.appID; 
+          {applications.map((app) => {
+            const appId = app.appID;
 
-            // 🌟 2. ดึงชื่อ (ถ้า Step 1 ทำถูกต้อง ข้อมูล Project จะโผล่มาตรงนี้ครับ)
             const projectTitle = app.project?.projName || "ไม่ระบุชื่อโครงการ";
-            const companyName = app.project?.company?.coNameTH || "ไม่ระบุชื่อบริษัท";
-            
-            // 🌟 3. เช็กวันที่ (ถ้าใน DB คุณใช้ชื่ออื่น เช่น appDate ให้แก้ตรงนี้นะครับ)
-           const applyDate = app.createAt ? new Date(app.createAt).toLocaleDateString('th-TH') : "ไม่ระบุวันที่";
+            const companyName =
+              app.project?.company?.coNameTH || "ไม่ระบุชื่อบริษัท";
+
+            const applyDate = app.createAt
+              ? new Date(app.createAt).toLocaleDateString("th-TH")
+              : "ไม่ระบุวันที่";
 
             return (
               <div key={appId} className="app-item-card">
                 <div className="card-top-row">
                   <h3>{projectTitle}</h3>
-                  {/* ใช้ app.appStat แทน app.status */}
                   {app.appStat !== "APPROVED" && (
                     <button
-                      className="btn-icon-delete" 
+                      className="btn-icon-delete"
                       onClick={() => handleDeleteClick(appId)}
                       title="ยกเลิกการสมัคร"
                     >
@@ -123,15 +130,22 @@ export default function StudentApplications() {
                   <span className="app-date">สมัครเมื่อ: {applyDate}</span>
 
                   <div className="app-status-zone">
-                    {/* 🌟 4. เปลี่ยนมาเช็กจาก appStat แทน status */}
                     {app.appStat === "PENDING" && (
-                      <span className="status-tag pending"><Clock size={16} /> รอยืนยัน</span>
+                      <span className="status-tag pending">
+                        <Clock size={16} /> รอยืนยัน
+                      </span>
                     )}
-                    {(app.appStat === "APPROVED" || app.appStat === "ACCEPTED") && (
-                      <span className="status-tag approved"><CheckCircle size={16} /> ผ่านการคัดเลือก</span>
+                    {(app.appStat === "APPROVED" ||
+                      app.appStat === "ACCEPTED") && (
+                      <span className="status-tag approved">
+                        <CheckCircle size={16} /> ผ่านการคัดเลือก
+                      </span>
                     )}
-                    {(app.appStat === "REJECTED" || app.appStat === "DENIED") && (
-                      <span className="status-tag rejected"><XCircle size={16} /> ไม่ผ่าน</span>
+                    {(app.appStat === "REJECTED" ||
+                      app.appStat === "DENIED") && (
+                      <span className="status-tag rejected">
+                        <XCircle size={16} /> ไม่ผ่าน
+                      </span>
                     )}
                   </div>
                 </div>
@@ -142,7 +156,7 @@ export default function StudentApplications() {
             <div className="empty-state">
               <p>ยังไม่มีรายการสมัครโครงการ</p>
               <button
-                onClick={() => navigate('/student/projects')}
+                onClick={() => navigate("/student/projects")}
                 className="btn-go-find"
               >
                 ไปหาโครงการเลย

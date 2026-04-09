@@ -8,7 +8,6 @@ import {
   PrimaryKey 
 } from 'sequelize-typescript';
 
-// ⚠️ เช็ก Path ให้ตรงกับ Entity ของคุณ
 import { User } from 'src/users/entities/user.entity'; 
 import { Project } from 'src/projects/entities/project.entity';
 
@@ -53,10 +52,6 @@ export class Application extends Model {
     defaultValue: 'WAITING',
   })
   declare hiredStat: string;
-
-  // ==========================================
-  // ความสัมพันธ์ (Associations)
-  // ==========================================
   
   @BelongsTo(() => User)
   declare user: User;

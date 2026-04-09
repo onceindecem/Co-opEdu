@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react';
 import './Projects.css';
-import { Search, MapPin, Briefcase, Loader2, CheckCircle } from 'lucide-react'; // 👈 เพิ่ม CheckCircle
+import { Search, MapPin, Briefcase, Loader2, CheckCircle } from 'lucide-react'; 
 import { useNavigate } from 'react-router-dom';
 import { projectService } from '../../api/services/projectService';
-// 🌟 1. อย่าลืม Import Service ของ Application เข้ามาด้วย
 import { applicationService } from '../../api/services/applicationService'; 
 
 export default function StudentProjects() {
   const navigate = useNavigate();
   
   const [projects, setProjects] = useState<any[]>([]);
-  // 🌟 2. เพิ่ม State เก็บ ID ของโปรเจกต์ที่สมัครไปแล้ว
   const [appliedProjectIds, setAppliedProjectIds] = useState<string[]>([]); 
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,18 +16,16 @@ export default function StudentProjects() {
  const fetchData = async () => {
   setLoading(true);
   
-  // 1. ดึงโปรเจกต์ (อันนี้ต้องขึ้น)
   try {
     const projectsRes = await projectService.getAll();
     const approved = projectsRes.data.filter((p: any) => 
-      p.projStat?.toUpperCase() === 'APPROVED' // 🌟 เช็กตัวพิมพ์ใหญ่
+      p.projStat?.toUpperCase() === 'APPROVED'
     );
     setProjects(approved);
   } catch (err) {
     console.error("Projects Load Failed", err);
   }
 
-  // 2. ดึงประวัติการสมัคร (ถ้าอันนี้ 401 อันบนก็ยังทำงานได้)
   try {
     const appsRes = await applicationService.getMyApplications();
     setAppliedProjectIds(appsRes.data.map((a: any) => a.projID));
@@ -41,7 +37,7 @@ export default function StudentProjects() {
 };
 
   useEffect(() => {
-    fetchData(); // เรียกใช้ fetchData แทนอันเดิม
+    fetchData();
   }, []);
 
   const filteredProjects = projects.filter(p => 

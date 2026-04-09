@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { Briefcase, Building2, LogOut } from "lucide-react";
 import "./Company.css";
-import { jwtDecode } from "jwt-decode";
 import { authService } from "../../api/services/authService";
 import { useAuth } from "../../context/AuthContext";
 
@@ -36,7 +35,7 @@ export default function CompanyLayout() {
 
   const confirmLogout = async () => {
     try {
-      await authService.logout(); // 👈 ยิงไปหา Backend เพื่อให้ clearCookie ทำงาน!
+      await authService.logout();
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {

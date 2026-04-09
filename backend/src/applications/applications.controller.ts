@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApplicationsService } from './applications.service';
 import { CreateApplicationDto } from './dto/create-application.dto';
-import { JwtAuthGuard } from 'src/auth/jwt.guard'; // ⚠️ เช็ก Path ให้เป๊ะนะครับ
+import { JwtAuthGuard } from 'src/auth/jwt.guard'; 
 import { Roles } from 'src/auth/roles.decorator';
 import { RolesGuard } from 'src/auth/roles.guard';
 
@@ -19,19 +19,18 @@ import { RolesGuard } from 'src/auth/roles.guard';
 export class ApplicationsController {
   constructor(private readonly applicationsService: ApplicationsService) {}
 
-  // 🌟 1. เพิ่ม Route นี้ และ "ต้อง" อยู่ก่อน @Get(':id')
-  @UseGuards(JwtAuthGuard,RolesGuard) // 🌟 ป้องกัน Route นี้ด้วย JWT Guard
+  @UseGuards(JwtAuthGuard,RolesGuard)
   @Get('my-applications')
-  @Roles('STUDENT') // 🌟 ถ้าอยากจำกัดให้เฉพาะ STUDENT เท่านั้นที่เข้าถึงได้
+  @Roles('STUDENT')
   async findMyApplications(@Request() req) {
     const userId = req.user.sub; 
     return this.applicationsService.findMyApplications(userId);
   }
 
- @UseGuards(JwtAuthGuard, RolesGuard) // อย่าลืมใส่ Guard เพราะต้องใช้ JWT
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Get('project/:projectId')
+  @Roles('ADVISOR')
   async getApplicationsByProject(@Param('projectId') projectId: string) {
-    console.log('ยิงเข้า Route project/:projectId สำเร็จ!'); // ใส่ Log ไว้เช็กที่ Terminal ของ NestJS
     return this.applicationsService.findByProjectId(projectId);
   }
 
@@ -47,36 +46,25 @@ export class ApplicationsController {
     return this.applicationsService.create(applicationData);
   }
 
-  @Get()
-  findAll() {
-    return this.applicationsService.findAll();
-  }
-
-  // ⚠️ อันนี้ต้องอยู่ล่างสุดของกลุ่ม Get
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.applicationsService.findOne(id);
-  }
- @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('STUDENT')
   @Delete(':id')
   remove(@Param('id') id: string, @Request() req) {
     const currentUserId = req.user?.sub || req.user?.userID; 
-    return this.applicationsService.remove(id, currentUserId); // 🌟 ส่ง ID ไปให้ Service
+    return this.applicationsService.remove(id, currentUserId);
   }
 
-  // อัปเดตสถานะการสมัคร (appStat)
-@UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADVISOR') // 🌟 เปลี่ยนจาก HR เป็น ADVISOR
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADVISOR')
   @Patch(':id/status')
   async updateAppStatus(@Param('id') id: string, @Body('status') status: string, @Request() req) {
     const advisorId = req.user?.sub || req.user?.userID; 
     return await this.applicationsService.updateAppStatus(id, status, advisorId);
   }
 
-  // อัปเดตผลการจ้างงาน (hiredStat)
-@UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADVISOR') // 🌟 เปลี่ยนจาก HR เป็น ADVISOR
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADVISOR')
   @Patch(':id/hired-status')
   async updateHiredStatus(@Param('id') id: string, @Body('hiredStat') hiredStat: string, @Request() req) {
     const advisorId = req.user?.sub || req.user?.userID; 

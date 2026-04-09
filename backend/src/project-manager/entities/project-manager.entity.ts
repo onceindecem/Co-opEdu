@@ -9,9 +9,8 @@ import {
   HasMany,
 } from 'sequelize-typescript';
 
-// TODO: ปลดคอมเมนต์เมื่อสร้าง Model Company และ Project เสร็จแล้ว
-// import { Company } from './company.model';
-// import { Project } from './project.model';
+import { Company } from 'src/company/entities/company.entity';
+import { Project } from 'src/projects/entities/project.entity';
 @Table({
   tableName: 'ProjectManager',
   timestamps: false,

@@ -13,18 +13,16 @@ export enum ReportStatus {
 export class CreateReportDto {
   @IsUUID()
   @IsNotEmpty()
-  appID!: string; // 🌟 เติม ! ตรงนี้
+  appID!: string; 
 
   @IsString()
   @IsNotEmpty()
-  repTopic!: string; // 🌟 เติม ! ตรงนี้
+  repTopic!: string; 
 
   @IsEnum(ReportStatus)
   @IsNotEmpty()
-  repStat!: ReportStatus; // 🌟 เติม ! ตรงนี้
+  repStat!: ReportStatus; 
 
-  // ส่วนตัวแปรที่บังคับใส่ @IsOptional() (อาจจะมีหรือไม่มีก็ได้) 
-  // ตรงนี้ไม่ต้องใส่ ! ก็ได้ครับ ให้ใช้เครื่องหมาย ? (Optional) แทนแบบนี้ครับ
   @IsString()
   @IsOptional()
   descDetail?: string;

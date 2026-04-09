@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'; 
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Briefcase, FileText, User, LogOut } from 'lucide-react';
+import { Search, Briefcase, FileText, LogOut } from 'lucide-react';
 import './StudentLayout.css';
 import { authService } from '../../api/services/authService';
-import { jwtDecode } from 'jwt-decode';
 import { useAuth } from '../../context/AuthContext';
 
 export default function StudentLayout() {
@@ -36,7 +35,7 @@ export default function StudentLayout() {
 
   const confirmLogout = async () => {
     try {
-      await authService.logout(); // 👈 ยิงไปหา Backend เพื่อให้ clearCookie ทำงาน!
+      await authService.logout();
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {

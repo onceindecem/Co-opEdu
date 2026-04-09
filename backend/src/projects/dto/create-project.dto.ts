@@ -8,7 +8,6 @@ import {
   IsUUID,
 } from 'class-validator';
 
-// กำหนด Enum ให้ตรงกับใน Database (ป้องกันคนพิมพ์ผิด)
 enum ContactType {
   PM = 'PM',
   COORD = 'COORD',
@@ -23,27 +22,27 @@ export class CreateProjectDto {
 
   @IsUUID('all', { message: 'projID ต้องเป็น UUID' })
   @IsNotEmpty()
-  projID: string;
+  projI!: string;
 
   @IsString()
   @IsNotEmpty()
-  coID: string;
+  coID!: string;
 
   @IsString()
   @IsNotEmpty()
-  userID: string;
+  userID!: string;
 
   @IsString()
   @IsNotEmpty()
-  pmID: string;
+  pmID!: string;
 
   @IsString()
-  @IsOptional() // อนุญาตให้เว้นว่างได้ (NULL)
+  @IsOptional() 
   advID?: string;
 
   @IsEnum(ContactType, { message: 'contact ต้องเป็น PM หรือ COORD เท่านั้น' })
   @IsNotEmpty()
-  contact: string;
+  contact!: string;
 
   @IsString()
   @IsOptional()
@@ -51,32 +50,32 @@ export class CreateProjectDto {
 
   @IsString()
   @IsNotEmpty()
-  projName: string;
+  projName!: string;
 
   @IsString()
   @IsNotEmpty()
-  obj: string;
+  obj!: string;
 
   @IsInt({ message: 'โควต้าต้องเป็นตัวเลขจำนวนเต็ม' })
   @Min(1, { message: 'โควต้าต้องไม่น้อยกว่า 1' })
   @IsNotEmpty()
-  quota: number;
+  quota!: number;
 
   @IsString()
   @IsNotEmpty()
-  jd: string;
+  jd!: string;
 
   @IsString()
   @IsNotEmpty()
-  skills: string;
+  skills!: string;
 
   @IsString()
   @IsNotEmpty()
-  mentor: string;
+  mentor!: string;
 
   @IsString()
   @IsNotEmpty()
-  workAddr: string;
+  workAddr!: string;
 
   @IsString()
   @IsOptional()
@@ -84,5 +83,5 @@ export class CreateProjectDto {
 
   @IsEnum(RoundType, { message: 'รอบต้องเป็น 1 หรือ 2 เท่านั้น' })
   @IsNotEmpty()
-  round: string;
+  round!: string;
 }

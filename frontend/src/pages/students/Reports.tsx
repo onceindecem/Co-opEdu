@@ -4,7 +4,6 @@ import { Plus, X, FileText, Calendar, Edit, Trash2, Activity, Briefcase, AlertTr
 import { reportService } from '../../api/services/reportService';
 import { applicationService } from '../../api/services/applicationService';
 
-// 🌟 กำหนด Type ให้ตรงกับ Database เพื่อให้ TypeScript ช่วยเช็ค
 interface Report {
   repID: string;
   appID: string;
@@ -13,7 +12,7 @@ interface Report {
   descDetail: string;
   interviewDate?: string;
   createAt: string;
-  projectName?: string; // เอาไว้โชว์ชื่อโปรเจกต์
+  projectName?: string;
 }
 
 interface Application {
@@ -27,20 +26,18 @@ export default function StudentReports() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
-  // 🌟 State สำหรับเก็บข้อมูลจาก API
   const [history, setHistory] = useState<Report[]>([]);
-  const [applications, setApplications] = useState<Application[]>([]); // โปรเจกต์ที่สมัครผ่านแล้ว
+  const [applications, setApplications] = useState<Application[]>([]); 
 
   const [formData, setFormData] = useState({
     appID: '',
     repTopic: '',
     descDetail: '',
-    repStat: 'EMAIL_SENT', // ใช้ ENUM เป็น Default
+    repStat: 'EMAIL_SENT', 
     interviewDate: ''
   });
 
 
-  // 🌟 ดึงข้อมูลตอนเปิดหน้าเว็บ
   useEffect(() => {
     fetchInitialData();
   }, []);
@@ -49,25 +46,16 @@ export default function StudentReports() {
     try {
       const appRes = await applicationService.getMyApplications();
 
-      console.log('📌 เช็คสถานะ App ทั้งหมด:', appRes.data.map((item: any) => ({ 
-        id: item.appID, 
-        status: item.appStat 
-      })));
-
-      // 🌟 1. เพิ่มการกรอง (Filter) ตรงนี้ครับ!
-      // ⚠️ ข้อควรระวัง: เช็คชื่อฟิลด์สถานะ (เช่น appStatus) และค่า (เช่น 'REJECTED', 'NOT_PASSED') 
-      // ให้ตรงกับที่คุณตั้งไว้ใน Database Application ด้วยนะครับ
       const activeApps = appRes.data.filter((item: any) => 
         item.appStat === 'APPROVED'
       );
 
-      // 🌟 2. เอาตัวที่กรองแล้ว (activeApps) มา Map แทน appRes.data
       const formattedApps = activeApps.map((item: any) => ({
         appID: item.appID,
         projectName: item.project?.projName || item.project?.projectName || 'ไม่ระบุชื่อโครงการ'
       }));
 
-      setApplications(formattedApps); // Dropdown จะโชว์แค่อันที่ยังรอดอยู่
+      setApplications(formattedApps);
 
       const reportRes = await reportService.getMyReports();
       setHistory(reportRes.data);
@@ -105,11 +93,9 @@ export default function StudentReports() {
     setShowDeleteModal(true);
   };
 
-  // 🌟 ยิง API ลบข้อมูล
   const confirmDelete = async () => {
     if (deleteTargetId !== null) {
       try {
-        // 👇 แก้ตรงนี้
         await reportService.deleteReport(deleteTargetId);
         setHistory(history.filter(item => item.repID !== deleteTargetId));
       } catch (error) {
@@ -126,7 +112,6 @@ export default function StudentReports() {
     setDeleteTargetId(null);
   };
 
-  // 🌟 ยิง API บันทึก/แก้ไขข้อมูล
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -137,18 +122,13 @@ export default function StudentReports() {
 
     try {
       if (editingId) {
-        // แก้ไข (PATCH) - ลบ setHistory ออก
         await reportService.updateReport(editingId, payload);
       } else {
-        // สร้างใหม่ (POST) - ลบ setHistory ออก
         await reportService.createReport(payload);
       }
 
-      // ปิดหน้าต่าง Modal เคลียร์ค่า ID
       setShowModal(false);
       setEditingId(null);
-
-      // 🌟 สั่งให้ไปดึงข้อมูลใหม่จาก Database ทันที (ต้องใส่ await)
       await fetchInitialData();
 
     } catch (error) {
@@ -157,7 +137,6 @@ export default function StudentReports() {
     }
   };
 
-  // 🌟 แปลง ENUM เป็นข้อความภาษาไทย
   const getStatusText = (status: string) => {
     const statusMap: Record<string, string> = {
       EMAIL_SENT: 'ส่งอีเมลแล้วรอการตอบกลับ',
@@ -186,7 +165,7 @@ export default function StudentReports() {
         </button>
       </div>
 
-      {/* --- Delete Modal --- */}
+      {/* Delete Modal */}
       {showDeleteModal && (
         <div className="delete-modal-overlay">
           <div className="delete-modal-content">
@@ -203,7 +182,7 @@ export default function StudentReports() {
         </div>
       )}
 
-      {/* --- Add/Edit Modal --- */}
+      {/* Add/Edit Modal */}
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -243,7 +222,6 @@ export default function StudentReports() {
 
               <div className="form-group">
                 <label><Activity size={16} /> สถานะปัจจุบัน</label>
-                {/* 🌟 เปลี่ยน Value เป็น ENUM ให้ตรงกับ Database */}
                 <select
                   value={formData.repStat}
                   onChange={(e) => setFormData({ ...formData, repStat: e.target.value })}
@@ -290,7 +268,7 @@ export default function StudentReports() {
         </div>
       )}
 
-      {/* --- Timeline --- */}
+      {/* Timeline */}
       <div className="timeline">
         {history.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>ยังไม่มีประวัติการส่งรายงาน</div>
@@ -300,7 +278,6 @@ export default function StudentReports() {
               ? `${getStatusText(item.repStat)} (วันที่: ${new Date(item.interviewDate).toLocaleDateString('th-TH')})`
               : getStatusText(item.repStat);
 
-            // หาชื่อโปรเจกต์จาก appID เพื่อมาแสดงผล
             const appInfo = applications.find(a => a.appID === item.appID);
 
             return (

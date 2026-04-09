@@ -1,6 +1,4 @@
-import { useState, useEffect } from "react"; // 🌟 1. อย่าลืม import useEffect
-import axios from "axios";
-import { jwtDecode } from "jwt-decode"; // 🌟 2. import jwt-decode
+import { useState, useEffect } from "react";
 import "./Company.css";
 import {
   ClipboardList,
@@ -21,9 +19,7 @@ import {
   FileText,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { projectService } from "../../api/services/projectService"; // 👈 นำเข้า Service (เช็ค Path ให้ตรงกับโปรเจกต์คุณด้วยนะครับ)
-import { authService } from "../../api/services/authService";
-import axiosInstance from "../../api/axiosInstance";
+import { projectService } from "../../api/services/projectService";
 import { useAuth } from "../../context/AuthContext";
 
 export default function CreateProject() {
@@ -31,7 +27,6 @@ export default function CreateProject() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // --- State สำหรับข้อมูลที่ต้องส่งไป Backend ---
   const [formData, setFormData] = useState({
     projNameTH: "",
     projDetail: "",
@@ -49,7 +44,6 @@ export default function CreateProject() {
     { id: Date.now(), name: "", position: "", phone: "", email: "" },
   ]);
 
-  // 🌟 [เพิ่มใหม่] State สำหรับเก็บข้อมูล PM
   const [pmData, setPmData] = useState({
     name: "",
     position: "",
@@ -58,7 +52,6 @@ export default function CreateProject() {
     email: "",
   });
 
-  // 🌟 [เพิ่มใหม่] State สำหรับเก็บข้อมูลผู้ประสานงาน
   const [coordData, setCoordData] = useState({
     name: "",
     position: "",
@@ -67,10 +60,8 @@ export default function CreateProject() {
     email: "",
   });
 
-  // 🌟 [เพิ่มใหม่] State สำหรับเก็บไฟล์ PDF
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const { user, profile } = useAuth();
-  console.log("🕵️‍♂️ ข้อมูล Profile ที่ได้จาก AuthContext:", profile);
 
   const [companyData, setCompanyData] = useState({
     nameTh: "",
@@ -112,7 +103,6 @@ export default function CreateProject() {
     );
   };
 
-  // ฟังก์ชันจัดการ Input ของ Project
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -120,19 +110,16 @@ export default function CreateProject() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 🌟 [เพิ่มใหม่] ฟังก์ชันจัดการ Input ของ PM
   const handlePmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPmData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 🌟 [เพิ่มใหม่] ฟังก์ชันจัดการ Input ของ Coordinator
   const handleCoordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setCoordData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 🌟 [เพิ่มใหม่] ฟังก์ชันจัดการไฟล์
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
@@ -144,11 +131,9 @@ export default function CreateProject() {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // 🌟 [แก้ไข] ฟังก์ชัน Submit ส่งข้อมูลไป Backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // เช็กเผื่อไว้ว่าถ้าไม่มี ID แปลว่ายังไม่ได้ล็อกอินหรือดึง JWT ไม่สำเร็จ
     if (!user.userID || !profile.coID) {
       alert("ไม่พบข้อมูลผู้ใช้งาน กรุณาล็อกอินใหม่");
       return;
@@ -156,7 +141,6 @@ export default function CreateProject() {
     setLoading(true);
 
     try {
-      // ใช้ FormData เพื่อให้ส่งไฟล์ได้
       const data = new FormData();
       data.append("projName", formData.projNameTH);
       data.append("obj", formData.projDetail);
@@ -186,7 +170,6 @@ export default function CreateProject() {
       data.append("coID", profile.coID);
       data.append("userID", user.userID);
 
-      // แนบไฟล์
       selectedFiles.forEach((file) => {
         data.append("files", file);
       });
@@ -228,9 +211,6 @@ export default function CreateProject() {
         )}
 
         <form onSubmit={handleSubmit}>
-          {/* =========================================
-              1. ข้อมูลสถานประกอบการ/หน่วยงาน
-          ========================================= */}
           <div className="form-section-title">
             <Building2 size={20} /> ข้อมูลสถานประกอบการ/หน่วยงาน
           </div>
@@ -290,9 +270,6 @@ export default function CreateProject() {
             </div>
           </div>
 
-          {/* =========================================
-              2. ข้อมูลผู้จัดการโครงการ/หัวหน้าหน่วยงาน
-          ========================================= */}
           <div className="form-section-title mt-40">
             <UserCircle size={20} />{" "}
             ข้อมูลผู้จัดการโครงการ/หัวหน้าหน่วยงาน/ผู้จัดการ
@@ -300,7 +277,6 @@ export default function CreateProject() {
 
           <div className="form-group span-full">
             <label>ชื่อ-นามสกุล *</label>
-            {/* 🌟 ผูก State ของ PM */}
             <input
               type="text"
               name="name"
@@ -363,9 +339,6 @@ export default function CreateProject() {
             </div>
           </div>
 
-          {/* =========================================
-              3. รายละเอียดโครงการที่เสนอ
-          ========================================= */}
           <div className="form-section-title mt-40">
             <ClipboardList size={20} /> รายละเอียดโครงการที่เสนอ
           </div>
@@ -436,9 +409,6 @@ export default function CreateProject() {
             />
           </div>
 
-          {/* =========================================
-              4. ข้อมูลพนักงานที่ปรึกษา (พี่เลี้ยง)
-          ========================================= */}
           <div className="form-section-header-flex mt-40">
             <div className="section-title-icon-wrapper">
               <UserCheck size={20} /> ข้อมูลพนักงานที่ปรึกษา (พี่เลี้ยง)
@@ -533,9 +503,6 @@ export default function CreateProject() {
             </div>
           ))}
 
-          {/* =========================================
-              5. การติดต่อประสานงาน
-          ========================================= */}
           <div className="form-section-title mt-40">
             <Phone size={20} /> การติดต่อประสานงาน
           </div>
@@ -579,7 +546,6 @@ export default function CreateProject() {
               </h4>
               <div className="form-group span-full">
                 <label>ชื่อ-นามสกุล ผู้ประสานงาน *</label>
-                {/* 🌟 ผูก State ของ Coordinator */}
                 <input
                   type="text"
                   name="name"
@@ -642,9 +608,6 @@ export default function CreateProject() {
             </div>
           )}
 
-          {/* =========================================
-              6. สถานที่ปฏิบัติงาน และ เอกสารแนบ
-          ========================================= */}
           <div className="form-section-title mt-40">
             <MapPin size={20} /> สถานที่ปฏิบัติงาน
           </div>
@@ -686,7 +649,6 @@ export default function CreateProject() {
             </label>
           </div>
 
-          {/* รายชื่อไฟล์ที่เลือก */}
           {selectedFiles.map((file, idx) => (
             <div
               key={idx}

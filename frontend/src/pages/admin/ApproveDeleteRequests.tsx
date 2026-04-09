@@ -1,37 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Check, X, Building2, Trash2, AlertCircle, Info, Loader2 } from 'lucide-react';
-// 🌟 1. Import Service เข้ามา (ปรับ path และชื่อ service ให้ตรงกับโปรเจกต์คุณ)
 import { projectService } from '../../api/services/projectService';
 
 export default function ApproveDeleteRequests() {
-  // 🌟 2. เปลี่ยน State เริ่มต้นเป็น Array ว่าง และเพิ่ม Loading State
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false); // สำหรับตอนกดยืนยันใน Modal
+  const [processing, setProcessing] = useState(false); 
 
   const [showPopup, setShowPopup] = useState(false);
   const [activeRequest, setActiveRequest] = useState<any>(null);
   const [actionType, setActionType] = useState<'approve' | 'reject' | null>(null);
 
-  // 🌟 3. ฟังก์ชันดึงข้อมูลคำขอลบโปรเจกต์จาก Backend
   const fetchDeleteRequests = async () => {
     setLoading(true);
     try {
       const response = await projectService.getPendingDeleteRequests();
 
-      // 🌟 นำข้อมูลจาก Database มาแปลงให้ตรงกับที่ตารางหน้าบ้านต้องการโชว์
       const formattedData = response.data.map((proj: any) => ({
-        id: proj.projID, // ใช้ projID เป็นไอดีหลัก
-        projectName: proj.projName, // ชื่อโปรเจกต์
-        company: proj.company?.coNameTH || 'ไม่ระบุชื่อบริษัท', // ดึงชื่อบริษัทจากตารางที่ Join มา
+        id: proj.projID, 
+        projectName: proj.projName, 
+        company: proj.company?.coNameTH || 'ไม่ระบุชื่อบริษัท', 
         requestDate: proj.updateAt
           ? new Date(proj.updateAt).toLocaleDateString('th-TH', {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
           })
-          : 'ไม่มีข้อมูลวันที่', // 👈 ใส่ fallback ไว้กันพัง
-        reason: proj.deleteReason || 'โครงการเสร็จสิ้นหรือต้องการยกเลิก', // 👈 เหตุผลการลบ
+          : 'ไม่มีข้อมูลวันที่', 
+        reason: proj.deleteReason || 'โครงการเสร็จสิ้นหรือต้องการยกเลิก', 
       }));
 
       setRequests(formattedData);
@@ -53,27 +49,23 @@ export default function ApproveDeleteRequests() {
   };
 
   const closePopup = () => {
-    if (processing) return; // ถ้ากำลังโหลดอยู่ ห้ามปิด Modal
+    if (processing) return; 
     setShowPopup(false);
     setActiveRequest(null);
     setActionType(null);
   };
 
-  // 🌟 4. ฟังก์ชันยิง API เมื่อกดยืนยันใน Modal
   const confirmAction = async () => {
     if (!activeRequest || !actionType) return;
 
     setProcessing(true);
     try {
       if (actionType === 'approve') {
-        // ยิง API อนุมัติการลบ
         await projectService.approveDelete(activeRequest.id);
       } else {
-        // ยิง API ปฏิเสธการลบ
         await projectService.rejectDelete(activeRequest.id);
       }
 
-      // อัปเดตตารางหน้าบ้านโดยเอาตัวที่จัดการแล้วออก
       setRequests(prev => prev.filter(req => req.id !== activeRequest.id));
       closePopup();
     } catch (error) {
@@ -91,7 +83,6 @@ export default function ApproveDeleteRequests() {
       </div>
 
       <div className="admin-card">
-        {/* 🌟 5. แสดง Loading Spinner ตอนดึงข้อมูล */}
         {loading ? (
           <div className="flex-center-gap" style={{ padding: '40px', color: '#64748b' }}>
             <Loader2 className="animate-spin" size={24} /> กำลังโหลดข้อมูล...
@@ -111,7 +102,6 @@ export default function ApproveDeleteRequests() {
               {requests.length > 0 ? (
                 requests.map((req) => (
                   <tr key={req.id}>
-                    {/* 🌟 ปรับ key เป็นฟิลด์จริงจาก DB เช่น req.projID */}
                     <td><div className="text-projectName">{req.projectName}</div></td>
                     <td>
                       <div className="company-info-flex">
@@ -167,17 +157,16 @@ export default function ApproveDeleteRequests() {
               <button
                 className="btn-modal btn-modal-cancel"
                 onClick={closePopup}
-                disabled={processing} // ปิดปุ่มถ้าระบบกำลังประมวลผล
+                disabled={processing} 
               >
                 ยกเลิก
               </button>
               <button
                 className={`btn-modal ${actionType === 'approve' ? 'btn-modal-confirm-approve' : 'btn-modal-confirm-reject'}`}
                 onClick={confirmAction}
-                disabled={processing} // ปิดปุ่มถ้าระบบกำลังประมวลผล
+                disabled={processing} 
                 style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
               >
-                {/* 🌟 6. เปลี่ยนข้อความปุ่มตอนกำลังโหลด */}
                 {processing ? (
                   <><Loader2 size={18} className="animate-spin" /> กำลังดำเนินการ...</>
                 ) : (

@@ -1,4 +1,3 @@
-// src/users/entities/student.entity.ts
 import { Column, DataType, Model, Table, ForeignKey, BelongsTo } from 'sequelize-typescript';
 import { User } from 'src/users/entities/user.entity';
 

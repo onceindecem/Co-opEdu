@@ -1,6 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
   FolderSearch,
   Briefcase,
   FileCheck,
@@ -9,23 +8,20 @@ import {
 } from "lucide-react";
 import "./Advisor.css";
 import { useEffect, useState } from "react";
-import { jwtDecode } from "jwt-decode";
 import { authService } from "../../api/services/authService";
 import { useAuth } from "../../context/AuthContext";
 
 export default function AdvisorLayout() {
   const location = useLocation();
-  const navigate = useNavigate(); // 🌟 ใช้งาน useNavigate
+  const navigate = useNavigate(); 
 
-  // 🌟 State สำหรับควบคุม Popup Logout
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // 🌟 ฟังก์ชันจัดการ Logout
   const handleLogoutClick = () => setShowLogoutModal(true);
   const cancelLogout = () => setShowLogoutModal(false);
   const confirmLogout = async () => {
     try {
-      await authService.logout(); // 👈 ยิงไปหา Backend เพื่อให้ clearCookie ทำงาน!
+      await authService.logout();
     } catch (error) {
       console.error("Logout failed:", error);
     } finally {
@@ -68,7 +64,7 @@ export default function AdvisorLayout() {
 
   return (
     <div className="advisor-layout">
-      {/* 🌟 Popup ยืนยันการออกจากระบบ */}
+      {/* Popup logout */}
       {showLogoutModal && (
         <div className="logout-modal-overlay">
           <div className="logout-modal-content">
@@ -119,7 +115,6 @@ export default function AdvisorLayout() {
               <p className="dept">Computer Science</p>
             </div>
           </div>
-          {/* 🌟 ผูกฟังก์ชันเปิด Popup เข้ากับปุ่ม */}
           <button className="btn-logout-sidebar" onClick={handleLogoutClick}>
             <LogOut size={18} /> <span>ออกจากระบบ</span>
           </button>

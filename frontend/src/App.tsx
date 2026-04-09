@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom"; // 👈 เอา BrowserRouter ที่ซ้ำซ้อนออก
+import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/Login";
 import RegisterPage from "./pages/Register";
 import Profile from "./pages/Profile";
@@ -46,7 +46,6 @@ function App() {
       setProfile(res.data.profile);
       setLoading(false);
       
-      // อย่าลืม return role กลับไปให้หน้า Login ใช้ย้ายหน้าครับ
       return res.data.accountInfo.role; 
     } catch (error) {
       setUser(null);
@@ -56,7 +55,6 @@ function App() {
     }
   };
 
-  // 🌟 2. ให้ useEffect เรียกใช้ checkAuth แค่ตอนเปิดเว็บครั้งแรก
   useEffect(() => {
     checkAuth();
   }, []);

@@ -3,25 +3,25 @@ import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
 export class CreateCompanyDto {
   @IsString()
   @IsNotEmpty()
-  coID: string;
+  coID!: string;
 
   @IsString()
   @IsNotEmpty()
-  coNameTH: string;
+  coNameTH!: string;
 
   @IsString()
-  @IsOptional() // ใส่เผื่อไว้ถ้าไม่ได้บังคับ
-  coNameEN: string;
-
-  @IsString()
-  @IsNotEmpty()
-  coEmail: string;
+  @IsOptional() 
+  coNameEN!: string;
 
   @IsString()
   @IsNotEmpty()
-  coTel: string;
+  coEmail!: string;
 
   @IsString()
   @IsNotEmpty()
-  coAddr: string;
+  coTel!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  coAddr!: string;
 }

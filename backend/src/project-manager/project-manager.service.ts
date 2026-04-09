@@ -28,7 +28,6 @@ export class ProjectManagerService {
   }
 
   async update(id: string, updateProjectManagerDto: UpdateProjectManagerDto) {
-    // ⚠️ เปลี่ยน pmID ให้ตรงกับชื่อ Primary Key ในตาราง PM ของคุณ
     const [numberOfAffectedRows] = await this.projectManagerModel.update(
       { ...updateProjectManagerDto },
       { where: { pmID: id } }

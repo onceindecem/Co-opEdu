@@ -18,13 +18,13 @@ import { Application } from 'src/applications/entities/application.entity';
 
 @Table({
   tableName: 'Projects',
-  timestamps: true, // ให้ Sequelize จัดการ createAt / updateAt
+  timestamps: true,
 })
 export class Project extends Model {
 
   @Column({
     type: DataType.BOOLEAN,
-    defaultValue: false, // false = ปกติ, true = ขออนุญาตลบ
+    defaultValue: false, 
   })
   isPendingDelete!: boolean;
 
@@ -32,7 +32,7 @@ export class Project extends Model {
     type: DataType.TEXT,
     allowNull: true,
   })
-  deleteReason!: string; // เก็บเหตุผลที่ HR พิมพ์มา
+  deleteReason!: string; 
   
   @PrimaryKey
   @Column({ type: DataType.UUID })
@@ -107,12 +107,6 @@ export class Project extends Model {
   @UpdatedAt
   @Column({ field: 'updateAt' })
   updateAt!: Date;
-
-  
-
-  /* ==============================================
-     ส่วนของการทำ Associations (ความสัมพันธ์ตาราง)
-  ============================================== */
 
   @BelongsTo(() => Company)
   company!: Company;

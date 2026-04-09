@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom'; 
 import { User, Building2, Phone, Mail, Briefcase, MapPin, Save, CheckCircle } from 'lucide-react';
 import './Profile.css';
 import { authService } from '../api/services/authService';
-import { jwtDecode } from 'jwt-decode';
 import { hrService } from '../api/services/hrService';
 
 const StudentView = ({ accountInfo, profileData }: { accountInfo: any, profileData: any }) => {
@@ -212,18 +211,13 @@ export default function UserProfile() {
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
-        // 💡 เรียก API โปรไฟล์ (Axios จะแนบ Cookie ให้เองอัตโนมัติ)
         const response = await authService.getProfile();
         
-        // เซ็ตข้อมูลที่ได้จาก Backend
         setDbData(response.data);
         
-        // 💡 ดึง role จากข้อมูลที่ Backend ส่งกลับมา (แทนการ Decode เอง)
-        // สมมติโครงสร้าง response.data.accountInfo.role หรือตามที่ Backend คุณส่งมา
         setCurrentRole(response.data.accountInfo.role); 
 
       } catch (error: any) {
-        // 💡 ถ้า API ตอบ 401 (ไม่มี Cookie/หมดอายุ) ให้เด้งไปหน้า Login
         if (error.response?.status === 401) {
           navigate('/login', { replace: true });
         }
@@ -239,7 +233,6 @@ export default function UserProfile() {
     return <div style={{ textAlign: 'center', padding: '50px' }}>กำลังโหลดข้อมูล... ⏳</div>;
   }
 
-  // ถ้าโหลดเสร็จแล้วแต่ไม่มีข้อมูล (เผื่อกรณี Error อื่นๆ)
   if (!dbData) {
     return (
       <div style={{ textAlign: 'center', padding: '50px' }}>
@@ -252,7 +245,6 @@ export default function UserProfile() {
   return (
     <div className="profile-container">
       <div className="profile-card">
-        {/* 💡 ใช้ currentRole ที่ได้จาก API ในการ Render View */}
         {currentRole === 'STUDENT' && (
           <StudentView accountInfo={dbData.accountInfo} profileData={dbData.profile}/>
         )}
@@ -261,7 +253,6 @@ export default function UserProfile() {
           <CompanyView accountInfo={dbData.accountInfo} profileData={dbData.profile}/>
         )}
         
-        {/* กรณีเป็น Role อื่นๆ ที่ไม่ได้นิยามหน้า View ไว้ */}
         {currentRole !== 'STUDENT' && currentRole !== 'HR' && (
           <div style={{ textAlign: 'center', padding: '40px' }}>
             <h3 style={{ color: '#ef4444' }}>ไม่มีสิทธิ์เข้าถึงหน้านี้</h3>

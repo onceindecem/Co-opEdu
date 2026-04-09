@@ -8,7 +8,6 @@ import { HR } from '../hr/entities/hr.entity';
 import { Advisor } from '../advisor/entities/advisor.entity';
 import { randomUUID } from 'crypto';
 import { Application } from '../applications/entities/application.entity'; // เช็ก Path ให้ตรง
-import model from 'sequelize/lib/model';
 import { ActivityLogsService } from '../activity-log/activity-log.service';
 
 @Injectable()
@@ -16,21 +15,19 @@ export class ProjectsService {
   constructor(
     @InjectModel(Project) private projectModel: typeof Project,
     @InjectModel(ProjectManager) private pmModel: typeof ProjectManager,
-    @InjectModel(Advisor) private advisorModel: typeof Advisor, // 🌟 1. เพิ่มบรรทัดนี้ เพื่อให้เรียกใช้ตาราง Advisor ได้
+    @InjectModel(Advisor) private advisorModel: typeof Advisor,
     private sequelize: Sequelize,
     private activityLogsService: ActivityLogsService,
-  ) {}
+  ) { }
 
-  // --- 1. สร้างโครงการใหม่ ---
-async create(userId: string, dto: any, files?: Array<Express.Multer.File>) { // 🌟 รับ userId เพิ่ม
+  async create(userId: string, dto: any, files?: Array<Express.Multer.File>) {
     try {
       return await this.sequelize.transaction(async (t) => {
-        // ... โค้ดส่วน Parse JSON เหมือนเดิม ...
         const pmData = typeof dto.pmData === 'string' ? JSON.parse(dto.pmData) : dto.pmData;
         const mentors = typeof dto.mentor === 'string' ? JSON.parse(dto.mentor) : dto.mentor;
         const contDetail = dto.contDetail && typeof dto.contDetail === 'string' ? JSON.parse(dto.contDetail) : dto.contDetail;
 
-        // 1. สร้าง Project Manager
+        // create PM
         const pm = await this.pmModel.create({
           pmID: randomUUID(),
           pmName: pmData.pmName,
@@ -41,7 +38,7 @@ async create(userId: string, dto: any, files?: Array<Express.Multer.File>) { // 
           coID: dto.coID,
         }, { transaction: t });
 
-        // 2. สร้าง Project
+        // create Project
         const project = await this.projectModel.create({
           projID: randomUUID(),
           projName: dto.projName,
@@ -55,13 +52,13 @@ async create(userId: string, dto: any, files?: Array<Express.Multer.File>) { // 
           mentor: JSON.stringify(mentors),
           pmID: pm.pmID,
           projStat: 'PENDING',
-          
+
           coID: dto.coID,
-          userID: userId || dto.userID, // 🌟 ใช้ userId จาก Token เป็นหลักเพื่อความปลอดภัย
+          userID: userId,
           round: dto.round,
         }, { transaction: t });
 
-        // 🌟🌟 3. บันทึก Log การสร้างโครงการ (ดักจับ Error ไว้ด้วย) 🌟🌟
+        // log
         try {
           const logUserId = userId || dto.userID;
           if (logUserId) {
@@ -78,21 +75,19 @@ async create(userId: string, dto: any, files?: Array<Express.Multer.File>) { // 
         return project;
       });
     } catch (error) {
-      console.error('🔥 Create Project Error:', error);
+      console.error('Create Project Error:', error);
       throw error;
     }
   }
 
-  // --- 2. อัปเดตโครงการ (โหมด Edit) ---
- async update(id: string, userId: string, dto: any, files?: Array<Express.Multer.File>) { // 🌟 รับ userId เพิ่ม
+  async update(id: string, userId: string, dto: any, files?: Array<Express.Multer.File>) { // 🌟 รับ userId เพิ่ม
     try {
       return await this.sequelize.transaction(async (t) => {
-        // ... โค้ดส่วน Parse JSON เหมือนเดิม ...
         const pmData = typeof dto.pmData === 'string' ? JSON.parse(dto.pmData) : dto.pmData;
         const mentors = typeof dto.mentor === 'string' ? JSON.parse(dto.mentor) : dto.mentor;
         const contDetail = dto.contDetail && typeof dto.contDetail === 'string' ? JSON.parse(dto.contDetail) : dto.contDetail;
 
-        // 1. อัปเดต Project Manager
+        // update PM
         if (pmData && pmData.pmID) {
           await this.pmModel.update({
             pmName: pmData.pmName,
@@ -100,17 +95,17 @@ async create(userId: string, dto: any, files?: Array<Express.Multer.File>) { // 
             pmDept: pmData.pmDept,
             pmTel: pmData.pmTel,
             pmEmail: pmData.pmEmail,
-          }, { 
-            where: { pmID: pmData.pmID }, 
-            transaction: t 
+          }, {
+            where: { pmID: pmData.pmID },
+            transaction: t
           });
         }
 
-        // 2. ค้นหาโครงการเดิม
+        // find project
         const project = await this.projectModel.findByPk(id);
         if (!project) throw new NotFoundException('ไม่พบโครงการที่ต้องการแก้ไข');
 
-        // 3. อัปเดตข้อมูลโครงการ
+        // update project
         await project.update({
           projName: dto.projName,
           obj: dto.obj,
@@ -125,7 +120,7 @@ async create(userId: string, dto: any, files?: Array<Express.Multer.File>) { // 
           advID: null,
         }, { transaction: t });
 
-        // 🌟🌟 4. บันทึก Log การแก้ไขโครงการ 🌟🌟
+        // log
         try {
           const logUserId = userId || dto.userID;
           if (logUserId) {
@@ -142,15 +137,13 @@ async create(userId: string, dto: any, files?: Array<Express.Multer.File>) { // 
         return { message: 'อัปเดตโครงการและข้อมูลผู้จัดการเรียบร้อยแล้ว', project };
       });
     } catch (error) {
-      console.error('🔥 Update Project Error:', error);
+      console.error('Update Project Error:', error);
       throw error;
     }
   }
 
-  // --- 3. ฟังก์ชันอื่นๆ (เหมือนเดิม) ---
- async findAll() {
+  async findAll() {
     return await this.projectModel.findAll({
-      // 🌟 เพิ่ม Application เข้าไปใน list การ Join
       include: [Company, HR, ProjectManager, Advisor, Application],
     });
   }
@@ -158,15 +151,12 @@ async create(userId: string, dto: any, files?: Array<Express.Multer.File>) { // 
   async findHRProjects(userId: string) {
     return await this.projectModel.findAll({
       where: { userID: userId },
-      // 🌟 เพิ่ม Application เข้าไป
       include: [Company, HR, ProjectManager, Advisor, Application],
     });
   }
 
-  // ... ฟังก์ชัน findOne ...
   async findOne(id: string) {
     const project = await this.projectModel.findByPk(id, {
-      // 🌟 เพิ่ม Application เข้าไป
       include: [Company, HR, ProjectManager, Advisor, Application],
     });
     if (!project) {
@@ -177,32 +167,28 @@ async create(userId: string, dto: any, files?: Array<Express.Multer.File>) { // 
 
   async remove(id: string) {
     const project = await this.findOne(id);
-    await project.destroy(); 
+    await project.destroy();
     return { message: `ลบโปรเจกต์รหัส ${id} เรียบร้อยแล้ว` };
   }
-  // ==========================================
-  // 🌟 4. ดึงโครงการที่รอการอนุมัติ (Status: PENDING และยังไม่มีอาจารย์)
-  // ==========================================
+
   async findAvailable() {
     return await this.projectModel.findAll({
       where: {
-        projStat: 'PENDING', // กรองเฉพาะที่รออนุมัติ
-        advID: null          // และยังไม่มีอาจารย์รับไปดูแล
+        projStat: 'PENDING',
+        advID: null
       },
-      include: [Company, ProjectManager], // Join ข้อมูลที่จำเป็นต้องโชว์ในตารางหน้าบ้าน
+      include: [Company, ProjectManager],
     });
   }
 
-  // ==========================================
-  // 🌟 5. ดึงโครงการที่อาจารย์ท่านนี้ดูแลอยู่ (Status: APPROVED)
-  // ==========================================
+
   async findMyProjects(advisorId?: string) {
     const whereCondition = advisorId ? { advID: advisorId } : { projStat: 'APPROVED' };
-    
+
     return await this.projectModel.findAll({
       where: whereCondition,
       include: [
-        Company, 
+        Company,
         {
           model: Application,
         }
@@ -210,45 +196,41 @@ async create(userId: string, dto: any, files?: Array<Express.Multer.File>) { // 
     });
   }
 
-async approveProject(id: string, userIdFromToken: string) {
-    console.log("🛠️ ตรวจสอบค่าที่ส่งมา -> ProjectID:", id, "UserID (จาก Token):", userIdFromToken);
+  async approveProject(id: string, userIdFromToken: string) {
 
     const project = await this.projectModel.findByPk(id);
     if (!project) throw new NotFoundException(`ไม่พบโปรเจกต์รหัส ${id}`);
-    
-    const advisor = await this.advisorModel.findOne({ 
-      where: { userID: userIdFromToken } 
+
+    const advisor = await this.advisorModel.findOne({
+      where: { userID: userIdFromToken }
     });
 
     if (!advisor) {
       throw new BadRequestException('ไม่พบข้อมูลโปรไฟล์อาจารย์ที่ผูกกับรหัสผู้ใช้นี้');
     }
 
-    // อัปเดตสถานะโครงการ
-    await project.update({ 
-      projStat: 'APPROVED', 
-      advID: advisor.userID 
+    await project.update({
+      projStat: 'APPROVED',
+      advID: advisor.userID
     });
-    
-    // 🌟 บันทึก Log การอนุมัติ
+
     await this.activityLogsService.createLog(
       userIdFromToken,
       'APPROVE_PROJECT',
       `อาจารย์อนุมัติโครงการ: ${project.projName || 'ไม่ระบุชื่อ'}`
     );
 
-    const updatedProject = await this.findOne(id); 
+    const updatedProject = await this.findOne(id);
     return { message: 'อนุมัติเรียบร้อยแล้ว', data: updatedProject };
   }
-async rejectProject(id: string, userIdFromToken: string) { // 🌟 รับ userId เพิ่ม
+  async rejectProject(id: string, userIdFromToken: string) {
     const project = await this.projectModel.findByPk(id);
     if (!project) throw new NotFoundException(`ไม่พบโครงการรหัส ${id}`);
 
     await project.update({
-      projStat: 'DENIED' 
+      projStat: 'DENIED'
     });
 
-    // 🌟 บันทึก Log การปฏิเสธ
     await this.activityLogsService.createLog(
       userIdFromToken,
       'REJECT_PROJECT',
@@ -260,99 +242,75 @@ async rejectProject(id: string, userIdFromToken: string) { // 🌟 รับ use
 
   async findByCompanyId(coId: string) {
     return await this.projectModel.findAll({
-      where: { coID: coId }, // ค้นหาเฉพาะโปรเจกต์ที่มี coID ตรงกับที่ส่งมา
+      where: { coID: coId },
       include: [Company, HR, ProjectManager, Advisor, Application],
     });
   }
-  // ==========================================
-  // 🌟 ส่วนจัดการคำขอลบโครงการ (Admin อนุมัติ/ปฏิเสธ)
-  // ==========================================
 
-  // 1. ดึงข้อมูลโครงการที่รอการอนุมัติลบ (สำหรับหน้าตาราง Admin)
-async getPendingDeleteRequests() {
-    console.log(`🔵 [Admin] กำลังดึงข้อมูลโปรเจกต์ที่รออนุมัติลบ...`);
+  async getPendingDeleteRequests() {
 
     const data = await this.projectModel.findAll({
       where: { isPendingDelete: true },
-      include: [ { model: Company } ], // 👈 บางทีอาจจะพังตรงการ Join ตาราง ลองแก้เป็นแบบนี้ดูครับ
+      include: [{ model: Company }],
     });
-
-    console.log(`✅ [Admin] ดึงข้อมูลได้ทั้งหมด: ${data.length} รายการ`); // 👈 ดักดูว่าดึงมาได้กี่ตัว (ถ้าเป็น 0 แปลว่าใน Database ไม่มี)
     return data;
   }
 
- // 1. ตรวจสอบว่ารับ adminId เข้ามา (ไม่มีเครื่องหมาย ?)
-async approveDeleteRequest(id: string, adminId: string) { 
-  const project = await this.projectModel.findByPk(id);
-  if (!project) throw new NotFoundException(`ไม่พบโครงการรหัส ${id}`);
+  async approveDeleteRequest(id: string, adminId: string) {
+    const project = await this.projectModel.findByPk(id);
+    if (!project) throw new NotFoundException(`ไม่พบโครงการรหัส ${id}`);
 
-  // เก็บชื่อโครงการไว้ก่อนสั่งลบ (เอาไว้ใส่ใน Log)
-  const projectName = project.projName || 'ไม่ระบุชื่อ';
+    const projectName = project.projName || 'ไม่ระบุชื่อ';
 
-  // 🔥 คำสั่งลบจริงใน Database
-  await project.destroy(); 
+    await project.destroy();
 
-  // 🌟 บันทึก Log ด้วย ID คนกดจริง และใส่ชื่อโครงการที่โดนลบ
-  await this.activityLogsService.createLog(
-    adminId,
-    'APPROVE_DELETE_PROJECT',
-    `Admin อนุมัติการลบโครงการ`
-  );
+    await this.activityLogsService.createLog(
+      adminId,
+      'APPROVE_DELETE_PROJECT',
+      `Admin อนุมัติการลบโครงการ`
+    );
 
-  return { message: `อนุมัติการลบโครงการ ${projectName} เรียบร้อยแล้ว` };
-}
-
-  // 3. ปฏิเสธคำขอลบโครงการ (Admin กดปฏิเสธ)
-async rejectDeleteRequest(id: string, adminId: string) { // 👈 เพิ่ม adminId
-  const project = await this.projectModel.findByPk(id);
-  if (!project) throw new NotFoundException(`ไม่พบโครงการรหัส ${id}`);
-
-  // เปลี่ยนสถานะกลับไปเป็นปกติ
-  await project.update({
-    projStat: 'APPROVED', 
-    isPendingDelete: false, // 🌟 เคลียร์ flag ออกเพื่อให้ปุ่มลบกลับมาขึ้นใหม่ได้
-    deleteReason: null      // 🌟 ลบเหตุผลทิ้ง
-  });
-
-  // 🌟 บันทึก Log
-  await this.activityLogsService.createLog(
-    adminId,
-    'REJECT_DELETE_PROJECT',
-    `Admin ปฏิเสธคำขอลบโครงการ `
-  );
-
-  return { message: `ปฏิเสธคำขอลบโครงการรหัส ${id} เรียบร้อยแล้ว`, project };
-}
-  
-
-async requestDeleteProject(id: string, userId: string, reason?: string) { 
-  console.log(`🟡 [HR] กำลังยื่นขอลบโปรเจกต์ ID: ${id} โดย User ID: ${userId}`);
-
-  // 1. ค้นหา Project
-  const project = await this.projectModel.findByPk(id);
-  if (!project) {
-    throw new NotFoundException(`ไม่พบโครงการรหัส ${id}`);
+    return { message: `อนุมัติการลบโครงการ ${projectName} เรียบร้อยแล้ว` };
   }
 
-  // TODO: แนะนำให้ใช้ Transaction ครอบการทำงานส่วนนี้ (Sequelize Transaction)
-  // 2. อัปเดตสถานะโครงการ
-  await project.update({
-    isPendingDelete: true,
-    deleteReason: reason || 'ต้องการลบโครงการ'
-  });
+  async rejectDeleteRequest(id: string, adminId: string) { 
+    const project = await this.projectModel.findByPk(id);
+    if (!project) throw new NotFoundException(`ไม่พบโครงการรหัส ${id}`);
 
-  // 3. บันทึก Activity Log (นำ if เช็ก service ออก เพื่อให้ชัวร์ว่าระบบบังคับบันทึก Log เสมอ)
-  await this.activityLogsService.createLog(
-  userId, 
-  'REQUEST_DELETE_PROJECT', 
-  `HR ยื่นขอลบโครงการ`
-);
+    await project.update({
+      projStat: 'APPROVED',
+      isPendingDelete: false, 
+      deleteReason: null  
+    });
 
-  console.log(`✅ [HR] อัปเดต isPendingDelete เป็น true สำเร็จ!`);
-  
-  return { 
-    message: 'ส่งคำขอลบเรียบร้อยแล้ว', 
-    project 
-  };
-}
+    await this.activityLogsService.createLog(
+      adminId,
+      'REJECT_DELETE_PROJECT',
+      `Admin ปฏิเสธคำขอลบโครงการ `
+    );
+
+    return { message: `ปฏิเสธคำขอลบโครงการรหัส ${id} เรียบร้อยแล้ว`, project };
+  }
+
+
+  async requestDeleteProject(id: string, userId: string, reason?: string) {
+    const project = await this.projectModel.findByPk(id);
+    if (!project) {
+      throw new NotFoundException(`ไม่พบโครงการรหัส ${id}`);
+    }
+    await project.update({
+      isPendingDelete: true,
+      deleteReason: reason || 'ต้องการลบโครงการ'
+    });
+
+    await this.activityLogsService.createLog(
+      userId,
+      'REQUEST_DELETE_PROJECT',
+      `HR ยื่นขอลบโครงการ`
+    );
+    return {
+      message: 'ส่งคำขอลบเรียบร้อยแล้ว',
+      project
+    };
+  }
 }

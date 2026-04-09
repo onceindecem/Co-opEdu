@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Activity, Search, ShieldCheck, Clock, Loader2 } from 'lucide-react';
-import { activityLogService } from '../../api/services/activityLogService'; // ปรับ Path ให้ตรง
+import { activityLogService } from '../../api/services/activityLogService'; 
 import './Admin.css';
 
 interface ActivityLogData {
@@ -17,7 +17,6 @@ export default function AuditLogs() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // ฟังก์ชันดึงข้อมูลจาก Backend
   useEffect(() => {
     const fetchLogs = async () => {
       try {
@@ -32,7 +31,6 @@ export default function AuditLogs() {
     fetchLogs();
   }, []);
 
-  // ฟังก์ชันคำนวณ Type ของสีจากชื่อ Action (เนื่องจากใน DB ไม่มีฟิลด์ type)
   const determineLogType = (action: string) => {
     const act = action.toUpperCase();
     if (act.includes('SUCCESS') || act.includes('APPROVED')) return 'success';
@@ -50,7 +48,6 @@ export default function AuditLogs() {
     }
   };
 
-  // 🌟 ระบบค้นหา: กรองข้อมูลตาม Email หรือ Action
   const filteredLogs = logs.filter(log => {
     const emailMatch = log.user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const actionMatch = log.action.toLowerCase().includes(searchTerm.toLowerCase());

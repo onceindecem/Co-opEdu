@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { jwtDecode } from "jwt-decode"; // 🌟 import jwt-decode
 import "./Company.css";
 import {
   ClipboardList,
@@ -30,11 +28,8 @@ export default function EditProject() {
   const isEdit = Boolean(id);
 
   const [loading, setLoading] = useState(false);
-
-  // 🌟 เพิ่ม State สำหรับเก็บ ID จาก Token
   const { user, profile } = useAuth();
 
-  // 🌟 เปลี่ยน Company Data ให้เป็น State แทน Mockup
   const [companyData, setCompanyData] = useState({
     nameTh: "",
     nameEn: "",
@@ -79,11 +74,10 @@ export default function EditProject() {
   const [currentPmID, setCurrentPmID] = useState<string>("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  // 🌟 รวมการดึงข้อมูลจาก Token, ดึง Company, และดึงข้อมูล Project เก่าไว้ใน useEffect เดียวกัน
   useEffect(() => {
     const initData = async () => {
       try {
-        // 1. set company จาก profile
+        // set company from profile
         if (profile) {
           setCompanyData({
             nameTh: profile.company.coNameTH || "ไม่ระบุชื่อบริษัท",
@@ -94,7 +88,7 @@ export default function EditProject() {
           });
         }
 
-        // 2. โหลด project (edit mode)
+        // load project
         if (isEdit && id) {
           setLoading(true);
 
@@ -137,7 +131,6 @@ export default function EditProject() {
           }
         }
       } catch (error) {
-        console.error("โหลดข้อมูลไม่สำเร็จ:", error);
         if (isEdit) {
           alert("ไม่พบข้อมูลโครงการนี้");
           navigate("/company/projects");
@@ -236,7 +229,6 @@ export default function EditProject() {
         }),
       );
 
-      // 🌟 ใช้ตัวแปร State ที่แกะมาจาก Token ส่งไปแทน Hardcode
       data.append("coID", profile.coID);
       data.append("userID", user.userID);
 
@@ -709,7 +701,6 @@ export default function EditProject() {
               <span className="upload-subtext">
                 (รองรับ PDF ขนาดไม่เกิน 5MB)
               </span>
-              {/* 🌟 เพิ่ม onChange เข้าไปให้ Input เลือกไฟล์ทำงานได้ */}
               <input
                 type="file"
                 hidden
@@ -720,7 +711,6 @@ export default function EditProject() {
             </label>
           </div>
 
-          {/* 🌟 เพิ่ม UI แสดงไฟล์ที่เพิ่งเลือกเข้ามาใหม่ (เหมือนหน้า Create) */}
           {selectedFiles.map((file, idx) => (
             <div
               key={idx}

@@ -1,7 +1,7 @@
 import { Table, Column, Model, PrimaryKey, DataType, ForeignKey, BelongsTo, Default } from 'sequelize-typescript';
-import { User } from 'src/users/entities/user.entity'; // ปรับ path ให้ตรงกับโปรเจกต์คุณ
+import { User } from 'src/users/entities/user.entity'; 
 
-@Table({ tableName: 'ActivityLogs', timestamps: false }) // ปิด timestamps อัตโนมัติ เพราะเรามีคอลัมน์ timestamp เอง
+@Table({ tableName: 'ActivityLogs', timestamps: false }) 
 export class ActivityLog extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)

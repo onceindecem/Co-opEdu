@@ -143,24 +143,18 @@ export class AuthService {
 
   async login(loginData: any) {
     const { email, password } = loginData;
-    console.log('--- LOGIN ATTEMPT ---');
-    console.log('1. Email received:', email);
-    console.log('2. Password received:', password);
 
     const user = await this.usersService.findByEmail(email);
-    console.log('3. User found in DB?:', user ? 'YES' : 'NO');
 
     if (!user) {
       throw new HttpException('email or password is incorrect', HttpStatus.UNAUTHORIZED);
     }
 
-    console.log('4. Password Hash in DB:', user.passwordHash);
     if (!user.passwordHash || !password) {
       throw new HttpException('email or password is incorrect', HttpStatus.UNAUTHORIZED);
     }
 
     const isPasswordMatching = await bcrypt.compare(password, user.passwordHash);
-    console.log('5. Is password matching?:', isPasswordMatching);
     if (!isPasswordMatching) {
       throw new HttpException('email or password is incorrect', HttpStatus.UNAUTHORIZED);
     }

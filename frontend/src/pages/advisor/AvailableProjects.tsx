@@ -8,26 +8,23 @@ import {
   Building2,
   Calendar,
   ChevronRight,
-  AlertTriangle, // 🌟 เพิ่ม Icon สำหรับหน้า Reject
+  AlertTriangle,
 } from "lucide-react";
-import { projectService } from "../../api/services/projectService"; // 🌟 อย่าลืมเช็ค path ตรงนี้นะครับว่าตรงกับไฟล์ API ในโปรเจกต์ของคุณ
+import { projectService } from "../../api/services/projectService";
 import "./Advisor.css";
 
 export default function AvailableProjects() {
   const navigate = useNavigate();
 
-  // 🌟 เปลี่ยน state มารองรับข้อมูลจริง และเพิ่ม loading / search
   const [pendingProjects, setPendingProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // --- 🌟 State สำหรับควบคุม Modal (สไตล์เหมือน Student) ---
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null,
   );
-  const [rejectReason, setRejectReason] = useState(""); // เก็บเหตุผลที่พิมพ์ใน textarea
 
   useEffect(() => {
     fetchPendingProjects();
@@ -45,13 +42,11 @@ export default function AvailableProjects() {
     }
   };
 
-  // --- 🌟 ฟังก์ชันเปิด Modal อนุมัติ ---
   const handleOpenApproveModal = (projectId: string) => {
     setSelectedProjectId(projectId);
     setShowApproveModal(true);
   };
 
-  // --- 🌟 ฟังก์ชันยืนยันการอนุมัติ (เรียก API) ---
   const confirmApprove = async () => {
     if (!selectedProjectId) return;
 
@@ -61,53 +56,36 @@ export default function AvailableProjects() {
       closeModals();
       fetchPendingProjects();
     } catch (error) {
-      console.error("เกิดข้อผิดพลาดในการอนุมัติ:", error);
       alert("เกิดข้อผิดพลาดในการทำรายการ กรุณาลองใหม่อีกครั้ง");
     }
   };
 
-  // --- 🌟 ฟังก์ชันเปิด Modal ปฏิเสธ ---
   const handleOpenRejectModal = (projectId: string) => {
     setSelectedProjectId(projectId);
-    setRejectReason(""); // เคลียร์ค่าเก่า
     setShowRejectModal(true);
   };
 
-  // --- 🌟 ฟังก์ชันยืนยันการปฏิเสธ (เรียก API) ---
   const confirmReject = async () => {
     if (!selectedProjectId) return;
 
     try {
-      // ยิง API ไปเลย ไม่ต้องรอเหตุผลแล้ว
-      await projectService.reject(selectedProjectId);
+      await projectService.rejectProject(selectedProjectId);
 
       closeModals();
       fetchPendingProjects();
-      alert("❌ ปฏิเสธโครงการเรียบร้อยแล้ว");
+      alert("ปฏิเสธโครงการเรียบร้อยแล้ว");
     } catch (error) {
-      console.error("เกิดข้อผิดพลาดในการปฏิเสธ:", error);
-      alert("เกิดข้อผิดพลาดในการทำรายการ กรุณาลองใหม่อีกครั้ง");
-    }
-
-    try {
-      await projectService.rejectProject(selectedProjectId, rejectReason);
-      closeModals();
-      fetchPendingProjects();
-    } catch (error) {
-      console.error("เกิดข้อผิดพลาดในการปฏิเสธ:", error);
       alert("เกิดข้อผิดพลาดในการทำรายการ กรุณาลองใหม่อีกครั้ง");
     }
   };
 
-  // --- ฟังก์ชันปิด Modal ทั้งหมด ---
   const closeModals = () => {
     setShowApproveModal(false);
     setShowRejectModal(false);
     setSelectedProjectId(null);
-    setRejectReason("");
   };
 
-  // ฟังก์ชันค้นหา
+  // search
   const filteredProjects = pendingProjects.filter((proj) => {
     const titleText = (proj.projName || proj.title || "")
       .toString()
@@ -126,11 +104,8 @@ export default function AvailableProjects() {
 
   return (
     <div className="advisor-page">
-      {/* 🌟 ==========================================
-          MODAL SECTION (โครงสร้างสไตล์ StudentLayout)
-      ========================================== */}
 
-      {/* --- 🟢 1. Modal ยืนยันการอนุมัติ --- */}
+      {/*  Modal approve */}
       {showApproveModal && (
         <div className="advisor-modal-overlay">
           <div className="advisor-modal-content">
@@ -159,7 +134,7 @@ export default function AvailableProjects() {
         </div>
       )}
 
-      {/* --- 🔴 2. Modal ระบุเหตุผลการปฏิเสธ --- */}
+      {/* Modal reject */}
       {showRejectModal && (
         <div className="advisor-modal-overlay">
           <div className="advisor-modal-content">
@@ -167,8 +142,6 @@ export default function AvailableProjects() {
               <AlertTriangle size={40} />
             </div>
             <h2>ปฏิเสธโครงการ</h2>
-
-            {/* เพิ่ม Textarea สำหรับพิมพ์เหตุผล */}
 
             <div className="advisor-modal-actions">
               <button onClick={closeModals} className="btn-modal-cancel">
@@ -185,9 +158,7 @@ export default function AvailableProjects() {
         </div>
       )}
 
-      {/* 🌟 ==========================================
-          MAIN CONTENT SECTION
-      ========================================== */}
+      {/* main content */}
       <div className="page-header-section">
         <h2 className="page-title">โครงการที่รอการอนุมัติ</h2>
         <p className="page-subtitle">
@@ -199,7 +170,6 @@ export default function AvailableProjects() {
         <div className="table-actions">
           <div className="search-wrapper">
             <Search size={18} />
-            {/* 🌟 ผูก state กับช่องค้นหา */}
             <input
               type="text"
               placeholder="ค้นหาชื่อโครงการ หรือ บริษัท..."
@@ -209,7 +179,6 @@ export default function AvailableProjects() {
           </div>
         </div>
 
-        {/* 🌟 แสดงสถานะ Loading ระหว่างรอข้อมูล */}
         {loading ? (
           <div style={{ textAlign: "center", padding: "40px" }}>
             กำลังโหลดข้อมูล...
@@ -232,7 +201,6 @@ export default function AvailableProjects() {
               </tr>
             </thead>
             <tbody>
-              {/* 🌟 ใช้ข้อมูลที่กรองแล้วมาแสดงผล */}
               {filteredProjects.map((proj) => (
                 <tr key={proj.projID || proj.id}>
                   <td className="proj-title-cell">
@@ -258,7 +226,6 @@ export default function AvailableProjects() {
                   </td>
                   <td>
                     <div className="date-cell">
-                      {/* จัดรูปแบบวันที่จาก Backend ให้สวยงาม */}
                       <Calendar size={16} />
                       {proj.createdAt
                         ? new Date(proj.createdAt).toLocaleDateString("th-TH")
@@ -272,7 +239,6 @@ export default function AvailableProjects() {
                   </td>
                   <td style={{ textAlign: "center" }}>
                     <div className="action-buttons-group">
-                      {/* 🌟 เปลี่ยนมาเรียกฟังก์ชันเปิด Modal */}
                       <button
                         className="btn-approve-claim"
                         onClick={() =>
@@ -283,7 +249,6 @@ export default function AvailableProjects() {
                         <CheckCircle size={18} /> อนุมัติ
                       </button>
 
-                      {/* 🌟 ปุ่มปฏิเสธ (ควรทำสไตล์ CSS เพิ่ม) */}
                       <button
                         className="btn-reject"
                         onClick={() =>

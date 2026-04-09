@@ -70,7 +70,6 @@ export default function LoginPage() {
         }
       }
     } catch (error: any) {
-      console.error("🚨 REAL ERROR:", error);
       if (error.response?.status === 429) {
         setApiError(
           "You have attempted to log in too many times. Please wait and try again later.",

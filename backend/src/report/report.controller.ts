@@ -1,63 +1,63 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { ReportsService } from './report.service';
 import { CreateReportDto } from './dto/create-report.dto';
-import { JwtAuthGuard } from '../auth/jwt.guard'; // 🛡️ Import Guard ของคุณมา
+import { JwtAuthGuard } from '../auth/jwt.guard';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
 
-@UseGuards(JwtAuthGuard) // 🔒 บังคับว่าต้องมี JWT Token ถึงจะเข้าใช้งาน API ในนี้ได้ทั้งหมด
+@UseGuards(JwtAuthGuard)
 @Controller('reports')
 export class ReportsController {
-  constructor(private readonly reportsService: ReportsService) {}
+  constructor(private readonly reportsService: ReportsService) { }
 
-  // 🌟 ใช้ @UseGuards(JwtAuthGuard) เพื่อบังคับว่าต้องมี Token เท่านั้น
-  @UseGuards(JwtAuthGuard) 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADVISOR')
   @Get('advisor/all')
   findAllForAdvisor() {
-    // 💡 ถ้ามี Guard เช็คสิทธิ์ (RolesGuard) ว่าเป็น 'ADVISOR' ค่อยเพิ่มได้ในอนาคตครับ
     return this.reportsService.findAllForAdvisor();
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('STUDENT')
   @Post()
   create(@Body() createReportDto: CreateReportDto, @Request() req: any) {
     const userId = req.user?.id || req.user?.sub || req.user?.userId;
-    return this.reportsService.create(createReportDto, userId); // 🌟 ส่ง userId ไป
+    return this.reportsService.create(createReportDto, userId);
   }
 
-@Get()
-findAll(@Request() req: any) {
-  // 1. ลองดักจับดูว่าใน req.user มีหน้าตาแบบไหน
-  console.log('🕵️‍♂️ ข้อมูล User จาก Token:', req.user); 
 
-  // 2. ปรับให้ดักทุกทาง! (ส่วนใหญ่ NestJS จะเก็บ ID ไว้ใน req.user.sub หรือ req.user.id)
-  const userId = req.user?.id || req.user?.sub || req.user?.userId;
-
-  // 3. ถ้ายังหาไม่เจออีก ให้มันโวยวายออกมาใน Terminal ของ NestJS
-  if (!userId) {
-    console.log('❌ หา userId ไม่เจอ! เช็ค JWT Strategy ด่วน!');
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('STUDENT')
+  @Get()
+  findAll(@Request() req: any) {
+    const userId = req.user?.id || req.user?.sub || req.user?.userId;
+    return this.reportsService.findAllByUserId(userId);
   }
 
-  return this.reportsService.findAllByUserId(userId);
-}
-
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('STUDENT', 'ADVISOR')
   @Get('application/:appId')
   findAllByAppId(@Param('appId') appId: string) {
     return this.reportsService.findAllByAppId(appId);
   }
 
-  // PATCH /reports/:repID - แก้ไขข้อมูล
- @Patch(':repID')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('STUDENT')
+  @Patch(':repID')
   update(
-    @Param('repID') repID: string, 
-    @Body() updateReportDto: Partial<CreateReportDto>, 
-    @Request() req: any // 🌟 ดึง Token
+    @Param('repID') repID: string,
+    @Body() updateReportDto: Partial<CreateReportDto>,
+    @Request() req: any
   ) {
     const userId = req.user?.id || req.user?.sub || req.user?.userId;
-    return this.reportsService.update(repID, updateReportDto, userId); // 🌟 ส่ง userId ไป
+    return this.reportsService.update(repID, updateReportDto, userId);
   }
 
-  // DELETE /reports/:repID - ลบข้อมูล
-@Delete(':repID')
-  remove(@Param('repID') repID: string, @Request() req: any) { // 🌟 ดึง Token
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('STUDENT')
+  @Delete(':repID')
+  remove(@Param('repID') repID: string, @Request() req: any) {
     const userId = req.user?.id || req.user?.sub || req.user?.userId;
-    return this.reportsService.remove(repID, userId); // 🌟 ส่ง userId ไป
+    return this.reportsService.remove(repID, userId);
   }
 }

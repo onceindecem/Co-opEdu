@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import {
@@ -8,8 +8,8 @@ import {
 } from 'lucide-react';
 import './students/Projects.css';
 import { projectService } from '../api/services/projectService';
-// 🌟 1. Import applicationService เข้ามาเพื่อเช็กโควตา
 import { applicationService } from '../api/services/applicationService';
+import { useAuth } from '../context/AuthContext';
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -19,28 +19,16 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [isApproving, setIsApproving] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
-  const [isCheckingQuota, setIsCheckingQuota] = useState(false); // 🌟 State สำหรับปุ่มเช็กโควตา
+  const [isCheckingQuota, setIsCheckingQuota] = useState(false);
 
-  // --- State สำหรับ Popup (Modals) ---
   const [isConfirmOpen, setIsConfirmOpen] = useState(false); 
   const [showApproveModal, setShowApproveModal] = useState(false); 
   const [showRejectModal, setShowRejectModal] = useState(false); 
   const [rejectReason, setRejectReason] = useState(''); 
 
-  // --- สิทธิ์การใช้งาน ---
-  const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
-  let currentRole = 'STUDENT';
-  let currentUserId = "";
-
-  if (token) {
-    try {
-      const decodedToken: any = jwtDecode(token);
-      currentRole = (decodedToken.role || decodedToken.userRole || decodedToken.type)?.toUpperCase() || 'STUDENT';
-      currentUserId = decodedToken.id || decodedToken.sub || decodedToken.userId;
-    } catch (error) {
-      console.error("Token is invalid:", error);
-    }
-  }
+  const { user, loading: authLoading } = useAuth();
+  const currentRole = (user?.role || user?.userRole || user?.type)?.toUpperCase() || 'STUDENT';
+  const currentUserId = user?.id || user?.userId || user?.sub || "";
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -64,10 +52,13 @@ export default function ProjectDetail() {
         setLoading(false);
       }
     };
-    fetchDetail();
-  }, [id, navigate, currentRole]);
 
-  // --- 🟢 ฟังก์ชันยืนยันการอนุมัติ (ยิง API) ---
+    // รอให้ Auth โหลดเสร็จก่อน ค่อยดึงข้อมูลโปรเจกต์
+    if (!authLoading) {
+        fetchDetail();
+    }
+  }, [id, navigate, currentRole, authLoading]);
+
   const confirmApprove = async () => {
     try {
       setIsApproving(true);
@@ -76,7 +67,7 @@ export default function ProjectDetail() {
         return;
       }
       
-      await projectService.updateStatus(id as string, currentUserId);
+      await projectService.approveProject(id as string);
       setShowApproveModal(false); 
       
       const updated = await projectService.getOne(id as string);
@@ -89,49 +80,37 @@ export default function ProjectDetail() {
     }
   };
 
-  // --- 🔴 ฟังก์ชันยืนยันการปฏิเสธ (ยิง API) ---
   const confirmReject = async () => {
-    if (!rejectReason.trim()) {
-      alert("กรุณาระบุเหตุผลการปฏิเสธ");
-      return;
-    }
-
     try {
       setIsApproving(true);
-      await projectService.reject(id as string); 
+      await projectService.rejectProject(id as string); 
       
       alert('❌ ปฏิเสธโครงการเรียบร้อยแล้ว');
       setShowRejectModal(false); 
       navigate(-1); 
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการปฏิเสธโครงการ');
-      console.error(err);
     } finally {
       setIsApproving(false);
     }
   };
 
-  // --- 🌟 2. ฟังก์ชันเช็กโควตาก่อนเปิด Modal สมัคร ---
   const handleApplyClick = async () => {
     try {
       setIsCheckingQuota(true);
-      // ดึงข้อมูลการสมัครทั้งหมดของตัวเองมาก่อน
       const res = await applicationService.getMyApplications();
       
-      // ถ้าสมัครครบ 2 แล้ว บล็อกการเปิด Modal
       if (res.data.length >= 2) {
         alert("คุณไม่สามารถสมัครเพิ่มได้ เนื่องจากโควตาเต็มแล้ว (สูงสุด 2 โครงการ)");
         return;
       }
 
-      // เช็กด้วยว่าเคยสมัครโครงการนี้ไปแล้วหรือยัง (Optional แต่แนะนำ)
       const alreadyApplied = res.data.some((app: any) => app.project?.projID === id || app.projID === id);
       if (alreadyApplied) {
         alert("คุณได้สมัครโครงการนี้ไปแล้ว");
         return;
       }
 
-      // ถ้าผ่านเงื่อนไขทั้งหมด ค่อยเปิด Modal
       setIsConfirmOpen(true);
     } catch (err) {
       console.error("Error checking quota:", err);
@@ -141,7 +120,6 @@ export default function ProjectDetail() {
     }
   };
 
- // --- 🔵 ฟังก์ชันยืนยันการสมัครโครงการ (ยิง API) ---
   const confirmApply = async () => {
     try {
       setIsApplying(true);
@@ -173,7 +151,7 @@ export default function ProjectDetail() {
   return (
     <div className="project-detail-container">
 
-      {/* 1. Modal ยืนยันการสมัคร (STUDENT) */}
+      {/* Modal ยืนยันการสมัคร (STUDENT) */}
       {isConfirmOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -201,7 +179,7 @@ export default function ProjectDetail() {
         </div>
       )}
 
-      {/* 2. Modal ยืนยันการอนุมัติ (ADVISOR) */}
+      {/* Modal ยืนยันการอนุมัติ (ADVISOR) */}
       {showApproveModal && (
         <div className="modal-overlay">
           <div className="modal-content" style={{ textAlign: 'center' }}>
@@ -233,7 +211,7 @@ export default function ProjectDetail() {
         </div>
       )}
 
-     {/* 3. Modal ยืนยันการปฏิเสธ (ADVISOR) */}
+     {/* Modal ยืนยันการปฏิเสธ (ADVISOR) */}
       {showRejectModal && (
         <div className="modal-overlay">
           <div className="modal-content modal-center">
@@ -366,12 +344,11 @@ export default function ProjectDetail() {
         <div className="action-buttons">
           <button className="btn-close" onClick={() => navigate(-1)}>ปิดหน้าต่าง</button>
 
-          {/* 🌟 3. เปลี่ยนจากเปิด Modal ตรงๆ เป็นการเรียก handleApplyClick */}
           {currentRole === 'STUDENT' && (
             <button 
               className="btn-apply-main" 
               onClick={handleApplyClick}
-              disabled={isCheckingQuota} // ปิดปุ่มไว้ชั่วคราวตอนเช็ก API
+              disabled={isCheckingQuota} 
               style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
             >
               {isCheckingQuota ? <Loader2 className="animate-spin" size={18} /> : <Briefcase size={18} />}
@@ -379,7 +356,6 @@ export default function ProjectDetail() {
             </button>
           )}
 
-          {/* ปุ่ม เปิด Popup อนุมัติ / ปฏิเสธ (ADVISOR) */}
           {currentRole === 'ADVISOR' && project.projStat === 'PENDING' && (
             <div style={{ display: 'flex', gap: '10px' }}>
               <button 

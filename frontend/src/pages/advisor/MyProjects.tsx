@@ -1,14 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
-  Plus,
-  Edit2,
-  Trash2,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
   Users,
-  ClipboardCheck,
   Building2,
   ArrowRight,
   FolderCheck,
@@ -54,12 +47,7 @@ export default function MyProjects() {
             {myProjects.map((proj) => {
               const roundNumber = String(proj.round || '1');
               const isRound1 = roundNumber === '1';
-
-              // 🌟 1. จำนวนคนสมัครทั้งหมด
               const totalApplicants = proj.applications ? proj.applications.length : 0;
-
-              // 🌟 2. นับคนที่ "พิจารณาแล้ว" (รวมทั้งอนุมัติและปฏิเสธ)
-              // ดักจับทั้งคำว่า status และ appStat เผื่อไว้เลย
               const processedCount = proj.applications
                 ? proj.applications.filter((app: any) =>
                   app.appStat === 'APPROVED' ||
@@ -88,7 +76,6 @@ export default function MyProjects() {
                       </span>
                     </div>
 
-                    {/* 🌟 แสดงผลเป็น จำนวนที่พิจารณาแล้ว / จำนวนที่สมัครทั้งหมด */}
                     <div className="stat-box">
                       <span className="stat-label">พิจารณาแล้ว</span>
                       <span className="stat-value">

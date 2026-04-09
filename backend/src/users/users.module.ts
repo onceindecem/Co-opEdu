@@ -1,4 +1,3 @@
-// src/users/users.module.ts
 import { forwardRef, Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { UsersService } from './users.service';

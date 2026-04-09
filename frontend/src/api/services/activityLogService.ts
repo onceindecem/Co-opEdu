@@ -1,4 +1,4 @@
-import api from '../axiosInstance'; // ปรับ path ให้ตรงกับ Axios ของคุณ
+import api from '../axiosInstance';
 
 export const activityLogService = {
   getAll: () => api.get('/activity-logs'),

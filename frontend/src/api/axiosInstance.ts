@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000', // URL ของ NestJS
+  baseURL: 'http://localhost:3000', 
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -13,8 +13,8 @@ api.interceptors.response.use(
   (error) => {
     if (
       error.response?.status === 401 && 
-      error.config.url !== '/users/profile' && // หยุดลูป checkAuth
-      !error.config.url?.includes('/login')    // 🌟 เพิ่มบรรทัดนี้! เพื่อหยุดการรีเฟรชตอนรหัสผิด
+      error.config.url !== '/users/profile' && 
+      !error.config.url?.includes('/login') 
     ) {
       window.location.href = '/login'; 
     }

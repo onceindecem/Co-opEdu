@@ -1,10 +1,8 @@
 import { HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
-import { UpdateHRProfileDto } from './dto/update-hr-profile.dto';
 import { HR } from './entities/hr.entity';
 import { Company } from '../company/entities/company.entity';
-// 🌟 1. อย่าลืม Import ActivityLogsService (แก้ path ให้ตรงกับโปรเจกต์ของคุณ)
 import { ActivityLogsService } from '../activity-log/activity-log.service';
 
 @Injectable()
@@ -15,14 +13,11 @@ export class HrService {
     @InjectModel(Company)
     private companyModel: typeof Company,
     private sequelize: Sequelize,
-    // 🌟 2. Inject Service เข้ามาใน Constructor
     private readonly activityLogsService: ActivityLogsService,
   ) { }
 
   async updateHrProfile(userID: string, updateData: any) {
     const t = await this.sequelize.transaction();
-    console.log('Updating HR profile for userID:', userID);
-    console.log('Update data:', updateData);
 
     try {
       // find HR profile by userID
@@ -62,7 +57,6 @@ export class HrService {
       // commit transaction
       await t.commit();
 
-      // 🌟 3. บันทึก Activity Log หลังจาก Commit ข้อมูลลง DB สำเร็จ
       try {
         await this.activityLogsService.createLog(
           userID,
@@ -70,7 +64,6 @@ export class HrService {
           `อัปเดตข้อมูลผู้ประสานงานและสถานประกอบการ (${updateData.coNameTH ?? 'ไม่ระบุชื่อบริษัท'})`
         );
       } catch (logError) {
-        // ดัก Error ไว้เผื่อระบบ Log มีปัญหา จะได้ไม่กระทบกับการอัปเดตโปรไฟล์ที่สำเร็จไปแล้ว
         console.error('Failed to save activity log:', logError);
       }
 

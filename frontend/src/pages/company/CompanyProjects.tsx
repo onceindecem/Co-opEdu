@@ -2,39 +2,30 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { projectService } from '../../api/services/projectService';
-import axios from 'axios';
-import { jwtDecode } from 'jwt-decode'; // 🌟 เพิ่มบรรทัดนี้
 import './Company.css';
 
-// สร้าง Interface ให้ TypeScript รู้จักฟิลด์ที่ดึงมาจาก Backend
 interface ProjectData {
     projID: string;
     projName: string;
-    jd: string; // สมมติว่า role คือ jd
-    quota: number; // สมมติว่า slots คือ quota
-    projStat: string; // PENDING, APPROVED, DENIED
-    deleteRequested?: boolean; // ฟิลด์จำลองสำหรับการลบในหน้าบ้าน
+    jd: string; 
+    quota: number;
+    projStat: string; 
+    deleteRequested?: boolean; 
 }
 
 export default function CompanyProjects() {
     const navigate = useNavigate();
-
-    // State สำหรับจัดการ Modal
     const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
     const [showSuccess, setShowSuccess] = useState(false);
 
-    // State สำหรับเก็บข้อมูลจาก Backend
     const [projects, setProjects] = useState<ProjectData[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // 🌟 ฟังก์ชันดึงข้อมูลจาก Backend
-    // 🌟 ฟังก์ชันดึงข้อมูลจาก Backend (อัปเดตใหม่)
     useEffect(() => {
         const fetchProjects = async () => {
             try {
                 const response = await projectService.getHRProjects();
 
-                // นำข้อมูลที่ได้มาใส่ใน State
                 const formattedProjects = response.data.map((proj: any) => ({
                     ...proj,
                     deleteRequested: false
@@ -42,7 +33,6 @@ export default function CompanyProjects() {
 
                 setProjects(formattedProjects);
             } catch (error) {
-                console.error("Error fetching projects:", error);
                 alert("เกิดข้อผิดพลาดในการดึงข้อมูลโครงการ");
             } finally {
                 setLoading(false);
@@ -51,24 +41,21 @@ export default function CompanyProjects() {
 
         fetchProjects();
     }, []);
- // 🌟 ฟังก์ชันเมื่อกดยืนยันใน Popup ลบ (แก้ไขแล้ว)
+
     const confirmDeleteRequest = async () => {
         if (deleteTarget !== null) {
             try {
-                // 1. เรียก API ส่งคำขอลบ (ใช้ deleteTarget แทน projectId)
                 const reason = "ต้องการยกเลิกโครงการ"; 
                 await projectService.requestDelete(deleteTarget, reason); 
 
-                // 2. อัปเดตตาราง: 🌟 เปลี่ยนสถานะแทนการลบทิ้ง!
                 setProjects(prevProjects => 
                     prevProjects.map(p => 
                         p.projID === deleteTarget 
-                            ? { ...p, deleteRequested: true } // ให้ตัวที่ถูกกด เปลี่ยนเป็นสถานะรอลบ
+                            ? { ...p, deleteRequested: true } 
                             : p
                     )
                 );
 
-                // 3. ปิด Popup ยืนยัน และแสดง Popup สำเร็จ
                 setDeleteTarget(null);
                 setShowSuccess(true);
 
@@ -92,7 +79,6 @@ export default function CompanyProjects() {
             </div>
 
             <div className="card form-card">
-                {/* 🌟 แสดงข้อความกำลังโหลด */}
                 {loading ? (
                     <div className="text-center p-4">กำลังโหลดข้อมูล...</div>
                 ) : (
@@ -107,7 +93,6 @@ export default function CompanyProjects() {
                             </tr>
                         </thead>
                         <tbody>
-                            {/* 🌟 ถ้าไม่มีข้อมูลให้โชว์ข้อความนี้ */}
                             {projects.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="text-center p-4">ยังไม่มีโครงการในระบบ</td>
@@ -115,7 +100,6 @@ export default function CompanyProjects() {
                             ) : (
                                 projects.map(item => (
                                     <tr key={item.projID}>
-                                        {/* 🌟 ดึงข้อมูลจากฟิลด์จริงของ Backend มาโชว์ */}
                                         <td><strong className="project-name">{item.projName}</strong></td>
                                         <td className="project-role-text">{item.jd}</td>
                                         <td className="project-slots-text">{item.quota}</td>
@@ -126,7 +110,6 @@ export default function CompanyProjects() {
                                         </td>
                                         <td className="text-center">
                                             <div className="action-group">
-                                                {/* 🌟 ลิงก์ไปหน้า Edit (ส่ง projID ไปด้วย) */}
                                                 <button className="btn-edit-outline" onClick={() => navigate(`/company/projects/edit/${item.projID}`)}>
                                                     <Edit2 size={16} /> แก้ไข
                                                 </button>
@@ -150,7 +133,6 @@ export default function CompanyProjects() {
                 )}
             </div>
 
-            {/* --- Popup 1: ยืนยันการส่งคำขอ --- */}
             {deleteTarget && (
                 <div className="logout-modal-overlay">
                     <div className="logout-modal-content">
@@ -167,7 +149,6 @@ export default function CompanyProjects() {
                 </div>
             )}
 
-            {/* --- Popup 2: แสดงสถานะส่งสำเร็จ --- */}
             {showSuccess && (
                 <div className="logout-modal-overlay">
                     <div className="logout-modal-content">

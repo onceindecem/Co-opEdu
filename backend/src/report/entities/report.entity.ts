@@ -8,21 +8,20 @@ export class Report extends Model {
     defaultValue: DataType.UUIDV4,
     primaryKey: true,
   })
-  repID!: string; // 🌟 เติม ! ตรงนี้
+  repID!: string; 
 
   @ForeignKey(() => Application)
   @Column({
     type: DataType.UUID,
     allowNull: false,
   })
-  appID!: string; // 🌟 เติม ! ตรงนี้
+  appID!: string; 
 
   @Column({
     type: DataType.STRING(255),
     allowNull: false,
   })
-  repTopic!: string; // 🌟 เติม ! ตรงนี้
-
+  repTopic!: string; 
   @Column({
     type: DataType.ENUM(
       'EMAIL_SENT',
@@ -35,20 +34,19 @@ export class Report extends Model {
     ),
     allowNull: false,
   })
-  repStat!: string; // 🌟 เติม ! ตรงนี้
+  repStat!: string; 
 
   @Column({
     type: DataType.TEXT,
     allowNull: true,
   })
-  descDetail!: string; // 🌟 เติม ! ตรงนี้
-
+  descDetail!: string;
   @Column({
     type: DataType.DATEONLY,
     allowNull: true,
   })
-  interviewDate!: Date; // 🌟 เติม ! ตรงนี้
+  interviewDate!: Date; 
 
   @BelongsTo(() => Application)
-  application!: Application; // 🌟 เติม ! ตรงนี้
+  application!: Application; 
 }

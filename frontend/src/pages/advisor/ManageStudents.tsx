@@ -14,7 +14,6 @@ export default function ManageStudents() {
   const [projectDetail, setProjectDetail] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // 🌟 แยกฟังก์ชันโหลดรายชื่อออกมา เพื่อให้กดปุ่มปุ๊บ โหลดข้อมูลใหม่ปั๊บ
   const fetchApplications = useCallback(async () => {
     if (!projectId) return;
     try {
@@ -42,41 +41,36 @@ export default function ManageStudents() {
     fetchInitialData();
   }, [projectId, fetchApplications]);
 
-  // ==========================================
-  // 🟢 1. ฟังก์ชันอนุมัติ (เปลี่ยน appStat เป็น APPROVED)
-  // ==========================================
+  // approve
   const handleApprove = async (appId: string) => {
     if (!window.confirm("ต้องการ 'ยืนยัน' การสมัครของนักศึกษาคนนี้ใช่หรือไม่?")) return;
     try {
       await applicationService.updateAppStat(appId, 'APPROVED');
-      fetchApplications(); // โหลดข้อมูลใหม่
+      fetchApplications();
     } catch (error) {
-      console.error(error);
       alert("เกิดข้อผิดพลาดในการอนุมัติ");
     }
   };
 
-  // ==========================================
-  // 🔴 2. ฟังก์ชันปฏิเสธ (เปลี่ยน appStat เป็น DENIED)
-  // ==========================================
+
+  // reject
   const handleReject = async (appId: string) => {
     if (!window.confirm("ต้องการ 'ปฏิเสธ' การสมัครของนักศึกษาคนนี้ใช่หรือไม่?")) return;
     try {
       await applicationService.updateAppStat(appId, 'DENIED');
-      fetchApplications(); // โหลดข้อมูลใหม่
+      fetchApplications(); 
     } catch (error) {
       console.error(error);
       alert("เกิดข้อผิดพลาดในการปฏิเสธ");
     }
   };
 
-  // ==========================================
-  // 🔽 3. ฟังก์ชันอัปเดตผลการจ้างงาน (hiredStat)
-  // ==========================================
+
+  // update hire stat
   const handleHiredChange = async (appId: string, newHiredStat: string) => {
     try {
       await applicationService.updateHiredStat(appId, newHiredStat);
-      fetchApplications(); // โหลดข้อมูลใหม่
+      fetchApplications();
     } catch (error) {
       console.error(error);
       alert("เกิดข้อผิดพลาดในการอัปเดตผลการจ้างงาน");
@@ -148,7 +142,6 @@ export default function ManageStudents() {
                     </span>
                   </td>
                   <td>
-                    {/* 🌟 ผูกฟังก์ชัน onChange กับ Dropdown */}
                     <select 
                       className={`hired-select ${app.hiredStat?.toLowerCase() || 'WAITING'}`}
                       value={app.hiredStat || 'WAITING'}
@@ -162,7 +155,6 @@ export default function ManageStudents() {
                   </td>
                   <td style={{ textAlign: 'center' }}>
                     <div className="action-group">
-                      {/* 🌟 ซ่อนปุ่มถ้าอนุมัติหรือปฏิเสธไปแล้ว */}
                       {app.appStat === 'PENDING' ? (
                         <>
                           <button 

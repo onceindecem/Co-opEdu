@@ -9,9 +9,7 @@ import {
   HasMany,
 } from 'sequelize-typescript';
 
-// TODO: ปลดคอมเมนต์เมื่อสร้าง Model Users และ Project เสร็จแล้ว
 import { User } from 'src/users/entities/user.entity';
-// import { Project } from 'src/projects/entities/project.entity';
 
 @Table({
   tableName: 'Advisor',

@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
-  Search,
   UserPlus,
   Key,
   Trash2,
@@ -76,7 +75,6 @@ export default function UserManagement() {
   };
 
   const handleAddUser = async () => {
-    // 🌟 บังคับให้กรอกชื่อและนามสกุลด้วย
     if (!newUser.email || !newUser.password || !newUser.firstName || !newUser.lastName) {
       alert('กรุณากรอกข้อมูลให้ครบถ้วน (ชื่อ, นามสกุล, Email, Password)');
       return;
@@ -85,7 +83,6 @@ export default function UserManagement() {
       await adminService.createUser(newUser);
       alert("สร้างบัญชีผู้ใช้งานสำเร็จ!");
       setShowAddModal(false);
-      // 🌟 รีเซ็ต State กลับเป็นค่าว่าง
       setNewUser({ firstName: '', lastName: '', email: '', password: '', role: 'STUDENT' });
       fetchUsers();
     } catch (error) {
