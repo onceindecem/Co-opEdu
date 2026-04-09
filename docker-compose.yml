@@ -1,18 +1,22 @@
 version: '3.8'
 
 services:
-  backend:
+  backend:            
     build:
       context: ./backend
     ports:
       - "3000:3000"
-    environment:
-      - NODE_ENV=production
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
 
-  frontend:
+  frontend:          
     build:
       context: ./frontend
     ports:
-      - "8080:80"
+      - "5173:5173"  
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules 
     depends_on:
       - backend
