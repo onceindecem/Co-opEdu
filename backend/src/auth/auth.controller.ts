@@ -67,7 +67,7 @@ export class AuthController {
       maxAge: 24 * 60 * 60 * 1000, 
     });
 
-    const frontendUrl = `http://localhost:5173/login?role=${result.role}`;
+    const frontendUrl = process.env.FRONTEND_URL+`/login?role=${result.role}`;
     return res.redirect(frontendUrl);
   }
 }

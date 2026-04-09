@@ -1,8 +1,6 @@
 import api from '../axiosInstance';
 // import 'dotenv/config'
 
-const baseURL = "http://localhost:3000";
-
 export const authService = {
   registerHR: (data: any) => api.post('/auth/register-hr', data),
 
@@ -11,7 +9,7 @@ export const authService = {
   login: (credentials: any) => api.post('/auth/login', credentials),
 
   loginWithGoogle: () => {
-    const url = baseURL;
+    const url = process.env.BACKEND_URL;
     window.location.href = `${url}/auth/google`;
   },
 
